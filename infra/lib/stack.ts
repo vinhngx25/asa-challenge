@@ -102,7 +102,7 @@ export class AsaStack extends cdk.Stack {
       projectRoot: here('../..'),
       depsLockFilePath: here('../../package-lock.json'),
       handler: 'handler',
-      runtime: lambda.Runtime.NODEJS_22_X,
+      runtime: lambda.Runtime.NODEJS_24_X,
       architecture: lambda.Architecture.ARM_64,
       memorySize: 512,
       timeout: cdk.Duration.seconds(15),
@@ -118,7 +118,7 @@ export class AsaStack extends cdk.Stack {
       bundling: {
         minify: true,
         sourceMap: true,
-        target: 'node22',
+        target: 'node24',
         // Bundle everything, including the AWS SDK, so the deployed code matches the lockfile exactly.
         externalModules: [],
       },
@@ -229,8 +229,13 @@ export class AsaStack extends cdk.Stack {
       destinationBucket: siteBucket,
       distribution,
       distributionPaths: ['/*'],
-      cacheControl: [s3deploy.CacheControl.fromString('public, max-age=300')],
+      cacheControl: [s3deploy.CacheControl.fromString('public, max-age=300, must-revalidate')],
     });
+
+    // The site-deployment helper that CDK ships runs on an older Python than Lambda now offers; move it to the newest.
+    for (const child of this.node.findAll()) {
+      if (child instanceof lambda.CfnFunction && child.runtime === 'python3.13') child.addPropertyOverride('Runtime', 'python3.14');
+    }
 
     if (props.domain) {
       const zone = route53.HostedZone.fromHostedZoneAttributes(this, 'Zone', {

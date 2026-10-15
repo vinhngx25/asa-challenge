@@ -238,7 +238,7 @@ Versions are the latest stable releases at install time and are pinned by the lo
 | Area | Choice | Clarity | Logic | Foresight |
 |---|---|---|---|---|
 | Language | **TypeScript** everywhere | One language across UI, API and infrastructure | Types describe the domain and catch mistakes before runtime | Shared contracts between frontend and backend |
-| Runtime | **Node.js LTS** on Lambda arm64 | Familiar, fast cold start | Cheaper and faster per request on Graviton | Same code runs locally and in the cloud |
+| Runtime | **Node.js 24** (the newest Lambda runtime) on Lambda arm64; the CDK helper functions run Node.js 24 and Python 3.14 | Familiar, fast cold start | Cheaper and faster per request on Graviton | Same code runs locally and in the cloud |
 | API framework | **Hono** | Tiny, readable routing and middleware | Built on web-standard Request/Response, so it needs no Lambda-specific code | Can move to containers, edge or another cloud by swapping the adapter |
 | Validation | **Zod** | The schema is the documentation | Rejects bad input at the edge and produces the TypeScript type | Frontend reuses the same schemas |
 | Database | **DynamoDB** (single table, on-demand) | Access patterns listed up front, no scans | Transactions give atomic multi-resource booking | Scales without redesign; storage sits behind a repository interface |

@@ -457,3 +457,7 @@ After the author found that "Book another" left the service, dealership and date
 | Dashboard tab, search, filters | Kept while moving between pages | Intended; no change |
 
 Verified in Chrome on the local build: Book another keeps only the vehicle; a hiding category clears the service; a real conflict (the same vehicle booked from outside) shows the message and picking another time removes it. Manual cases C-S22, C-S23, C-S24 and S-S08 were added.
+
+## 20. Runtimes
+
+All three Lambda functions in the stack run the newest runtimes Lambda offers: the API on Node.js 24 (esbuild target `node24`), the auto-delete helper on Node.js 24, and the site-deployment helper on Python 3.14. CDK pins that helper to Python 3.13, so the stack moves it to 3.14 with a property override. A redeploy that re-ran the helper uploaded the site correctly on 3.14, and the API suites (41, 11 and 55 checks) and the smoke test pass on Node.js 24. The site's cache header is now `public, max-age=300, must-revalidate`. Local development still works on Node.js 22 or newer.
