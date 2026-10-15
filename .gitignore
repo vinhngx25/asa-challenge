@@ -14,3 +14,6 @@ __pycache__/
 *.pyc
 .venv/infra/cdk-outputs.json
 scripts/ui-regression/shots/
+scripts/ui-regression/baselines/
+scripts/ui-regression/diffs/
+scripts/ui-regression/layout/

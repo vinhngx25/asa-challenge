@@ -5,7 +5,7 @@ import { Card, EmptyState, ErrorNote, Img, Spinner } from '../components/ui';
 import { phaseOf } from '../lib/format';
 import { useAppointments, useCatalog } from '../queries';
 
-const selectClass = 'rounded-lg border-0 bg-white px-3 py-2 text-sm ring-1 ring-ink-200';
+const selectClass = 'w-full min-h-10 rounded-lg border-0 bg-white px-3 py-2 text-sm ring-1 ring-ink-200';
 
 export function Staff() {
   const catalog = useCatalog();
@@ -95,19 +95,19 @@ export function Staff() {
         })}
       </section>
 
-      <Card className="flex flex-wrap items-end gap-4">
-        <label className="min-w-56 flex-1 text-sm font-semibold">
+      <Card className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end sm:gap-4">
+        <label className="col-span-2 text-sm font-semibold sm:min-w-56 sm:flex-1">
           <span className="mb-1 block">Search</span>
           <input
             type="search"
             value={query}
             maxLength={LIMITS.search}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Reference, customer, plate, car, service or technician"
-            className="w-full rounded-lg border-0 bg-white px-3 py-2 text-sm font-normal ring-1 ring-ink-200"
+            placeholder="Reference, name, plate, car or service"
+            className="min-h-10 w-full rounded-lg border-0 bg-white px-3 py-2 text-sm font-normal ring-1 ring-ink-200"
           />
         </label>
-        <label className="text-sm font-semibold">
+        <label className="col-span-2 text-sm font-semibold sm:col-auto">
           <span className="mb-1 block">Dealership</span>
           <select className={selectClass} value={dealershipId} onChange={(e) => setDealershipId(e.target.value)}>
             <option value="">All dealerships</option>
@@ -118,7 +118,7 @@ export function Staff() {
             ))}
           </select>
         </label>
-        <label className="text-sm font-semibold">
+        <label className="col-span-2 text-sm font-semibold sm:col-auto">
           <span className="mb-1 block">Status</span>
           <select className={selectClass} value={status} onChange={(e) => setStatus(e.target.value as AppointmentStatus | '')}>
             <option value="">Any</option>
@@ -136,7 +136,7 @@ export function Staff() {
         </label>
         {(dealershipId || status || from || to || query) && (
           <button
-            className="pb-2 text-sm font-semibold text-brand-700 underline"
+            className="col-span-2 min-h-10 text-left text-sm font-semibold text-brand-700 underline sm:col-auto sm:pb-2"
             onClick={() => {
               setDealershipId('');
               setStatus('');

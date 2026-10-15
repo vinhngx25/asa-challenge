@@ -9,5 +9,6 @@ export default defineConfig({
     port: 5173,
     proxy: { '/api': process.env.API_URL ?? 'http://localhost:3000' },
   },
+  preview: { port: 4173, proxy: { '/api': process.env.API_URL ?? 'http://localhost:3000' } },
   build: { sourcemap: false },
 });

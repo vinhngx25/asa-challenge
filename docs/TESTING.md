@@ -26,6 +26,7 @@ How the project is tested, which tools were used, how to run every suite, and ho
 | Pairwise over HTTP | `python scripts/pairwise_tests.py --base-url <url>` | seeded data | yes |
 | Post-deploy smoke | `python scripts/smoke_test.py --base-url <url>` | deployed site | yes |
 | UI regression, full (102 checks) | see section 6 | local app running, or the deployed site run by you | local by the agent; production by the author (section 6) |
+| UI layout audit (221 checks), resilience (46), visual regression (11), performance (18; 10 on the deployed sign-in page) | see section 6a | local app; performance and the sign-in page also on the deployed site | local by the agent; performance of the sign-in page on production |
 | UI public (29 checks, no sign-in) | `node scripts/ui-regression/ui-public.mjs <url>` | nothing | yes |
 
 `<url>` is `http://localhost:3000` for the API on your machine, or the site address. Every script cancels the bookings it makes. All Python scripts exit with code 1 when a check fails, so they can run in CI.
@@ -201,3 +202,27 @@ What the 102 checks include: every Must-have customer and staff case, most Shoul
 - `npm run seed:local` / `npm run seed:aws` wipe the table and load the demo data, so a run always starts from the same state.
 - Integration tests use their own table (`asa-challenge-test`), so the demo data is untouched.
 - The Python and Playwright runs cancel what they create. If a run is interrupted, re-seed.
+
+## 6a. More kinds of UI testing
+
+Beyond functional, boundary and pairwise checks, six more kinds of browser test run against a production build of the app (`npm run build`, then `npm run preview -w frontend` with the API running). Each is its own script in `scripts/ui-regression/` and prints PASS or FAIL per check.
+
+| Kind | Command (from `scripts/ui-regression`) | What it does | Result |
+|---|---|---|---|
+| **Layout audit** | `node ui-layout.mjs <url>` | Opens every main screen (sign-in, dashboard, cancelled tab, booking, staff) at seven sizes (320, 360, 390, 414, 768, 1024, 1440 px) and measures: no sideways scrolling; header items share one centre line and, on phones, at most two rows and 130 px; header items do not overlap; touch targets at least 36 px high; no text under 12 px; pictures not stretched; no text cut off | 221 of 221 after fixes (the first run found the phone header three rows and 153 px tall) |
+| **Resilience** | `node ui-resilience.mjs <url>` | **Time zones and locales**: the browser set to Singapore, New York, Auckland, London and Ho Chi Minh City; **network failures**: errors, aborted calls, offline, a slow double click, a Fast 3G profile, sign-in with the server down; **session and navigation**: expired token mid-booking, deep links, sign-out in another tab, role switch, back and forward, refresh mid-flow; **random clicking**: 220 seeded random clicks, keystrokes of hostile text, resizes and back/forward for a customer on desktop, a customer on a phone and staff, with writes blocked so data stays intact | 46 of 46 after fixes |
+| **Visual regression** | `npm run test:visual:update` once on a build you trust, then `node ui-visual.mjs <url>` after each change | Compares screenshots of the sign-in page (3 sizes), dashboard, booking start and booking times (desktop and phone) and staff overview with saved baselines; dates, counts and references are hidden first so only layout, colour and pictures count; differences are saved to `diffs/` | 11 of 11. Mutation check: changing one colour made the two dashboard comparisons fail; restoring it passed |
+| **Performance** | `node ui-perf.mjs <url> [--signed-in]` | First and largest contentful paint, layout shift, bytes, requests and picture weight, on a normal desktop connection and on a mid-range phone (4x slower CPU, Fast 3G); with `--signed-in` also sign-in to dashboard, choosing a date to times on screen, and booking-page weight | Deployed sign-in page: desktop LCP 0.8 s, phone LCP 2.1 s, layout shift 0, 292 KB desktop and 225 KB phone, and the phone does not download the large desktop photo. Local build, signed in: dashboard in 0.2 s (desktop) and 1.4 s (phone), times in 0.07 s and 0.5 s |
+| **Time zone and locale** (part of resilience) | as above | Confirms times are shown and stored in the dealership's time (London) for a browser anywhere, UK-style dates in every locale, and that opening time reads 08:00 on both sides of the clock change | passed for all five zones |
+| **Random clicking** (part of resilience) | as above | Looks for crashes, blank pages and uncaught errors, not for expected results | no uncaught error in 660 steps |
+
+### What these found
+
+| Found by | Defect | Fix |
+|---|---|---|
+| Layout audit | On phones the header was three rows and 153 px tall: logo and title, then the menu, then the avatar and Sign out each on their own line, so the title, avatar and menu did not sit on one line | Redesigned: row one has the logo and title on the left and avatar and Sign out on the right on one centre line; row two has the menu as equal-width buttons; one row on wider screens; title fits at 320 px |
+| Layout review | Staff filters on phones had different widths with a lone "To" box, and the search placeholder was cut off | One tidy grid of full-width controls; shorter placeholder |
+| Resilience (network) | A fast double click on Confirm booking sent two requests (the database still booked once) | A guard that works on the first click; the same for Cancel and Sign in |
+| Resilience (offline) | With the network down, Confirm booking sat on "Confirming..." for ever with no message: the data library silently pauses requests while offline, and there was no request timeout | Requests are always attempted so "You appear to be offline" shows at once; any request that gets no answer for 20 seconds is given up with a clear message |
+| Resilience (session) | After an expired session or a deep link the person always landed on the home page after signing in | They now return to the page they asked for (only same-site paths are honoured); a deliberate sign-out returns to the home page |
+| The tests themselves | The first version of the resilience script swallowed its own errors and stopped after 25 of its 46 checks without saying so | Errors are reported; the full 46 run and pass |

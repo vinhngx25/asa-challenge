@@ -86,6 +86,13 @@ Status: all milestones complete. Outcomes, deviations from the design and test r
 - [x] Boundary, hostile-text and length tests at three levels: integration, HTTP sweep (`input_tests.py`), browser (87-check run)
 - [x] Document every input with its limit and tests (TESTING.md section 4a)
 
+### M12 More UI testing and the mobile review
+- [x] Layout audit at seven sizes; redesign the phone header; tidy the staff filters
+- [x] Resilience: time zones and locales, network failures, session and navigation, random clicking
+- [x] Visual regression with baselines (mutation-checked) and performance budgets
+- [x] Fix what they found: duplicate requests, offline hang, request timeout, return to the requested page
+- [x] Record skipped test types as out of scope (cross-browser, manual sessions, heavy data)
+
 ## Working agreements
 
 - Commit after each milestone to `asa-challenge`, one repository per commit.

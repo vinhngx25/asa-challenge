@@ -5,8 +5,8 @@ For a quick manual check of the live site by a person. Cases are ordered by prio
 | Priority | Meaning | Count | Rough time |
 |---|---|---|---|
 | **Must have** | The product is not usable or not safe if one fails | 15 | 20 to 25 minutes |
-| **Should have** | Important rules and everyday behaviour | 26 | 35 minutes |
-| **Nice to have** | Polish, accessibility and edge behaviour | 15 | 20 minutes |
+| **Should have** | Important rules and everyday behaviour | 27 | 35 minutes |
+| **Nice to have** | Polish, accessibility and edge behaviour | 17 | 25 minutes |
 
 Mark each result in the **Result** column: `P` pass, `F` fail, `-` skipped. Write failures down with the case ID and what you saw.
 
@@ -86,6 +86,7 @@ Services used below: **Oil & Filter Change** (60 min, Oil & Fluids), **Fluid Top
 | C-S14 | Qualified technician limit | Choose **Wheel Alignment** at Brum Auto Centre. Book it at DAY 10:00 with John, then try **Tyre Rotation & Balancing** at 10:00 with James. | The second is refused: Brum has only one tyre specialist, even though a bay is free. | |
 | C-S15 | Completed tab | Open the **Completed** tab. | Past bookings are listed with a "Completed" badge and no Cancel button. | |
 | C-S16 | Book another | After a confirmation, click **Book another**. | Wizard resets to an empty selection. | |
+| C-S20 | Return to the page you asked for | Signed out, type the address of the booking page (`/book`) in the browser. Sign in as a customer. | After signing in you land on the booking page. After pressing **Sign out** yourself and signing in again you land on My bookings. | |
 | C-S19 | Sign-in help and live feedback | On the login page read the **Sign-in help** panel. Type a few characters in each box. Type a space in the password box, then delete it. Tick **Show password**. | Each box shows a counter such as `5 / 32` and its rule underneath. A red message appears as soon as the password has a space and goes when you remove it. Show password reveals the text and un-ticking hides it. The panel says who signs in, the 8 hour session and that this is a demo; the username and password rules appear once, under their boxes (not repeated in the panel). | |
 | C-S18 | Username and password limit (negative) | On the login page type 40 characters into Username, then into Password. Then type exactly 32 characters in each and sign in. | Each box stops at 32 characters. With 32 characters in each the page answers "Incorrect username or password" (not an error screen). | |
 | C-S17 | Date suggestion skips closed days | On a Saturday, open the booking page and choose a vehicle, a service and a dealership without touching the date. | The date moves from Sunday to the next open day (Monday). If you pick a date yourself it is never changed for you. | |
@@ -117,6 +118,8 @@ Services used below: **Oil & Filter Change** (60 min, Oil & Fluids), **Fluid Top
 | N-07 | Both | HTTPS | On the live site check the address bar. Try `http://asa-challenge.fibosolutions.com`. | Padlock shown; http redirects to https. | |
 | N-08 | Customer | Many bookings | Make 3 bookings on different days, then check ordering. | Upcoming is soonest first; Completed is most recent first. | |
 | N-09 | Customer | Pictures | Look at login, vehicles, dealerships, technicians. | Bright, modern images load; no broken image icons. | |
+| N-17 | Customer | Network down | On the booking page choose a time, turn the network off (aeroplane mode, or the browser's Offline option), press **Confirm booking**. Turn the network on and press it again. | A clear "You appear to be offline" message at once, no endless "Confirming...", nothing booked. After reconnecting the second press books it. | |
+| N-16 | Both | Phone header | Open the site on a phone (or a 390 px window). Look at the top bar on every page. | Row one: logo and title on the left, your picture and Sign out on the right, on one line. Row two: the menu as equal-width buttons. Nothing overlaps or is cut off. | |
 | N-15 | Both | Light interface | Look at the navigation bar and the dashboard welcome card on a customer account. | White navigation bar with dark text and a light turquoise-to-warm gradient welcome card with dark text; no dark blocks. | |
 | N-14 | Both | Phone and desktop pictures | Open the login page on a phone (or a narrow window) and on a wide screen. | Phone: a portrait banner of a mechanic above the form. Wide screen: the large workshop photo on the left, no banner. | |
 | N-10 | Customer | Long service end time | Book Full Service (240 min). | Confirmation shows start to end four hours later in local time. | |

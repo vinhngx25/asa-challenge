@@ -15,6 +15,10 @@ Results from the author's runs (Alice). Full detail, tool notes and method: [../
 | `scripts/input_tests.py` (every text field and parameter) | local and live | 55 of 55 |
 | `scripts/pairwise_tests.py` | local and live | 39 of 39 |
 | `scripts/smoke_test.py` | live | 10 of 10 |
+| `ui-layout.mjs` (seven screen sizes) | local production build | 221 of 221 |
+| `ui-resilience.mjs` (time zones, network failures, sessions, random clicking) | local production build | 46 of 46 |
+| `ui-visual.mjs` (screenshot baselines) | local production build | 11 of 11 |
+| `ui-perf.mjs` (speed budgets) | local build signed in 18 of 18; **deployed sign-in page 10 of 10** | LCP 0.8 s desktop, 2.1 s phone |
 | `scripts/ui-regression/ui-public.mjs` (browser, no sign-in) | **live** 29 of 29 after the final deploy; local 27 of 27 |
 | Playwright UI regression (`scripts/ui-regression`) | local app | 102 of 102 (includes the light-interface measurement, the sign-in help, live password feedback, the text box limits and hostile input, staff search, date suggestion, throttled message and WCAG 2.1 AA scans of four screens) |
 
@@ -69,5 +73,8 @@ Two tools: **Claude in Chrome** (Alice driving the author's Chrome) and **Playwr
 | `13-login-space-warning.jpg` | Live warning when a password contains a space; Show password ticked |
 | `14-mobile-login-help.jpg` | The same page at phone width, with the portrait banner |
 | `15-tablet-login.jpg` | The same page at tablet width |
+| `16-phone-header-dashboard.jpg` | Phone header after the redesign: one line for logo, picture and Sign out; menu as equal buttons below |
+| `17-phone-staff-filters.jpg` | Staff filters as a tidy grid on a phone |
+| `18-phone-320-header.jpg` | The same header at the narrowest size, 320 px |
 
 Browser sign-in on the deployed site is performed by the author; the deployed site was verified by the Python scripts and the post-deploy smoke test.

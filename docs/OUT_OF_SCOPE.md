@@ -47,6 +47,11 @@ Where they came from: [IMPLEMENTATION_RESULTS.md](IMPLEMENTATION_RESULTS.md) sec
 | 22 | No screen-reader or real-device phone testing | Automated accessibility scans, keyboard-only sign-in and a 390 px layout check were done | Manual accessibility audit and device lab runs |
 | 23 | The browser counts characters in UTF-16 units and the server counts code points, so for emoji the box holds 16 and the API accepts 32 | The box is the stricter side, so nothing over the limit can be sent from the page | Count the same way on both sides |
 | 24 | Usernames and passwords are not trimmed, so a leading or trailing space is a different (wrong) account | Case and exact text matter by design | Trim the username before sign-in |
+| 26 | The browser tests run in Chromium only; Firefox and Safari's engine (WebKit) are not tested | Needs a large extra browser download and was set aside by the author for this version | Add Firefox and WebKit to the browser runs |
+| 27 | No manual accessibility or usability sessions: screen reader (NVDA, VoiceOver), 200% zoom, high-contrast mode, first-time-user walkthrough | Automated scans, keyboard-only sign-in and layout checks were done; a human session was set aside by the author for this version | Run a moderated accessibility and usability session |
+| 28 | No test with heavy data: very long names, hundreds of bookings per customer or per dealership | Demo volumes only; set aside by the author for this version | Add large-data fixtures and measure the lists |
+| 29 | On phones the "Your booking" summary and the Confirm button sit at the end of the booking page, after a long scroll | Works and is tested; a sticky bottom bar is a design change | Pin a compact summary and Confirm to the bottom of the screen on phones |
+| 30 | Visual-regression baselines are not committed, because they depend on the machine's fonts and browser | Each person creates their own with one command (`npm run test:visual:update`) | Keep baselines in CI on one fixed image |
 | 25 | Requests with oversized headers or URLs, or URL paths containing `../` or control characters, are refused by the platform (CloudFront or API Gateway: 400, 403, 413, 414, 431) in its own format, not the API's JSON error | Happens before the application is reached | Add a gateway response template |
 
 ## What this list is not

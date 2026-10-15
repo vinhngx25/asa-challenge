@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from 'react';
-import { Navigate } from 'react-router';
+import { useRef, useState, type FormEvent } from 'react';
+import { Navigate, useLocation } from 'react-router';
 import { ApiError } from '../api';
 import { useAuth } from '../auth';
 import { LIMITS } from '@asa/shared';
@@ -15,13 +15,19 @@ export function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const sending = useRef(false);
 
-  if (user) return <Navigate to="/" replace />;
+  const from = (useLocation().state as { from?: string } | null)?.from;
+  // Only same-site paths are honoured, never an address given from outside.
+  const target = from && /^\/(?!\/)/.test(from) && !from.startsWith('/login') ? from : '/';
+  if (user) return <Navigate to={target} replace />;
 
   const hasWhiteSpace = /\s/.test(password);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
+    if (sending.current) return;
+    sending.current = true;
     setBusy(true);
     setError(null);
     try {
@@ -29,6 +35,7 @@ export function Login() {
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not sign in.');
     } finally {
+      sending.current = false;
       setBusy(false);
     }
   }

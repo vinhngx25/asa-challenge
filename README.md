@@ -97,6 +97,16 @@ npm install && npx playwright install chromium
 node ui-run.mjs http://localhost:5173 ./shots # 102 checks, screenshots in ./shots, exit code 1 on failure
 ```
 
+More browser tests (layout at seven screen sizes, resilience, visual regression, performance), run against a production build, are described in [docs/TESTING.md](docs/TESTING.md) section 6a:
+
+```bash
+cd scripts/ui-regression
+node ui-layout.mjs http://localhost:4173        # 221 checks: alignment, touch targets, overflow at 7 sizes
+node ui-resilience.mjs http://localhost:4173    # 46 checks: time zones, network failures, sessions, random clicking
+npm run test:visual:update                      # once: save baselines (then: node ui-visual.mjs http://localhost:4173)
+node ui-perf.mjs https://<your-url>             # speed budgets; add --signed-in on a local build
+```
+
 ### Manual test cases
 
 [docs/MANUAL_TEST_CASES.md](docs/MANUAL_TEST_CASES.md) lists customer and staff cases (happy and negative) ordered Must have, Should have and Nice to have, so a person can stop after any section. Evidence and results from the author's runs are in [docs/test-evidence/](docs/test-evidence/).

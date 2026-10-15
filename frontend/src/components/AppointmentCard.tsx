@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { appointmentPhase, type AppointmentDto } from '@asa/shared';
 import { ApiError, api } from '../api';
 import { fmtDate, fmtDuration, fmtTime } from '../lib/format';
@@ -17,6 +17,7 @@ export function AppointmentCard({ appt, showCustomer = false }: { appt: Appointm
   const catalog = useCatalog();
   const queryClient = useQueryClient();
   const [confirming, setConfirming] = useState(false);
+  const inFlight = useRef(false);
 
   const tz = catalog.data?.dealerships.find((d) => d.id === appt.dealershipId)?.timezone ?? 'Europe/London';
   const phase = appointmentPhase(appt);
@@ -25,6 +26,9 @@ export function AppointmentCard({ appt, showCustomer = false }: { appt: Appointm
 
   const cancel = useMutation({
     mutationFn: () => api.cancel(appt.id),
+    onSettled: () => {
+      inFlight.current = false;
+    },
     onSuccess: () => {
       setConfirming(false);
       return queryClient.invalidateQueries({ queryKey: ['appointments'] });
@@ -99,7 +103,11 @@ export function AppointmentCard({ appt, showCustomer = false }: { appt: Appointm
                   <span className="text-sm text-ink-600">
                     Cancel {showCustomer ? `${appt.customerName}'s booking` : 'this booking'} and release the bay and technician?
                   </span>
-                  <Button variant="danger" disabled={cancel.isPending} onClick={() => cancel.mutate()}>
+                  <Button variant="danger" disabled={cancel.isPending} onClick={() => {
+                      if (inFlight.current) return;
+                      inFlight.current = true;
+                      cancel.mutate();
+                    }}>
                     {cancel.isPending ? 'Cancelling...' : 'Yes, cancel'}
                   </Button>
                   <Button variant="secondary" onClick={() => setConfirming(false)}>

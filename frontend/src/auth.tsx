@@ -8,7 +8,9 @@ interface AuthState {
   /** True while a stored token is being checked on first load. */
   loading: boolean;
   signIn: (username: string, password: string) => Promise<void>;
-  signOut: () => void;
+  /** True when the person pressed Sign out, false when the session simply ended (expired token). */
+  manualExit: boolean;
+  signOut: (manual?: boolean) => void;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -17,15 +19,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [user, setUser] = useState<UserDto | null>(null);
   const [loading, setLoading] = useState<boolean>(() => tokenStore.get() !== null);
+  const [manualExit, setManualExit] = useState(false);
 
-  const signOut = useCallback(() => {
+  const signOut = useCallback((manual = false) => {
+    setManualExit(manual === true);
     tokenStore.clear();
     setUser(null);
     queryClient.clear();
   }, [queryClient]);
 
   useEffect(() => {
-    setUnauthorizedHandler(signOut);
+    setUnauthorizedHandler(() => signOut(false));
     if (!tokenStore.get()) return;
     api
       .me()
@@ -39,12 +43,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const result = await api.login(username, password);
       tokenStore.set(result.token);
       queryClient.clear();
+      setManualExit(false);
       setUser(result.user);
     },
     [queryClient],
   );
 
-  const value = useMemo(() => ({ user, loading, signIn, signOut }), [user, loading, signIn, signOut]);
+  const value = useMemo(() => ({ user, loading, manualExit, signIn, signOut }), [user, loading, manualExit, signIn, signOut]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

@@ -54,20 +54,34 @@ export const setUnauthorizedHandler = (fn: () => void): void => {
   onUnauthorized = fn;
 };
 
+/** A request that gets no answer for this long is given up, so a stalled connection never leaves the page waiting for ever. */
+const REQUEST_TIMEOUT_MS = 20_000;
+
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    throw new ApiError('INTERNAL', 'You appear to be offline. Check your connection and try again.', 0);
+  }
   const token = tokenStore.get();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   let res: Response;
   try {
     res = await fetch(`/api${path}`, {
       method,
+      signal: controller.signal,
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
       },
       ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
     });
-  } catch {
+  } catch (err) {
+    if (controller.signal.aborted) {
+      throw new ApiError('INTERNAL', 'The server took too long to answer. Please try again.', 0);
+    }
     throw new ApiError('INTERNAL', 'Cannot reach the server. Check your connection and try again.', 0);
+  } finally {
+    clearTimeout(timer);
   }
 
   const text = await res.text();

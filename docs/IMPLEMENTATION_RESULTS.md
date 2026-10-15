@@ -4,7 +4,7 @@ What was built, how it differs from the design, what was tested and what was not
 
 - **Live:** https://asa-challenge.fibosolutions.com (AWS ap-southeast-1)
 - **Delivered:** 2026-10-15; hardened with boundary, pairwise and browser tests, then redeployed the same day
-- **Status:** all milestones M0 to M11 complete; the latest full run of every suite is green (section 5); a cross-check review is in section 12
+- **Status:** all milestones M0 to M12 complete; the latest full run of every suite is green (section 5); a cross-check review is in section 12
 
 ## 1. Summary
 
@@ -400,3 +400,20 @@ The author asked for the interface to be lightened to match the bright photograp
 ### 16.1 A flaw found in the UI run itself
 
 While re-running the suite many times the staff-cancel step consumed one of James's seeded upcoming bookings on every run, so repeated runs without a reseed eventually failed (the "James sees only his own cars" check found an empty list). The step now creates its own booking through the API and cancels that one, and a dealership-tile wait was made explicit. Three consecutive runs on the same data pass 102 of 102, which is what the earlier claim that the run can be repeated now actually means.
+
+## 17. More UI testing and the mobile review
+
+Requested after the author spotted a header alignment problem on a phone and asked what other UI testing could be done. Skipped by the author and recorded as out of scope: cross-browser, manual accessibility and usability sessions, and heavy data (items 26 to 28 of [OUT_OF_SCOPE.md](OUT_OF_SCOPE.md)). Method and commands are in [TESTING.md](TESTING.md) section 6a.
+
+| Kind | Result | Notes |
+|---|---|---|
+| Layout audit, 7 sizes x 5 screens | 221 of 221 | First run: the phone header was 3 rows and 153 px tall (logo and title, menu, avatar and Sign out each on their own line); also a 320 px title cut and uneven staff filters. All fixed and re-measured |
+| Resilience | 46 of 46 | 5 time zones x 4 checks; 12 network checks; 11 session and navigation checks; random clicking for 3 users (660 steps) with no uncaught error |
+| Visual regression | 11 of 11 | Mutation check: one changed colour failed two comparisons; restored it passed. Baselines are not committed (item 30) |
+| Performance, deployed sign-in page | 10 of 10 | Desktop: FCP 0.78 s, LCP 0.82 s. Phone profile (CPU 4x, Fast 3G): FCP 1.76 s, LCP 2.13 s. Layout shift 0. 292 KB and 225 KB. The phone does not download the large desktop photo |
+| Performance, local build signed in | 18 of 18 | Dashboard after Sign in: 0.23 s desktop, 1.38 s phone profile; times after choosing a date: 71 ms and 466 ms |
+| Existing suites on the final build | all green | Unit 20, integration 104, Python 41 / 11 / 57 / 39 / 55, UI run 102 (three times in a row), public checks 27 local and 29 deployed |
+
+Defects found and fixed in this round: the phone header layout; uneven staff filters; a double click sending two booking requests (safe, because the database lock held, but wasteful and confusing); the page waiting for ever with no message when offline (the data library pauses requests offline by default, and there was no request timeout); sign-in always ending on the home page even after an expired session or a deep link. One flaw in the tests themselves is also recorded: the first resilience script hid its own errors and stopped after 25 of 46 checks without saying so.
+
+Changes to the product: two-row phone header; filters grid; guards against duplicate requests on Confirm, Cancel and Sign in; 20 second request limit and an offline message; requests always attempted so that message appears; sign-in returns to the page that was asked for (same-site paths only, and a deliberate sign-out returns to the home page); a `preview` proxy in `vite.config.ts` so a production build can run locally with the API.

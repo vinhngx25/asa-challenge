@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import type { AppointmentDto, DealershipDto, ServiceTypeDto, SkillId, VehicleDto } from '@asa/shared';
 import { ApiError, api } from '../api';
@@ -44,6 +44,8 @@ export function Book() {
   const [dateChosen, setDateChosen] = useState(false);
   const [startTime, setStartTime] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState<AppointmentDto | null>(null);
+  // Set the moment Confirm is clicked, so a double click cannot send a second request before the button re-renders as disabled.
+  const inFlight = useRef(false);
 
   const ready = Boolean(service && dealership && date);
   const availability = useQuery({
@@ -72,6 +74,9 @@ export function Book() {
   const book = useMutation({
     mutationFn: () =>
       api.book({ vehicleId: vehicle!.id, serviceTypeId: service!.id, dealershipId: dealership!.id, startTime: startTime! }),
+    onSettled: () => {
+      inFlight.current = false;
+    },
     onSuccess: async (appt) => {
       setConfirmed(appt);
       await queryClient.invalidateQueries({ queryKey: ['appointments'] });
@@ -308,7 +313,11 @@ export function Book() {
             </div>
           )}
 
-          <Button className="w-full" disabled={!vehicle || !service || !dealership || !startTime || book.isPending} onClick={() => book.mutate()}>
+          <Button className="w-full" disabled={!vehicle || !service || !dealership || !startTime || book.isPending} onClick={() => {
+              if (inFlight.current) return;
+              inFlight.current = true;
+              book.mutate();
+            }}>
             {book.isPending ? 'Confirming...' : 'Confirm booking'}
           </Button>
         </Card>
