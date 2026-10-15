@@ -131,15 +131,36 @@ The deploy creates structured logs, metrics, X-Ray traces, a CloudWatch dashboar
 
 This project was built with **Alice**, a personal AI engineering assistant created by **Vinh**. Alice runs on Claude Code and treats a single `CLAUDE.md` file as her operating manual.
 
-**How Alice organizes herself**
+**How Alice is organized.** Alice is one git repository. This is its structure (the `asa-challenge` repository you are reading lives inside `workspace/projects/` and is not part of it):
 
-- **Skills** are Python modules, one per repeatable job (build and deploy a site, generate images, research a company, and more). Alice picks the skill that best matches each request using a routing graph built from all her skills, memories and rules.
-- **Memories** hold facts that must not be rediscovered, such as AWS account layout, hosting recipes and tool settings.
-- **Knowledge and working rules** record decisions and lessons as current facts, with git history as the timeline.
-- **Agents** are promoted from sub-tasks that keep recurring.
-- Each request follows a Plan, Do, Check, Act loop. If Alice finds a gap in a skill or a stale fact, she repairs it before ending the session.
+```
+alice/
+  CLAUDE.md        Operating manual Claude Code reads at the start of every session: paths, shell rules,
+                   working rules and the Plan, Do, Check, Act loop
+  architecture.md  How the parts fit together, written as current facts
+  capabilities.md  Generated index of every skill, agent and tool; the fallback when routing finds no match
+  skills/          One Python module per repeatable job (deploy a site, generate images, AWS operations,
+                   browser automation, research). The docstring says when to use it and the steps to follow
+  agents/          Sub-agents promoted from sub-tasks that keep recurring, for example a fullstack
+                   developer agent that turns a requirement into a tested, committed change
+  memories/        Typed facts as Python classes: who the user is, where systems and APIs live, core rules
+  knowledge/       Narrative knowledge: working rules, current context, an optimization log, and the
+                   generated routing and dependency graphs
+  mcp/             Notes on tool servers and the bridge that lets Alice drive the user's Chrome
+  setup/           Maintenance scripts: build and query the routing graph, sync everything after a
+                   change, session hooks, the Chrome extension
+  tests/           Tests for the tooling
+  credentials/     Alice's own API keys (gitignored)
+  data/, tmp/      Runtime state (the routing hint for the current request, execution log) and scratch
+                   files (gitignored)
+  workspace/       Everything Alice works on, kept apart from Alice herself
+    projects/<name>/   One git repository per code project, each with its own remote
+    (other folders)    Client, research and personal working material, organized by topic
+```
 
-**How Alice handles many projects.** Her workspace separates her own knowledge from client and personal work. Every code project lives under `workspace/projects/<name>/` as its own git repository with its own remote (this repository is one of them). Alice finds which repository owns a changed file before every commit and commits each repository separately.
+**How a request flows.** Alice extracts keywords from the request and queries the routing graph, which scores skills, memories and rules and writes a hint file. She follows the best-matching skill (or `capabilities.md` when nothing scores high enough), shows a plan for multi-step work, acts, then checks whether the intent was covered. If a skill has a gap or a memory is stale, she repairs it before the session ends and re-syncs the graphs, so she improves with use. Facts live in `memories/` and `knowledge/` as current state, with git history as the timeline; a project's own credentials stay inside that project, outside git.
+
+**How Alice handles many projects.** Every code project under `workspace/projects/` is its own git repository with its own remote. Alice finds which repository owns a changed file before every commit and commits each repository separately, so work on several projects never mixes.
 
 **What Alice did on this project**
 
