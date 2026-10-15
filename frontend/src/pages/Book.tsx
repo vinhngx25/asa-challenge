@@ -13,7 +13,7 @@ function Step({ n, title, done, disabled, children }: { n: number; title: string
       <h2 id={`step-${n}`} className="mb-3 flex items-center gap-3 text-lg font-bold">
         <span
           className={`flex size-7 items-center justify-center rounded-full text-sm ${
-            done ? 'bg-ok-600 text-white' : 'bg-ink-900 text-white'
+            done ? 'bg-ok-600 text-white' : 'bg-teal-700 text-white'
           }`}
         >
           {done ? '✓' : n}
@@ -323,7 +323,7 @@ function CategoryChip({ active, onClick, label, imageKey }: { active: boolean; o
       onClick={onClick}
       aria-pressed={active}
       className={`flex shrink-0 items-center gap-2 rounded-full py-1.5 pr-4 text-sm font-semibold ring-1 transition-colors ${imageKey ? 'pl-1.5' : 'pl-4'} ${
-        active ? 'bg-ink-900 text-white ring-ink-900' : 'bg-white ring-ink-200 hover:bg-ink-50'
+        active ? 'bg-teal-700 text-white ring-teal-700' : 'bg-white ring-ink-200 hover:bg-ink-50'
       }`}
     >
       {imageKey && <Img k={imageKey} alt="" className="size-7 rounded-full" />}

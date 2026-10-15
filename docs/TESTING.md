@@ -8,7 +8,7 @@ How the project is tested, which tools were used, how to run every suite, and ho
 |---|---|---|
 | Images and thumbnails (38: portraits, places, cars, service art, logo, desktop and mobile hero) | **Google "nano banana" (Gemini image models, `gemini-3.1-flash-image`)** through Alice's image skill | One shared bright, modern style prompt keeps the set consistent. Each image is checked by eye on a contact sheet, then converted to WebP. File names are fixed, so changing the art needs no code change |
 | Real UI testing | **Claude in Chrome**, driven by Alice | Opens the real app in the author's Chrome, signs in as each role, books, cancels, reads the page and captures screenshots. Used on the local app. Browser sign-in on the deployed site is left to the author |
-| Repeatable UI regression | **Playwright** (headless Chromium), `scripts/ui-regression/` | 100 checks that mirror the manual cases, including two browser windows racing for one slot, phone width, keyboard-only sign-in, a broken-image check, a throttled-request message and an automated accessibility scan (axe, WCAG 2.1 A and AA). Optional, with its own `package.json` |
+| Repeatable UI regression | **Playwright** (headless Chromium), `scripts/ui-regression/` | 102 checks that mirror the manual cases, including two browser windows racing for one slot, phone width, keyboard-only sign-in, a broken-image check, a throttled-request message and an automated accessibility scan (axe, WCAG 2.1 A and AA). Optional, with its own `package.json` |
 | API black-box and rare cases | **Python scripts** (standard library only) in `scripts/` | Login, roles, validation, boundaries, pairwise, concurrency, post-deploy smoke test. Run against local or live |
 | Unit and integration | **Vitest** with DynamoDB Local in Docker | Includes the parallel-booking tests, boundary tests and pairwise tests |
 | Manual API calls | `curl` or PowerShell `Invoke-RestMethod` | Examples below |
@@ -25,7 +25,7 @@ How the project is tested, which tools were used, how to run every suite, and ho
 | Input sweep (every text field and parameter) | `python scripts/input_tests.py --base-url <url>` | seeded data | yes (creates no bookings) |
 | Pairwise over HTTP | `python scripts/pairwise_tests.py --base-url <url>` | seeded data | yes |
 | Post-deploy smoke | `python scripts/smoke_test.py --base-url <url>` | deployed site | yes |
-| UI regression, full (100 checks) | see section 6 | local app running, or the deployed site run by you | local by the agent; production by the author (section 6) |
+| UI regression, full (102 checks) | see section 6 | local app running, or the deployed site run by you | local by the agent; production by the author (section 6) |
 | UI public (29 checks, no sign-in) | `node scripts/ui-regression/ui-public.mjs <url>` | nothing | yes |
 
 `<url>` is `http://localhost:3000` for the API on your machine, or the site address. Every script cancels the bookings it makes. All Python scripts exit with code 1 when a check fails, so they can run in CI.
@@ -163,7 +163,7 @@ Alice opened the app in real Chrome, signed in as John Wick, James Bond and Wins
 ### On the deployed site
 
 - **Without a sign-in** (the agent runs this on production): `cd scripts/ui-regression && npm install && node ui-public.mjs https://asa-challenge.fibosolutions.com`. 29 checks: the login page loads and is quick, explains the password and username rules, HSTS, CSP and the other security headers, `http://` redirects to `https://`, no console errors, no failed requests, all images load, no accessibility violations, keyboard order, signed-out redirects for `/`, `/book` and unknown addresses, an invalid saved token, every protected API route answers 401, a forged token is refused, malformed input is a 400, the phone-width layout, and that phones and tablets get the portrait banner while wide screens get the large photo.
-- **With a sign-in** (run by the author): the full 100-check run needs the demo passwords typed into the login form, which the agent does not do on a deployed site. Run it yourself from the same folder: `node ui-run.mjs https://asa-challenge.fibosolutions.com ./shots` (set `CHROME_PATH` if you do not want to download a browser). It cancels what it books and takes about two minutes. The manual sheet [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md) covers the same ground by hand.
+- **With a sign-in** (run by the author): the full 102-check run needs the demo passwords typed into the login form, which the agent does not do on a deployed site. Run it yourself from the same folder: `node ui-run.mjs https://asa-challenge.fibosolutions.com ./shots` (set `CHROME_PATH` if you do not want to download a browser). It cancels what it books, can be repeated straight away (the staff-cancel step books and cancels its own appointment instead of using seeded data) and takes about two minutes. The manual sheet [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md) covers the same ground by hand.
 - **API** on the deployed site: all five Python suites are run by the agent (section 2); they call the API directly and do not use the login form.
 
 ### With Playwright (repeatable)
@@ -178,7 +178,7 @@ node ui-run.mjs http://localhost:5173 ./shots
 
 Optional: `CHROME_PATH=<chrome.exe>` uses an existing browser instead of the downloaded one. The run prints PASS or FAIL per case id (the same ids as the manual sheet), writes screenshots and `results.json` to the folder, cancels the bookings it created and exits 1 on any failure. It can be run repeatedly.
 
-What the 100 checks include: every Must-have customer and staff case, most Should-have cases, keyboard-only sign-in (Tab, type, Enter), deep-link reload, an invalid token, a check that every image on the booking page loads, no sideways scrolling at 390 px on four pages, and a **two-window race**: window A and window B both reach the last free slot, A confirms first, B then sees the conflict message with the four nearest times and books one of them.
+What the 102 checks include: every Must-have customer and staff case, most Should-have cases, keyboard-only sign-in (Tab, type, Enter), deep-link reload, an invalid token, a check that every image on the booking page loads, no sideways scrolling at 390 px on four pages, and a **two-window race**: window A and window B both reach the last free slot, A confirms first, B then sees the conflict message with the four nearest times and books one of them.
 
 ## 7. Defects found by testing
 

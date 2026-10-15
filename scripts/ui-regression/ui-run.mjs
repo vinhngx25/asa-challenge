@@ -101,6 +101,15 @@ try {
     await page.getByRole('heading', { name: 'John Wick' }).waitFor();
     check('C-M01', 'John signs in and sees his dashboard', true);
     const tabs = await page.getByRole('tab').allInnerTexts();
+    // The interface is light, not just the photographs: header, welcome card and text colours are measured.
+    const tone = await page.evaluate(() => {
+      const norm = (css) => { const c = document.createElement('canvas').getContext('2d'); c.fillStyle = css; return c.fillStyle; };
+      const lum = (css) => { const v = norm(css); if (v.startsWith('oklab(')) return Number(v.match(/[\d.]+/)[0]) ** 3; const m = v.startsWith('#') ? [1, 3, 5].map((i) => parseInt(v.slice(i, i + 2), 16)) : v.startsWith('color(') ? v.match(/[\d.]+/g).slice(0, 3).map((x) => Number(x) * 255) : v.match(/[\d.]+/g).slice(0, 3).map(Number); const f = (x) => { x /= 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(m[0]) + 0.7152 * f(m[1]) + 0.0722 * f(m[2]); };
+      const header = document.querySelector('header');
+      const card = document.querySelector('h1').closest('section');
+      return { headerBg: lum(getComputedStyle(header).backgroundColor), headerText: lum(getComputedStyle(header.querySelector('span')).color), cardImage: getComputedStyle(card).backgroundImage !== 'none', cardText: lum(getComputedStyle(document.querySelector('h1')).color) };
+    });
+    check('N-15', 'the navigation bar is light with dark text, and the welcome card is a light gradient with dark text', tone.headerBg > 0.8 && tone.headerText < 0.1 && tone.cardImage && tone.cardText < 0.1, JSON.stringify(tone));
     check('C-M01b', 'dashboard shows Upcoming / Completed / Cancelled tabs', tabs.length === 3, tabs.join(' | '));
     const own = await page.locator('article').allInnerTexts();
     check('C-M11a', 'John sees only his own cars', own.length > 0 && own.every((t) => /JW\d\d/.test(t)));
@@ -134,6 +143,7 @@ try {
   const james = await newPage();
   await signIn(james.page, 'JamesBond');
   await james.page.getByRole('heading', { name: 'James Bond' }).waitFor();
+  await james.page.locator('article').first().waitFor();
   const jv = (await james.page.locator('article').allInnerTexts());
   check('C-M11b', 'James sees only his own cars', jv.length > 0 && jv.every((t) => /JB\d\d/.test(t)));
   await startBooking(james.page, { vehicle: 'Toyota 2000GT', service: 'Oil & Filter Change', dealership: 'Northern Quarter Garage' });
@@ -228,6 +238,8 @@ try {
   const staff = await newPage();
   await signIn(staff.page, 'Winston');
   await staff.page.getByRole('heading', { name: 'All bookings' }).waitFor();
+  await staff.page.locator('section[aria-label="Dealerships"] button').nth(2).waitFor();
+  await staff.page.locator('article').first().waitFor();
   check('S-M01', 'staff sees All bookings with summary and dealership tiles', (await staff.page.locator('section[aria-label="Summary"] > div').count()) === 4 && (await staff.page.locator('section[aria-label="Dealerships"] button').count()) === 3);
   const who = new Set((await staff.page.locator('article').allInnerTexts()).map((t) => (t.match(/CUSTOMER\n(.+)/) ?? [])[1]));
   check('S-M01b', 'staff sees both customers', who.has('John Wick') && who.has('James Bond'));
@@ -299,8 +311,18 @@ try {
   check('T-21', 'extra spaces around search words are ignored', (await staff.page.locator('article').count()) >= 1);
   await staff.page.getByRole('button', { name: 'Clear filters' }).click();
   await staff.page.waitForTimeout(400);
-  const jamesCard = staff.page.locator('article').filter({ hasText: 'James Bond' }).filter({ hasText: 'Upcoming' }).first();
-  const jamesRef = (await jamesCard.innerText()).match(/ASA-[0-9A-F]{8}/)[0];
+  // The run makes its own booking for James through the API and cancels that one, so seeded data is never used up
+  // and the run can be repeated. (cleanup() at the end removes anything left on the test day.)
+  const jLogin = await (await staff.ctx.request.post(BASE + '/api/auth/login', { data: { username: 'JamesBond', password: 'JamesBond' } })).json();
+  const jHeaders = { Authorization: `Bearer ${jLogin.token}` };
+  const free = await (await staff.ctx.request.get(`${BASE}/api/availability?dealershipId=kensington&serviceTypeId=oil-change&date=${DAY}&vehicleId=bond-esprit`, { headers: jHeaders })).json();
+  const lastFree = free.slots.filter((s) => s.available).at(-1);
+  const made = await (await staff.ctx.request.post(BASE + '/api/appointments', { headers: jHeaders, data: { vehicleId: 'bond-esprit', serviceTypeId: 'oil-change', dealershipId: 'kensington', startTime: lastFree.startTime } })).json();
+  await staff.page.reload();
+  await staff.page.getByRole('heading', { name: 'All bookings' }).waitFor();
+  const jamesCard = staff.page.locator('article').filter({ hasText: made.reference });
+  await jamesCard.waitFor();
+  const jamesRef = made.reference;
   await jamesCard.getByRole('button', { name: 'Cancel booking' }).click();
   check('S-M03a', "staff's cancel prompt names the customer", await jamesCard.getByText(/Cancel James Bond's booking/).isVisible());
   await jamesCard.getByRole('button', { name: 'Yes, cancel' }).click();
@@ -454,8 +476,11 @@ try {
     await tb.page.getByLabel('Show password').uncheck();
     check('T-25c', 'and hides it again', (await pass.getAttribute('type')) === 'password');
     const help = await tb.page.getByRole('region', { name: 'Sign-in help' }).innerText();
-    check('T-26', 'the Sign-in help panel states who signs in, the username and password rules, session length and that this is a demo',
-      /Customers and staff sign in on this page/.test(help) && /Username: up to 32 characters, case sensitive/.test(help) && /Password: up to 32 characters, case sensitive, and no spaces/.test(help) && /8 hours/.test(help) && /demo/.test(help) && /README/.test(help), help.replace(/\n+/g, ' | ').slice(0, 250));
+    check('T-26', 'the Sign-in help panel states who signs in, the session length and that this is a demo',
+      /Customers and staff sign in on this page/.test(help) && /8 hours/.test(help) && /demo/.test(help) && /README/.test(help), help.replace(/\n+/g, ' | ').slice(0, 250));
+    const fullText = await tb.page.locator('body').innerText();
+    check('T-27', 'the username and password rules are shown once, under the boxes, and not repeated in the help panel',
+      (fullText.match(/Up to 32 characters/g) ?? []).length === 2 && !/Username: up to/.test(help) && !/Password: up to/.test(help), `count=${(fullText.match(/Up to 32 characters/g) ?? []).length}`);
     check('T-12', 'the login form still works after all of that', await tb.page.getByRole('button', { name: 'Sign in' }).isEnabled());
     await tb.ctx.close();
 

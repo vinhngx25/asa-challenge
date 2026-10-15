@@ -13,6 +13,13 @@
   --color-ink-800: #172a4a;
   --color-ink-900: #0b1f3a;
 
+  /* Turquoise from the photographs: tints for light surfaces, 700 and 800 for text and fills that need contrast */
+  --color-teal-50: #e8fafb;
+  --color-teal-100: #c7f0f3;
+  --color-teal-200: #94e0e6;
+  --color-teal-700: #0b7f8a;
+  --color-teal-800: #0a6670;
+
   --color-brand-50: #fff8eb;
   --color-brand-100: #ffecc7;
   --color-brand-400: #fbb94a;

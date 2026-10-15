@@ -35,12 +35,11 @@ export function Login() {
 
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
-      <div className="relative hidden bg-ink-900 lg:block">
+      <div className="relative hidden bg-teal-50 lg:block">
         <Img k="app-hero" alt="A bright modern car workshop with mechanics and a booking calendar" className="absolute inset-0 size-full" />
-        <div className="absolute inset-x-0 bottom-0 h-3/5 bg-linear-to-t from-ink-900/85 via-ink-900/45 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 p-10 text-white">
-          <h2 className="max-w-md text-3xl font-bold leading-tight">A bay and a qualified technician, confirmed before you book.</h2>
-          <p className="mt-3 max-w-md text-ink-200">
+        <div className="absolute inset-x-8 bottom-8 max-w-lg rounded-2xl bg-white/90 p-6 text-ink-900 shadow-lg ring-1 ring-white backdrop-blur">
+          <h2 className="text-2xl font-bold leading-tight">A bay and a qualified technician, confirmed before you book.</h2>
+          <p className="mt-2 text-ink-700">
             No more phone tag. Pick your vehicle, the service and a time, and see instantly what the dealership can serve.
           </p>
         </div>
@@ -50,8 +49,7 @@ export function Login() {
         {/* Phones and tablets get their own portrait picture as a banner; wide screens use the large picture on the left. */}
         <div className="relative h-52 w-full overflow-hidden sm:h-64 lg:hidden">
           <Img k="app-hero-mobile" alt="A friendly mechanic in a bright modern workshop" className="size-full object-[50%_30%]" />
-          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-ink-900/70 to-transparent" />
-          <p className="absolute inset-x-0 bottom-0 px-6 pb-4 text-lg font-bold leading-snug text-white sm:text-xl">
+          <p className="absolute inset-x-3 bottom-3 rounded-xl bg-white/90 px-4 py-2.5 text-base font-bold leading-snug text-ink-900 shadow backdrop-blur sm:inset-x-6 sm:bottom-4 sm:text-lg">
             A bay and a qualified technician, confirmed before you book.
           </p>
         </div>
@@ -145,8 +143,6 @@ export function Login() {
             </h2>
             <ul className="list-disc space-y-1.5 pl-5">
               <li>Customers and staff sign in on this page. Customers go to My bookings, staff to All bookings.</li>
-              <li>Username: up to {LIMITS.username} characters, case sensitive.</li>
-              <li>Password: up to {LIMITS.password} characters, case sensitive, and no spaces (no tabs or line breaks either).</li>
               <li>You stay signed in for 8 hours. On a shared computer, use Sign out when you finish.</li>
               <li>This is a demo: accounts are fixed and cannot be created, changed or reset here. The demo accounts are listed in the project README.</li>
             </ul>

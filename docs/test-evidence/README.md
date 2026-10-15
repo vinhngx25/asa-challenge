@@ -16,7 +16,7 @@ Results from the author's runs (Alice). Full detail, tool notes and method: [../
 | `scripts/pairwise_tests.py` | local and live | 39 of 39 |
 | `scripts/smoke_test.py` | live | 10 of 10 |
 | `scripts/ui-regression/ui-public.mjs` (browser, no sign-in) | **live** 29 of 29 after the final deploy; local 27 of 27 |
-| Playwright UI regression (`scripts/ui-regression`) | local app | 100 of 100 (includes the sign-in help, live password feedback, the text box limits and hostile input, staff search, date suggestion, throttled message and WCAG 2.1 AA scans of four screens) |
+| Playwright UI regression (`scripts/ui-regression`) | local app | 102 of 102 (includes the light-interface measurement, the sign-in help, live password feedback, the text box limits and hostile input, staff search, date suggestion, throttled message and WCAG 2.1 AA scans of four screens) |
 
 "Live" is `https://asa-challenge.fibosolutions.com` on AWS (CloudFront, API Gateway, Lambda, DynamoDB).
 

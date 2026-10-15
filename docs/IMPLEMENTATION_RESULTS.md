@@ -22,7 +22,7 @@ What was built, how it differs from the design, what was tested and what was not
 | Observability | Structured logs, custom metrics, X-Ray tracing, dashboard, 5 alarms |
 | Reviewer can follow the README to build, run, test and deploy | Rehearsed from a fresh clone: install, build, unit tests, seed, integration tests (section 6) |
 | Boundary and pairwise testing | Done: 26 boundary tests and 38 pairwise rows in the integration suite, plus 55 boundary and 39 pairwise HTTP checks that also run on the live site (sections 5.2 and 5.3) |
-| Real UI testing | Claude in Chrome for exploratory runs, plus a repeatable Playwright run of 100 checks including text-box limits and accessibility scans (section 5.4) |
+| Real UI testing | Claude in Chrome for exploratory runs, plus a repeatable Playwright run of 102 checks including text-box limits and accessibility scans (section 5.4) |
 | Manual test cases for a person, by priority | [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md): 14 must have, 21 should have, 12 nice to have |
 | Tools recorded | Google nano banana for images, Claude in Chrome and Playwright for the UI, Python and curl for the API (section 10, [TESTING.md](TESTING.md)) |
 
@@ -167,7 +167,7 @@ The race script fires every scenario at the same instant with a barrier. On the 
 
 A defect found and fixed during the first run: the "Sign out" text was too faint against the header. The staff list was also reordered so upcoming bookings come first.
 
-**Playwright regression, 100 of 100 passed** (`scripts/ui-regression/ui-run.mjs`, run twice to prove it cleans up after itself). It uses the case ids of the manual sheet: every Must-have customer and staff case, most Should-have cases and several Nice-to-have cases. Highlights:
+**Playwright regression, 102 of 102 passed, three runs in a row on the same data** (`scripts/ui-regression/ui-run.mjs`, run twice to prove it cleans up after itself). It uses the case ids of the manual sheet: every Must-have customer and staff case, most Should-have cases and several Nice-to-have cases. Highlights:
 
 - Two browser windows act as two people. Both reach the last free slot; window A confirms; window B is refused with the message and the four nearest times and books one of them.
 - Taken and overlapping times are greyed out while back-to-back times stay open; a vehicle booked elsewhere is greyed everywhere.
@@ -338,7 +338,7 @@ Run against https://asa-challenge.fibosolutions.com after the final deploy.
 |---|---|---|
 | API: smoke, API, race, boundary, pairwise and input-sweep scripts | agent | 10, 38, 11, 57, 39 and 55 checks pass |
 | Browser, no sign-in (`ui-public.mjs`): page load speed, security headers, HTTP to HTTPS, console and network cleanliness, images, accessibility scan, keyboard order, signed-out redirects, API 401 shapes, forged token, malformed input, phone width | agent | 25 of 25 pass (login page loaded in about 0.6 s) |
-| Browser, signed in (`ui-run.mjs`, 100 checks) or the manual sheet | author | not run by the agent: it does not type the demo passwords into the login form of a deployed site. The same 100 checks pass on the local app; the author runs them on production with one command (see [TESTING.md](TESTING.md) section 6) |
+| Browser, signed in (`ui-run.mjs`, 102 checks) or the manual sheet | author | not run by the agent: it does not type the demo passwords into the login form of a deployed site. The same 102 checks pass on the local app; the author runs them on production with one command (see [TESTING.md](TESTING.md) section 6) |
 | Infrastructure: metrics, alarms, traces, logs, certificate | agent | verified in section 12.4 |
 
 The API scripts and the browser run exercise the same code. The browser run adds the screens and the rendering, which is why it is the part left for a person to run on production.
@@ -366,7 +366,7 @@ The author's rule: a password has at most 32 characters and **no spaces**. It is
 
 ### 14.2 Sign-in page guidance
 
-Added at the author's request so customers and staff know the rules before they type. The page now has: a live counter on each box (`8 / 32`), the rule under each box (username up to 32 characters and case sensitive; password up to 32 characters, no spaces, case sensitive), a red warning the moment a password contains white space, a Show password option, and a **Sign-in help** panel (customers and staff use the same page and land on their own start page; the username and password rules; an 8 hour session and a reminder to sign out on a shared computer; this is a demo with fixed accounts that cannot be created or reset, listed in the README). The demo passwords are not shown on the page, so the gate keeps its purpose. Browser checks T-23 to T-26 and the public check P-22 cover it; the page still passes the accessibility scan and has no sideways scrolling at 390 px.
+Added at the author's request so customers and staff know the rules before they type. The page now has: a live counter on each box (`8 / 32`), the rule under each box (username up to 32 characters and case sensitive; password up to 32 characters, no spaces, case sensitive), a red warning the moment a password contains white space, a Show password option, and a **Sign-in help** panel (customers and staff use the same page and land on their own start page; an 8 hour session and a reminder to sign out on a shared computer; this is a demo with fixed accounts that cannot be created or reset, listed in the README). The demo passwords are not shown on the page, so the gate keeps its purpose. Browser checks T-23 to T-26 and the public check P-22 cover it; the page still passes the accessibility scan and has no sideways scrolling at 390 px.
 
 ### 14.3 Browser sign-in on deployed hosts
 
@@ -388,3 +388,15 @@ After the cinematic set the author found the screens too dark and asked for a br
 Changes in the code: the sign-in page shows the portrait banner below the large-screen breakpoint and the wide photo above it, with a lighter text scrim on the wide photo. Square and 4:3 images (avatars, cards, thumbnails) are used at every size and were generated once. File names are unchanged apart from the new `app-hero-mobile`. Checks added: the phone shows the banner and hides the desktop photo, the tablet shows the banner without sideways scrolling, and wide screens show the large photo and hide the banner. The full 100-check UI run, the accessibility scans and the public checks pass with the new art.
 
 Still dark by design: the navigation bar and the welcome card on the dashboard use the deep navy of the colour scheme. They are interface colours, not images; they can be lightened if the author wants the whole interface brighter.
+
+### 14.4 Duplicate rule text on the sign-in page (found by the author)
+
+The username and password rules were printed under each box and again in the Sign-in help panel. They now appear once, under the boxes, where people need them; the panel keeps who signs in, the session length and the demo note. A check (T-27) fails if the rules are repeated.
+
+## 16. Light interface
+
+The author asked for the interface to be lightened to match the bright photographs. Changes: the navigation bar is white with dark text and a soft shadow (it was deep navy); the active menu item is turquoise; the dashboard welcome card is a turquoise-to-warm gradient with dark text (it was a solid navy block); step numbers and the selected category chip use turquoise; on the sign-in page the caption on the wide photo is a light frosted card instead of a dark scrim, and on phones the banner caption is a light pill. Turquoise tokens were added to `index.css`; the amber action colour is unchanged. A measured check (N-15) confirms the bar is light with dark text and the welcome card is a gradient with dark text, and the accessibility scans still pass with no violations.
+
+### 16.1 A flaw found in the UI run itself
+
+While re-running the suite many times the staff-cancel step consumed one of James's seeded upcoming bookings on every run, so repeated runs without a reseed eventually failed (the "James sees only his own cars" check found an empty list). The step now creates its own booking through the API and cancels that one, and a dealership-tile wait was made explicit. Three consecutive runs on the same data pass 102 of 102, which is what the earlier claim that the run can be repeated now actually means.

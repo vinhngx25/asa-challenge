@@ -27,13 +27,13 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-ink-900 p-5 text-white sm:p-6">
+      <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-linear-to-r from-teal-100 via-teal-50 to-brand-100 p-5 text-ink-900 ring-1 ring-teal-200 sm:p-6">
         <div className="flex items-center gap-4">
           <Avatar k={user.imageKey} name={user.displayName} size={64} />
           <div>
-            <p className="text-sm text-ink-300">Welcome back</p>
+            <p className="text-sm text-ink-600">Welcome back</p>
             <h1 className="text-2xl font-bold leading-tight">{user.displayName}</h1>
-            <p className="text-sm text-ink-200">
+            <p className="text-sm text-ink-700">
               {groups.upcoming.length} upcoming · {groups.past.length} completed
             </p>
           </div>
