@@ -6,7 +6,8 @@
   "description": "Optional real-browser UI regression for the ASA challenge (separate from the npm workspaces)",
   "scripts": {
     "setup": "playwright install chromium",
-    "test": "node ui-run.mjs"
+    "test": "node ui-run.mjs",
+    "test:public": "node ui-public.mjs"
   },
   "dependencies": {
     "playwright": "^1.64.1",

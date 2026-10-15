@@ -164,6 +164,10 @@ npm run destroy
 
 Structured JSON logs, business and technical metrics, X-Ray traces, a CloudWatch dashboard and alarms are created by the deploy. The dashboard name is printed at the end of `npm run deploy`. See section 8 of the design document.
 
+## Scope and known limitations
+
+The brief is delivered and tested: book against a free bay and a qualified technician for the whole duration, check availability in real time, and store a confirmed appointment linking customer, vehicle, technician and bay. Weak points found along the way (for example the shared API throttle, the public demo passwords, technician allocation, service ordering, staff list pagination, rescheduling and notifications) are acknowledged and **deliberately out of scope for this version**. They are listed with reasons in [docs/OUT_OF_SCOPE.md](docs/OUT_OF_SCOPE.md).
+
 ## Cost
 
 All services are pay-per-use (Lambda, DynamoDB on-demand, API Gateway, CloudFront, S3). The demo costs cents per month when idle.

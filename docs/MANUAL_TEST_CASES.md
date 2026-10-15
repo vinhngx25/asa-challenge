@@ -12,7 +12,7 @@ Mark each result in the **Result** column: `P` pass, `F` fail, `-` skipped. Writ
 
 ## Before you start
 
-- **Site:** https://asa-challenge.fibosolutions.com (or `http://localhost:5173` when run locally; Vite prints the port).
+- **Site:** https://asa-challenge.fibosolutions.com (or `http://localhost:5173` when run locally; Vite prints the port). The production data was reset after the last deploy, so the starting state is the seeded one.
 - **Accounts** (case sensitive, password equals the username): `JoinWick` (customer), `JamesBond` (customer), `Winston` (staff).
 - **Use two browser windows when a case says so**: a normal window and a private/incognito window, so two people can be signed in at once.
 - **Pick a test day:** choose a weekday (Monday to Saturday) one to three weeks ahead. Use the same day in every case so bookings collide on purpose. Called **DAY** below.

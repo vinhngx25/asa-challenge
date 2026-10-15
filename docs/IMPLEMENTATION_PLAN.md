@@ -78,6 +78,7 @@ Status: all milestones complete. Outcomes, deviations from the design and test r
 - [x] Walk through customer and staff journeys as users; fix friction found
 - [x] Accessibility scan; fix contrast
 - [x] Redeploy and re-run the live suites
+- [x] Record weak points and open questions as acknowledged, out of scope (docs/OUT_OF_SCOPE.md)
 
 ## Working agreements
 

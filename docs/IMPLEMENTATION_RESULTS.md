@@ -307,9 +307,12 @@ Method: each requirement and design claim was traced to the code that implements
 | Certificate | wildcard `*.fibosolutions.com` from Amazon, TLS 1.3, valid until February 2027 (ACM renews it) |
 | Throttling | works as configured (see 12.2) |
 
-### 12.5 Open points for a decision (not changed)
+### 12.5 Open points: acknowledged, out of scope for this version
 
-| # | Point | Why it matters | Option |
+These are recorded so the limits are visible. They are not open for discussion in this version and none changes the delivered behaviour; the maintained list, with reasons and what a next version would do, is [OUT_OF_SCOPE.md](OUT_OF_SCOPE.md) (22 items).
+
+
+| # | Point | Why it matters | What a next version could do |
 |---|---|---|---|
 | 1 | The throttle (50 requests per second, burst 100) is shared by all callers | One client flooding the API slows everyone | Per-IP rate rule with AWS WAF (small monthly cost), or accept for a demo |
 | 2 | Demo passwords are published and there is no per-account lockout | Fine for a gate on a public repo, not for real users | Managed identity provider (Cognito) if this ever leaves demo status |
@@ -321,3 +324,16 @@ Method: each requirement and design claim was traced to the code that implements
 | 8 | The staff summary tiles ignore the filters | Could be read as the filtered count | Label them "all bookings" or make them follow the filter |
 | 9 | Seeded dates are relative to the day of the last seed | Demo data ages | Re-seed before a demo |
 | 10 | Accounts and cars refer to film characters; the portraits are fictional but evocative | A professional audience may read it as unserious or as borrowed branding | Neutral names and cars if the hiring team should not see the references |
+
+## 13. Production verification
+
+Run against https://asa-challenge.fibosolutions.com after the final deploy.
+
+| Layer | Who ran it | Result |
+|---|---|---|
+| API: smoke, API, race, boundary and pairwise scripts | agent | 10, 38, 11, 55 and 39 checks pass |
+| Browser, no sign-in (`ui-public.mjs`): page load speed, security headers, HTTP to HTTPS, console and network cleanliness, images, accessibility scan, keyboard order, signed-out redirects, API 401 shapes, forged token, malformed input, phone width | agent | 25 of 25 pass (login page loaded in about 0.6 s) |
+| Browser, signed in (`ui-run.mjs`, 64 checks) or the manual sheet | author | not run by the agent: it does not type the demo passwords into the login form of a deployed site. The same 64 checks pass on the local app; the author runs them on production with one command (see [TESTING.md](TESTING.md) section 6) |
+| Infrastructure: metrics, alarms, traces, logs, certificate | agent | verified in section 12.4 |
+
+The API scripts and the browser run exercise the same code. The browser run adds the screens and the rendering, which is why it is the part left for a person to run on production.

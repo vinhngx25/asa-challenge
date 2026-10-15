@@ -24,7 +24,8 @@ How the project is tested, which tools were used, how to run every suite, and ho
 | Boundary over HTTP | `python scripts/boundary_tests.py --base-url <url>` | seeded data | yes |
 | Pairwise over HTTP | `python scripts/pairwise_tests.py --base-url <url>` | seeded data | yes |
 | Post-deploy smoke | `python scripts/smoke_test.py --base-url <url>` | deployed site | yes |
-| UI regression | see section 6 | local app running | no (signs in through the browser; use locally) |
+| UI regression, full (64 checks) | see section 6 | local app running, or the deployed site run by you | local by the agent; production by the author (section 6) |
+| UI public (25 checks, no sign-in) | `node scripts/ui-regression/ui-public.mjs <url>` | nothing | yes |
 
 `<url>` is `http://localhost:3000` for the API on your machine, or the site address. Every script cancels the bookings it makes. All Python scripts exit with code 1 when a check fails, so they can run in CI.
 
@@ -131,6 +132,12 @@ Alice opened the app in real Chrome, signed in as John Wick, James Bond and Wins
 
 - Chrome slows background-tab timers and stops rendering them, so keep one tab in front. If screenshots time out, wait or bring the window forward.
 - Run it against the local app. Entering demo passwords into the deployed site through the browser is left to the human.
+
+### On the deployed site
+
+- **Without a sign-in** (the agent runs this on production): `cd scripts/ui-regression && npm install && node ui-public.mjs https://asa-challenge.fibosolutions.com`. 25 checks: the login page loads and is quick, HSTS, CSP and the other security headers, `http://` redirects to `https://`, no console errors, no failed requests, all images load, no accessibility violations, keyboard order, signed-out redirects for `/`, `/book` and unknown addresses, an invalid saved token, every protected API route answers 401, a forged token is refused, malformed input is a 400, and the phone-width layout.
+- **With a sign-in** (run by the author): the full 64-check run needs the demo passwords typed into the login form, which the agent does not do on a deployed site. Run it yourself from the same folder: `node ui-run.mjs https://asa-challenge.fibosolutions.com ./shots` (set `CHROME_PATH` if you do not want to download a browser). It cancels what it books and takes about two minutes. The manual sheet [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md) covers the same ground by hand.
+- **API** on the deployed site: all five Python suites are run by the agent (section 2); they call the API directly and do not use the login form.
 
 ### With Playwright (repeatable)
 

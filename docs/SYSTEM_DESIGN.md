@@ -310,6 +310,7 @@ Mutation checks confirm the tests can fail: the database lock writes were broken
 6. No buffer time between jobs. No holidays, breaks or multi-day jobs.
 7. Customers and vehicles are seeded; there is no registration screen.
 8. Out of scope: payments, notifications, rescheduling (cancel and rebook instead), waitlists, real identity provider.
+9. Weak points found by review (shared throttle, public demo passwords, lock growth, technician allocation, service ordering, staff pagination and more) are acknowledged and deliberately left out of this version. The full list, with the reason and what a next version would do, is in [OUT_OF_SCOPE.md](OUT_OF_SCOPE.md).
 
 ## 15. Visual design
 
