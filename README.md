@@ -18,7 +18,7 @@ An appointment scheduler for car dealerships that replaces manual booking. A cus
 | Customer | Log in, see a dashboard of their own bookings, book a service (vehicle, service type, dealership, date and time), see why a slot is unavailable and which times are free, cancel a booking and release its resources |
 | Staff | Log in, see every booking across all dealerships, filter by dealership, date and status, cancel any booking |
 
-### Demo accounts (case sensitive; username and password are at most 32 characters)
+### Demo accounts (case sensitive; username and password are at most 32 characters; a password contains no spaces)
 
 | Username | Password | Role |
 |---|---|---|
@@ -76,7 +76,7 @@ Full guide, including how to call the API by hand: [docs/TESTING.md](docs/TESTIN
 
 ```bash
 npm test                    # 16 unit tests (Vitest)
-npm run test:integration    # 103 tests on DynamoDB Local: booking, API, boundary values, pairwise, parallel bookings
+npm run test:integration    # 104 tests on DynamoDB Local: booking, API, boundary values, pairwise, parallel bookings
 
 # black-box scripts, no installs needed (Python standard library). Seeded data required; each cancels what it books.
 python scripts/api_tests.py      --base-url http://localhost:3000   # login, roles, validation, cancel frees slots
@@ -94,7 +94,7 @@ The same Python scripts run unchanged against the deployed site (`--base-url htt
 npm run dev                                   # in one terminal
 cd scripts/ui-regression
 npm install && npx playwright install chromium
-node ui-run.mjs http://localhost:5173 ./shots # 87 checks, screenshots in ./shots, exit code 1 on failure
+node ui-run.mjs http://localhost:5173 ./shots # 92 checks, screenshots in ./shots, exit code 1 on failure
 ```
 
 ### Manual test cases

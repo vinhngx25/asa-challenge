@@ -84,9 +84,19 @@ try {
     await signIn(page, 'JoinWick', 'wrong');
     await page.getByRole('alert').waitFor();
     check('C-M03a', 'wrong password rejected', /Incorrect/.test(await page.getByRole('alert').innerText()));
-    await signIn(page, 'JoinWick', 'Join Wick');
-    await page.getByRole('alert').waitFor();
-    check('C-M03b', 'password with a space rejected', /Incorrect/.test(await page.getByRole('alert').innerText()));
+    {
+      // A password cannot contain spaces: the form stops it with a message and sends nothing.
+      let sent = 0;
+      page.on('request', (rq) => rq.url().includes('/api/auth/login') && sent++);
+      await page.goto(BASE + '/login');
+      await page.getByLabel('Username').fill('JoinWick');
+      await page.getByLabel('Password').fill('Join Wick');
+      await page.getByRole('button', { name: 'Sign in' }).click();
+      await page.waitForTimeout(400);
+      const msg = await page.getByLabel('Password').evaluate((el) => el.validationMessage);
+      check('C-M03b', 'a password with a space is stopped by the form with "Password cannot contain spaces" and nothing is sent', sent === 0 && /Password cannot contain spaces/.test(msg), `sent=${sent} message=${msg}`);
+      check('C-M03c', 'the login page tells people the rule: up to 32 characters, no spaces', /Up to 32 characters, no spaces/.test(await page.locator('form').innerText()));
+    }
     await signIn(page, 'JoinWick');
     await page.getByRole('heading', { name: 'John Wick' }).waitFor();
     check('C-M01', 'John signs in and sees his dashboard', true);
@@ -403,7 +413,7 @@ try {
     await tb.page.getByRole('button', { name: 'Sign in' }).click();
     await tb.page.waitForTimeout(400);
     check('T-07', 'an empty username is stopped by the form: no request is sent', requests === 0 && (await user.evaluate((el) => el.validity.valueMissing)));
-    r = await submit('<img src=x onerror=__xss=1>', "' OR 1=1 --");
+    r = await submit('<img src=x onerror=__xss=1>', "'OR'1'='1'--");
     check('T-08', 'HTML and SQL-like text is answered 401, never executed or echoed', r.status === 401 && !/<img/.test(r.message) && (await tb.page.evaluate(() => window.__xss)) === undefined, JSON.stringify(r));
     r = await submit('\u{1F697}'.repeat(20), 'p');
     check('T-09', '20 emoji typed into Username: the box keeps 32 units (16 emoji) and the server answers 401', (await user.inputValue()).length === 32 && r.status === 401, JSON.stringify(r));
@@ -411,6 +421,18 @@ try {
     check('T-10', 'accented, Japanese and Arabic text in Username is answered 401', r.status === 401, JSON.stringify(r));
     r = await submit('a'.repeat(5000), 'b'.repeat(5000), { fill: true });
     check('T-11', 'pasting 5,000 characters into both boxes keeps 32 in each, so nothing over-long is ever sent (answered 401)', (await user.inputValue()).length === 32 && (await pass.inputValue()).length === 32 && r.status === 401, JSON.stringify({ status: r.status, user: (await user.inputValue()).length }));
+    // A password with spaces, tabs or other white space never leaves the form.
+    for (const bad of ['a b', ' ab', 'ab ', '   ']) {
+      let sentNow = 0;
+      const count = (rq) => rq.url().includes('/api/auth/login') && sentNow++;
+      tb.page.on('request', count);
+      await user.fill('JoinWick');
+      await pass.fill(bad);
+      await tb.page.getByRole('button', { name: 'Sign in' }).click();
+      await tb.page.waitForTimeout(250);
+      check('T-22', `password ${JSON.stringify(bad)} is stopped by the form (nothing sent)`, sentNow === 0 && (await pass.evaluate((el) => !el.validity.valid)));
+      tb.page.off('request', count);
+    }
     check('T-12', 'the login form still works after all of that', await tb.page.getByRole('button', { name: 'Sign in' }).isEnabled());
     await tb.ctx.close();
 

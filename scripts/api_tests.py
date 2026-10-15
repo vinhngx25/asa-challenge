@@ -20,9 +20,12 @@ def main():
     # Login
     status, body = api.call("GET", "/health")
     r.check("health is public", status == 200 and body["status"] == "ok")
-    for user, pw in [("joinwick", "JoinWick"), ("JoinWick", "joinwick"), ("JoinWick", "Join Wick"), ("Nobody", "x")]:
+    for user, pw in [("joinwick", "JoinWick"), ("JoinWick", "joinwick"), ("Nobody", "x")]:
         s, b = api.call("POST", "/auth/login", body={"username": user, "password": pw})
         r.check(f"login rejects {user!r}/{pw!r}", s == 401 and b["error"]["code"] == "INVALID_CREDENTIALS")
+    for pw in ["Join Wick", " JoinWick", "JoinWick ", "Join\tWick"]:
+        s, b = api.call("POST", "/auth/login", body={"username": "JoinWick", "password": pw})
+        r.check(f"login refuses a password with white space {pw!r} as invalid input", s == 400 and b["error"]["code"] == "INVALID_INPUT" and "spaces" in b["error"]["message"])
     s, b = api.call("POST", "/auth/login", body={"username": ""})
     r.check("login validates the body", s == 400 and b["error"]["code"] == "INVALID_INPUT")
 

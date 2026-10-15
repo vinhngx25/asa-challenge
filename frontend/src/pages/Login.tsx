@@ -72,9 +72,19 @@ export function Login() {
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
               maxLength={LIMITS.password}
+              pattern="\S+"
+              onInvalid={(e) => {
+                const el = e.currentTarget;
+                el.setCustomValidity(el.validity.patternMismatch ? 'Password cannot contain spaces' : '');
+              }}
+              onInput={(e) => e.currentTarget.setCustomValidity('')}
+              aria-describedby="password-hint"
               required
               className="w-full rounded-lg border-0 bg-white px-3 py-2.5 ring-1 ring-ink-200 focus:ring-2 focus:ring-brand-500"
             />
+            <span id="password-hint" className="mt-1 block text-xs text-ink-500">
+              Up to {LIMITS.password} characters, no spaces.
+            </span>
           </label>
 
           {error && <ErrorNote>{error}</ErrorNote>}

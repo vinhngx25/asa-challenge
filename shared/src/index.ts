@@ -77,7 +77,8 @@ export const idSchema = z.string().min(1).max(LIMITS.id);
 
 export const loginRequestSchema = z.object({
   username: z.string().min(1).max(LIMITS.username),
-  password: z.string().min(1).max(LIMITS.password),
+  /** No white space at all: no space, tab, new line or non-breaking space. */
+  password: z.string().min(1).max(LIMITS.password).regex(/^\S+$/, 'Password cannot contain spaces'),
 });
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 

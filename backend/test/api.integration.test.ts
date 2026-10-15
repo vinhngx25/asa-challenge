@@ -53,7 +53,11 @@ describe('login', () => {
   it('is case sensitive for both fields', async () => {
     expect((await call('POST', '/auth/login', { body: { username: 'joinwick', password: 'JoinWick' } })).status).toBe(401);
     expect((await call('POST', '/auth/login', { body: { username: 'JoinWick', password: 'joinwick' } })).status).toBe(401);
-    expect((await call('POST', '/auth/login', { body: { username: 'JoinWick', password: 'Join Wick' } })).status).toBe(401);
+    // A password may not contain spaces, so this is invalid input (400) rather than wrong credentials.
+    const spaced = await call('POST', '/auth/login', { body: { username: 'JoinWick', password: 'Join Wick' } });
+    expect(spaced.status).toBe(400);
+    expect(spaced.body.error.code).toBe('INVALID_INPUT');
+    expect(spaced.body.error.message).toMatch(/Password cannot contain spaces/);
   });
 
   it('returns a uniform error for wrong user and wrong password', async () => {

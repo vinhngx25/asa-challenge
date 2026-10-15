@@ -301,6 +301,21 @@ describe('request inputs through the HTTP layer', () => {
     expect((await login('\u{1F697}'.repeat(33), 'b')).status).toBe(400);
   });
 
+  it('password: no white space at all (space, tab, new line, non-breaking space), in any position', async () => {
+    const login = (password: string, username = 'JoinWick') => call('POST', '/auth/login', { username, password }, false);
+    for (const bad of ['a b', ' ab', 'ab ', ' ', '   ', 'a\tb', 'a\nb', 'a\r\nb', 'a\u00a0b', 'a\u2003b', 'Join Wick']) {
+      const r = await login(bad);
+      expect(r.status, JSON.stringify(bad)).toBe(400);
+      expect(r.body.error.message).toMatch(/Password cannot contain spaces/);
+    }
+    // Without white space the password is just checked: wrong is 401, right is 200, 32 characters long is fine.
+    expect((await login('JoinWick1')).status).toBe(401);
+    expect((await login('x'.repeat(32))).status).toBe(401);
+    expect((await login('JoinWick')).status).toBe(200);
+    // The username may still contain a space: it is just not an existing account.
+    expect((await login('x', 'Join Wick')).status).toBe(401);
+  });
+
   it('record ids: up to 64 characters are looked up (404), 65 or more are invalid input (400), in every position', async () => {
     const ok = 'a'.repeat(64);
     const bad = 'a'.repeat(65);

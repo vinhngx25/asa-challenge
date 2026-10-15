@@ -4,7 +4,7 @@ For a quick manual check of the live site by a person. Cases are ordered by prio
 
 | Priority | Meaning | Count | Rough time |
 |---|---|---|---|
-| **Must have** | The product is not usable or not safe if one fails | 14 | 20 to 25 minutes |
+| **Must have** | The product is not usable or not safe if one fails | 15 | 20 to 25 minutes |
 | **Should have** | Important rules and everyday behaviour | 25 | 35 minutes |
 | **Nice to have** | Polish, accessibility and edge behaviour | 13 | 20 minutes |
 
@@ -43,7 +43,8 @@ Services used below: **Oil & Filter Change** (60 min, Oil & Fluids), **Fluid Top
 |---|---|---|---|---|
 | C-M01 | Sign in as a customer (happy) | Open the site. Sign in as `JoinWick` / `JoinWick`. | Dashboard shows "John Wick", tabs **Upcoming / Completed / Cancelled** with counts, and John's own bookings with car pictures. | |
 | C-M02 | Username is case sensitive (negative) | Sign in as `joinwick` / `JoinWick`. | Red message "Incorrect username or password." You stay on the login page. | |
-| C-M03 | Wrong password (negative) | Sign in as `JoinWick` / `wrong`. Then `JoinWick` / `Join Wick` (with a space). | Both rejected with the same message. No dashboard. | |
+| C-M03 | Wrong password (negative) | Sign in as `JoinWick` / `wrong`. | Rejected with "Incorrect username or password". No dashboard. |
+| C-M03b | Password with a space (negative) | Sign in as `JoinWick` with the password `Join Wick` (with a space). | The form stops you with "Password cannot contain spaces"; nothing is sent and you stay on the login page. The hint under the box says "Up to 32 characters, no spaces". | |
 | C-M04 | Book a service (happy) | As `JoinWick`: **Book a service**. Choose the Mustang, **Oil & Filter Change**, **Kensington**, date DAY, a free time (for example 10:00), **Confirm booking**. | "Booking confirmed" with a reference (ASA-xxxxxxxx), the service, vehicle, date and time, bay and technician (with photo). | |
 | C-M05 | New booking shows on the dashboard | Click **View my bookings** after C-M04. | The booking is under **Upcoming** with the same time, bay and technician. | |
 | C-M06 | Taken time is blocked (negative) | As `JamesBond`: book **Oil & Filter Change**, **Northern Quarter Garage**, DAY, 10:00 and confirm. Then as `JoinWick`: same service, same dealership, DAY. | For John, 10:00 is greyed out and cannot be selected. Neighbouring times that would overlap (09:30) are greyed too. | |
