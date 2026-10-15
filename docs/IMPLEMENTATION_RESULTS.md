@@ -16,7 +16,7 @@ What was built, how it differs from the design, what was tested and what was not
 | Login gate, customer dashboard, staff view | Built (3 accounts, case-sensitive, JWT) |
 | Cancel and free resources | Built, transactional |
 | Demo data: 5 bays, 13 technicians, 24 services, 3 dealerships | Built, matches exactly |
-| Generated illustrations | 37 cinematic images, 745 KB total as WebP |
+| Generated images | 38 bright, modern images (desktop and mobile versions where the layout needs them), 1.1 MB total as WebP |
 | Frontend and backend separate | `frontend/` and `backend/` with a shared contract package |
 | One environment on AWS with SSL at `asa-challenge.fibosolutions.com` | Deployed, CloudFront with the wildcard certificate, HTTP redirects to HTTPS |
 | Observability | Structured logs, custom metrics, X-Ray tracing, dashboard, 5 alarms |
@@ -371,3 +371,20 @@ Added at the author's request so customers and staff know the rules before they 
 ### 14.3 Browser sign-in on deployed hosts
 
 The author asked twice for the agent to type the demo credentials into the production login form (once offering a separate staging address). The agent does not enter passwords into login forms on deployed hosts, whatever their name or purpose, so the signed-in production run stays with the author: the 100-check command in [TESTING.md](TESTING.md) section 6, or signing in once in a Chrome tab so the agent can drive the rest. The agent signs in only on a locally running copy of the app, where the same 100 checks pass.
+
+## 15. Visual direction, second change
+
+After the cinematic set the author found the screens too dark and asked for a brighter, modern, dynamic look, with desktop and mobile versions where needed. The agent judged the sign-in screen first: a near-black workshop with heavy shadows, a muted palette and white text on dark, which read as moody rather than fresh. Every image was regenerated (a seven-image sample first, then the full set) and the old files were deleted from the working tree.
+
+| Item | Cinematic set | Bright set |
+|---|---|---|
+| Light and colour | night and dusk, teal and navy shadows, amber highlights, haze, grain | daylight, high key, fresh turquoise and orange accents, airy light backgrounds, no fog or grain |
+| People | painterly, dark scenes | smiling photographic portraits on light backgrounds in modern jackets and suits |
+| Cars | wet streets at night | each on a sunny road (coast, alpine, city boulevard, cherry blossom street) with slight motion blur |
+| Service categories | dramatic dark macro shots | clean bright product shots with a splash of colour |
+| Sign-in page | large dark photo, hidden on phones | large bright photo on wide screens and a separate portrait banner (`app-hero-mobile`) on phones and tablets |
+| Files | 37, 745 KB | 38, 1.1 MB |
+
+Changes in the code: the sign-in page shows the portrait banner below the large-screen breakpoint and the wide photo above it, with a lighter text scrim on the wide photo. Square and 4:3 images (avatars, cards, thumbnails) are used at every size and were generated once. File names are unchanged apart from the new `app-hero-mobile`. Checks added: the phone shows the banner and hides the desktop photo, the tablet shows the banner without sideways scrolling, and wide screens show the large photo and hide the banner. The full 100-check UI run, the accessibility scans and the public checks pass with the new art.
+
+Still dark by design: the navigation bar and the welcome card on the dashboard use the deep navy of the colour scheme. They are interface colours, not images; they can be lightened if the author wants the whole interface brighter.

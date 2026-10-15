@@ -36,8 +36,8 @@ export function Login() {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <div className="relative hidden bg-ink-900 lg:block">
-        <Img k="app-hero" alt="A car workshop with mechanics and a booking calendar" className="absolute inset-0 size-full opacity-90" />
-        <div className="absolute inset-0 bg-linear-to-t from-ink-900 via-ink-900/40 to-transparent" />
+        <Img k="app-hero" alt="A bright modern car workshop with mechanics and a booking calendar" className="absolute inset-0 size-full" />
+        <div className="absolute inset-x-0 bottom-0 h-3/5 bg-linear-to-t from-ink-900/85 via-ink-900/45 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 p-10 text-white">
           <h2 className="max-w-md text-3xl font-bold leading-tight">A bay and a qualified technician, confirmed before you book.</h2>
           <p className="mt-3 max-w-md text-ink-200">
@@ -46,8 +46,16 @@ export function Login() {
         </div>
       </div>
 
-      <div className="flex items-center justify-center px-6 py-10">
-        <div className="w-full max-w-sm space-y-6">
+      <div className="flex flex-col items-center lg:justify-center">
+        {/* Phones and tablets get their own portrait picture as a banner; wide screens use the large picture on the left. */}
+        <div className="relative h-52 w-full overflow-hidden sm:h-64 lg:hidden">
+          <Img k="app-hero-mobile" alt="A friendly mechanic in a bright modern workshop" className="size-full object-[50%_30%]" />
+          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-ink-900/70 to-transparent" />
+          <p className="absolute inset-x-0 bottom-0 px-6 pb-4 text-lg font-bold leading-snug text-white sm:text-xl">
+            A bay and a qualified technician, confirmed before you book.
+          </p>
+        </div>
+        <div className="w-full max-w-sm space-y-6 px-6 py-8 lg:py-10">
           <form onSubmit={submit} className="space-y-5" aria-label="Sign in">
             <div className="flex items-center gap-3">
               <Img k="app-logo" alt="" className="size-12 rounded-xl" />

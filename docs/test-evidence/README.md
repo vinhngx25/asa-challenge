@@ -15,7 +15,7 @@ Results from the author's runs (Alice). Full detail, tool notes and method: [../
 | `scripts/input_tests.py` (every text field and parameter) | local and live | 55 of 55 |
 | `scripts/pairwise_tests.py` | local and live | 39 of 39 |
 | `scripts/smoke_test.py` | live | 10 of 10 |
-| `scripts/ui-regression/ui-public.mjs` (browser, no sign-in) | **live** 26 of 26 after the final deploy; local 24 of 24 |
+| `scripts/ui-regression/ui-public.mjs` (browser, no sign-in) | **live** 29 of 29 after the final deploy; local 27 of 27 |
 | Playwright UI regression (`scripts/ui-regression`) | local app | 100 of 100 (includes the sign-in help, live password feedback, the text box limits and hostile input, staff search, date suggestion, throttled message and WCAG 2.1 AA scans of four screens) |
 
 "Live" is `https://asa-challenge.fibosolutions.com` on AWS (CloudFront, API Gateway, Lambda, DynamoDB).
@@ -67,6 +67,7 @@ Two tools: **Claude in Chrome** (Alice driving the author's Chrome) and **Playwr
 | `08` to `11` `-mobile-*.jpg` | Phone width: login, dashboard, booking, staff |
 | `12-login-help.jpg` | Login page with the rules and the Sign-in help panel |
 | `13-login-space-warning.jpg` | Live warning when a password contains a space; Show password ticked |
-| `14-mobile-login-help.jpg` | The same page at phone width |
+| `14-mobile-login-help.jpg` | The same page at phone width, with the portrait banner |
+| `15-tablet-login.jpg` | The same page at tablet width |
 
 Browser sign-in on the deployed site is performed by the author; the deployed site was verified by the Python scripts and the post-deploy smoke test.

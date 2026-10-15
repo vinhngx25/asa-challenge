@@ -252,7 +252,7 @@ Versions are the latest stable releases at install time and are pinned by the lo
 | Unit and integration tests | **Vitest** | Same TypeScript, fast | Slot math and booking rules tested without a browser | Runs in CI unchanged |
 | Race and API tests | **Python scripts** (`requests`, threads) | Black-box, independent of the implementation language | Fire real concurrent bookings at a running API | Same scripts run against local and AWS |
 | UI tests | **Claude in Chrome**, driven by Alice, plus a manual checklist | Real browser, real clicks, visual check | Verifies layout and flows that unit tests cannot | Screenshots saved as evidence in `docs/test-evidence/` |
-| Images | **Alice image skill (Gemini)**, cinematic poster look | Faces, places and cars replace text blocks | A shared colour grade makes 37 images read as one film; WebP keeps the set under 1 MB | Assets live in the frontend, easy to replace; an image field on each record can later point to uploads |
+| Images | **Alice image skill (Gemini)**, bright modern look | Faces, places and cars replace text blocks | A shared style prompt makes 38 images read as one family; WebP keeps the set near 1 MB | Assets live in the frontend, easy to replace; an image field on each record can later point to uploads |
 
 ## 11. Seed data
 
@@ -314,10 +314,11 @@ Mutation checks confirm the tests can fail: the database lock writes were broken
 
 ## 15. Visual design
 
-- **Style:** cinematic movie-poster look: neo-noir mood, dramatic rim lighting, teal and navy shadows with warm amber highlights, shallow depth of field, light haze and film grain. One shared style prompt is appended to every image so the set keeps a single grade. Each group has its own scene: customers in their own worlds (rainy neon street, golden casino, art-deco hotel lobby), technicians in a moody workshop, dealerships at dusk or night, each car on its own road, service categories as dramatic macro shots.
-- **People:** fictional painterly characters inspired by the roles, never film stills or a real person's likeness; prompts name no actor. Technicians are generic fictional mechanics.
-- **Where images appear:** user avatar in the header and dashboard, vehicle cards, dealership cards in the booking wizard, technician and bay thumbnails on each confirmed appointment, service category art, login hero, empty states.
-- **Delivery:** WebP, sized for the screen, with text alternatives. Each record stores an image key, so replacing art needs no code change.
+- **Style:** bright, modern, dynamic editorial photography: natural daylight, high-key exposure, fresh turquoise and teal with warm orange accents, airy light backgrounds, crisp focus and energetic angles. No night scenes, heavy shadows, fog or film grain. One shared style prompt is appended to every image so the set reads as one family. Each group has its own scene: customers in sunlit city, rooftop and hotel settings, technicians in a clean white service bay with turquoise accents, dealerships under blue skies, each car on its own sunny road with a hint of motion blur, service categories as clean product shots with a splash of colour.
+- **People:** fictional photographic portraits inspired by the roles, never a real person's likeness; prompts name no actor. Technicians are generic fictional mechanics in modern navy and teal work jackets.
+- **Mobile and desktop:** the sign-in page uses the wide photo on the left on large screens and a separate portrait photo as a banner on phones and tablets. Cards, avatars and thumbnails are square or 4:3 and are used at every size (they are sized by the layout, not generated twice).
+- **Where images appear:** user avatar in the header and dashboard, vehicle cards, dealership cards in the booking flow, technician and bay thumbnails on each confirmed appointment, service category art, sign-in photo and banner, empty states.
+- **Delivery:** WebP, sized for the screen, with text alternatives. Each record stores an image key, so replacing art needs no code change. The set is 38 files, about 1.1 MB.
 
 ## 16. Risks and open items
 

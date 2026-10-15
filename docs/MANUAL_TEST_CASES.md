@@ -6,7 +6,7 @@ For a quick manual check of the live site by a person. Cases are ordered by prio
 |---|---|---|---|
 | **Must have** | The product is not usable or not safe if one fails | 15 | 20 to 25 minutes |
 | **Should have** | Important rules and everyday behaviour | 26 | 35 minutes |
-| **Nice to have** | Polish, accessibility and edge behaviour | 13 | 20 minutes |
+| **Nice to have** | Polish, accessibility and edge behaviour | 14 | 20 minutes |
 
 Mark each result in the **Result** column: `P` pass, `F` fail, `-` skipped. Write failures down with the case ID and what you saw.
 
@@ -116,7 +116,8 @@ Services used below: **Oil & Filter Change** (60 min, Oil & Fluids), **Fluid Top
 | N-06 | Both | Public health check | Open `/api/health`. | `{"status":"ok", ...}`. | |
 | N-07 | Both | HTTPS | On the live site check the address bar. Try `http://asa-challenge.fibosolutions.com`. | Padlock shown; http redirects to https. | |
 | N-08 | Customer | Many bookings | Make 3 bookings on different days, then check ordering. | Upcoming is soonest first; Completed is most recent first. | |
-| N-09 | Customer | Pictures | Look at login, vehicles, dealerships, technicians. | Cinematic images load; no broken image icons. | |
+| N-09 | Customer | Pictures | Look at login, vehicles, dealerships, technicians. | Bright, modern images load; no broken image icons. | |
+| N-14 | Both | Phone and desktop pictures | Open the login page on a phone (or a narrow window) and on a wide screen. | Phone: a portrait banner of a mechanic above the form. Wide screen: the large workshop photo on the left, no banner. | |
 | N-10 | Customer | Long service end time | Book Full Service (240 min). | Confirmation shows start to end four hours later in local time. | |
 | N-11 | Staff | Customer names and photos | Check the Customer column on All bookings. | Correct name and portrait for each booking. | |
 | N-13 | Customer | Date box extremes | On the booking page type the year 9999, then the year 0001, in the date box. | A message that nothing is free, no error screen. | |

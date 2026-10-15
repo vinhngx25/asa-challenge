@@ -103,6 +103,18 @@ try {
   await pp.waitForTimeout(500);
   const overflow = await pp.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
   check('P-21', 'phone width (390 px): the login page does not scroll sideways', !overflow);
+  // Each screen size gets its own picture: a portrait banner on phones, the large photo on wide screens.
+  const mobileBanner = pp.getByAltText('A friendly mechanic in a bright modern workshop');
+  const desktopHero = pp.getByAltText('A bright modern car workshop with mechanics and a booking calendar');
+  check('P-23', 'phone: the login page shows the portrait banner and hides the large desktop photo', (await mobileBanner.isVisible()) && !(await desktopHero.isVisible()));
+  const tabletCtx = await browser.newContext({ viewport: { width: 768, height: 1024 } });
+  const tp = await tabletCtx.newPage();
+  await tp.goto(BASE + '/login');
+  await tp.getByRole('heading', { name: 'Service Scheduler' }).waitFor();
+  await tp.waitForTimeout(500);
+  check('P-24', 'tablet (768 px): banner shown, no sideways scrolling', (await tp.getByAltText('A friendly mechanic in a bright modern workshop').isVisible()) && !(await tp.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)));
+  await tabletCtx.close();
+  check('P-25', 'desktop: the large photo is shown and the phone banner is hidden', await (async () => { await page.goto(BASE + '/login'); await page.getByRole('heading', { name: 'Service Scheduler' }).waitFor(); return (await page.getByAltText('A bright modern car workshop with mechanics and a booking calendar').isVisible()) && !(await page.getByAltText('A friendly mechanic in a bright modern workshop').isVisible()); })());
   await phone.close();
   await ctx.close();
 } catch (err) {

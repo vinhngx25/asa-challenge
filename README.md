@@ -30,7 +30,7 @@ The sign-in page explains the rules next to the boxes (live character counters, 
 
 ### Demo data
 
-3 dealerships in England (London, Birmingham, Manchester), 5 service bays, 13 technicians, 24 service types (30, 60, 120 and 240 minutes, including MOT, Interim Service and Full Service), 2 customers with 3 and 4 classic and film-famous cars, and a spread of past, upcoming and cancelled bookings. People, places, cars and service categories carry cinematic poster-style thumbnails.
+3 dealerships in England (London, Birmingham, Manchester), 5 service bays, 13 technicians, 24 service types (30, 60, 120 and 240 minutes, including MOT, Interim Service and Full Service), 2 customers with 3 and 4 classic and film-famous cars, and a spread of past, upcoming and cancelled bookings. People, places, cars and service categories carry bright, modern, dynamic photographs (daylight, fresh turquoise and orange accents). Phones get a portrait banner on the sign-in page; wide screens get the large photo.
 
 ## Repository layout
 
@@ -195,7 +195,7 @@ Her workspace separates Alice's own knowledge from client and personal work. Eve
 - **Cloud operations.** She uses the AWS CLI with a dedicated profile to create and update infrastructure, deploy the frontend and backend, seed data and read logs.
 - **UI testing through a real browser.** She drives Chrome through the Claude in Chrome extension: logging in as each role, booking, cancelling, reading the rendered page and capturing screenshots as evidence. For a repeatable run she also uses Playwright (`scripts/ui-regression/`), with two browser windows racing for one slot, phone width and keyboard-only sign-in.
 - **API and rare-case testing.** She writes Python scripts that call the API directly, including simulations of rare cases such as two customers booking the same slot at the same moment, the same vehicle double-submitted, and cancel-then-rebook. She also designs boundary-value and pairwise (all-pairs) tests and checks that they can fail by deliberately breaking the code.
-- **Visuals.** She generates every image and thumbnail (37: portraits, dealerships, cars, service categories, logo, hero) with Google's "nano banana" Gemini image models through her image skill. One shared cinematic style prompt keeps the set consistent, and she reviews each batch on a contact sheet before converting it to WebP.
+- **Visuals.** She generates every image and thumbnail (38: portraits, dealerships, cars, service categories, logo, desktop and mobile hero, empty state) with Google's "nano banana" Gemini image models through her image skill. One shared bright, modern style prompt keeps the set consistent, and she reviews each batch on a contact sheet before converting it to WebP.
 
 ## License
 
