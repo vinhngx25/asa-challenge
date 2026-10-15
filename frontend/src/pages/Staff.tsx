@@ -128,11 +128,11 @@ export function Staff() {
         </label>
         <label className="text-sm font-semibold">
           <span className="mb-1 block">From</span>
-          <input type="date" className={selectClass} value={from} onChange={(e) => setFrom(e.target.value)} />
+          <input type="date" className={selectClass} value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} />
         </label>
         <label className="text-sm font-semibold">
           <span className="mb-1 block">To</span>
-          <input type="date" className={selectClass} value={to} onChange={(e) => setTo(e.target.value)} />
+          <input type="date" className={selectClass} value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} />
         </label>
         {(dealershipId || status || from || to || query) && (
           <button
@@ -149,6 +149,12 @@ export function Staff() {
           </button>
         )}
       </Card>
+
+      {from && to && from > to && (
+        <p role="alert" className="text-sm font-semibold text-bad-600">
+          "From" is after "To", so no bookings can match. Change one of the dates.
+        </p>
+      )}
 
       {isLoading && <Spinner label="Loading bookings" />}
       {error && <ErrorNote>Could not load bookings. Please refresh.</ErrorNote>}

@@ -5,7 +5,7 @@ For a quick manual check of the live site by a person. Cases are ordered by prio
 | Priority | Meaning | Count | Rough time |
 |---|---|---|---|
 | **Must have** | The product is not usable or not safe if one fails | 15 | 20 to 25 minutes |
-| **Should have** | Important rules and everyday behaviour | 28 | 35 minutes |
+| **Should have** | Important rules and everyday behaviour | 32 | 35 minutes |
 | **Nice to have** | Polish, accessibility and edge behaviour | 17 | 25 minutes |
 
 Mark each result in the **Result** column: `P` pass, `F` fail, `-` skipped. Write failures down with the case ID and what you saw.
@@ -87,6 +87,9 @@ Services used below: **Oil & Filter Change** (60 min, Oil & Fluids), **Fluid Top
 | C-S15 | Completed tab | Open the **Completed** tab. | Past bookings are listed with a "Completed" badge and no Cancel button. | |
 | C-S16 | Book another | After a confirmation, click **Book another**. | The vehicle stays selected (people often book a second job for the same car); service, dealership, date and time are cleared and the steps below the vehicle start again from step 2. | |
 | C-S21 | Confirm bar on a phone | On a phone (or a window under 1024 px wide) open the booking page and scroll through the steps. Choose a vehicle, a service, a dealership, a date and a time. | A bar stays at the bottom of the screen the whole time: it first says which step is next, then shows the service, dealership and time with a full-width **Confirm booking** button. You never have to scroll to the end to confirm. On a wide screen the summary is a card on the right instead. | |
+| C-S22 | Changing your mind mid-booking | Choose vehicle, service, dealership and a time. Click a service category that does not include the chosen service. Then choose a service and a time again and change the date, dealership or vehicle. | A category that hides the chosen service clears it, so nothing stays selected out of sight. Changing the service, dealership, date or vehicle clears the chosen time. | |
+| C-S23 | Old "time taken" message goes away | Make a time conflict (book the same vehicle and time in another tab first), click Confirm, then pick a different time or change any other choice. | The red message and its nearest times disappear as soon as a choice changes; they do not stay on screen. | |
+| C-S24 | Keep it clears a cancel error | After a cancel that failed, open the cancel prompt again and click Keep it. | The error message is gone. | |
 | C-S20 | Return to the page you asked for | Signed out, type the address of the booking page (`/book`) in the browser. Sign in as a customer. | After signing in you land on the booking page. After pressing **Sign out** yourself and signing in again you land on My bookings. | |
 | C-S19 | Sign-in help and live feedback | On the login page read the **Sign-in help** panel. Type a few characters in each box. Type a space in the password box, then delete it. Tick **Show password**. | Each box shows a counter such as `5 / 32` and its rule underneath. A red message appears as soon as the password has a space and goes when you remove it. Show password reveals the text and un-ticking hides it. The panel says who signs in, the 8 hour session and that this is a demo; the username and password rules appear once, under their boxes (not repeated in the panel). | |
 | C-S18 | Username and password limit (negative) | On the login page type 40 characters into Username, then into Password. Then type exactly 32 characters in each and sign in. | Each box stops at 32 characters. With 32 characters in each the page answers "Incorrect username or password" (not an error screen). | |
@@ -103,6 +106,7 @@ Services used below: **Oil & Filter Change** (60 min, Oil & Fluids), **Fluid Top
 | S-S05 | Cancel only for upcoming | Look at Completed and Cancelled bookings. | No **Cancel booking** button on them. | |
 | S-S07 | Search with unusual text | In **Search** type `.*[(`, then `<b>x</b>`, then 100 letters without spaces, then an emoji. | The page never breaks: it shows "No bookings match", nothing is rendered as bold or executed, the layout does not scroll sideways, and the box stops at 100 characters. | |
 | S-S06 | Search | Type a booking reference, a number plate (for example `JB77 LTS`), a customer name, or two words such as `wick mustang` into **Search**. | Only matching bookings stay; a message says how many match; a search with no result shows "No bookings match"; **Clear filters** empties the search. | |
+| S-S08 | From after To | Set **From** later than **To**. | A red message says From is after To; the date pickers also stop you choosing an earlier To or a later From. | |
 
 ---
 

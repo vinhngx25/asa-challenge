@@ -441,3 +441,19 @@ The author made the phone experience the first priority and asked for the Confir
 **Limits of the Chrome route.** The extension cannot resize the browser window, so phone width is shown by loading the app in a 390 px wide frame, which makes the page's own media queries apply. The tab is often reported as hidden by Chrome, which makes real keystrokes and some screenshots unreliable; clicks and form fills are therefore done through the page's own scripts and screenshots are taken when the tab allows it. The earlier Playwright scripts were removed from the repository to keep it simple for reviewers.
 
 > Note: the browser scripts named in sections 5 and 14 to 17 (`ui-run`, `ui-layout`, `ui-resilience`, `ui-visual`, `ui-perf`, `ui-public`, all Playwright) were removed from the repository after these runs, at the author's request, so reviewers see only the app, the Python suites and the docs. The results above stay as the record of what was run.
+
+## 19. Review of state that carries over between steps
+
+After the author found that "Book another" left the service, dealership and date selected (only the time was cleared), every place that keeps state between steps, users or actions was reviewed.
+
+| Place | Finding | Fix |
+|---|---|---|
+| Booking: Book another | Only the time was cleared | Keeps the vehicle only; service, category, dealership, date and time are cleared |
+| Booking: category chip | Choosing a category that hides the chosen service left it selected out of sight (Confirm still available) | The service is cleared when its category is hidden |
+| Booking: conflict message | After "time taken", changing the vehicle, service, dealership, date or time left the red message and its alternatives on screen (and hid the phone summary) | The message is cleared whenever a choice changes |
+| Cancel prompt | A cancel error stayed after Keep it | Keep it clears the error |
+| Staff filters | From later than To silently returned an empty list | Date pickers limit each other and a message names the problem |
+| Sign-in and sign-out | Cached data of the previous user | Already cleared (`queryClient.clear()` on both); no change |
+| Dashboard tab, search, filters | Kept while moving between pages | Intended; no change |
+
+Verified in Chrome on the local build: Book another keeps only the vehicle; a hiding category clears the service; a real conflict (the same vehicle booked from outside) shows the message and picking another time removes it. Manual cases C-S22, C-S23, C-S24 and S-S08 were added.

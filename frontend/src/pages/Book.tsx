@@ -68,9 +68,6 @@ export function Book() {
     if (nextDate !== date) setDate(nextDate);
   }, [dealership, date, dateChosen]);
 
-  // A change of service, place, day or vehicle invalidates the chosen time.
-  useEffect(() => setStartTime(null), [service?.id, dealership?.id, date, vehicle?.id]);
-
   const book = useMutation({
     mutationFn: () =>
       api.book({ vehicleId: vehicle!.id, serviceTypeId: service!.id, dealershipId: dealership!.id, startTime: startTime! }),
@@ -87,10 +84,23 @@ export function Book() {
     },
   });
 
+  // A change of service, place, day or vehicle invalidates the chosen time and any "time taken" message about it.
+  const resetBooking = book.reset;
+  useEffect(() => {
+    setStartTime(null);
+    resetBooking();
+  }, [service?.id, dealership?.id, date, vehicle?.id, resetBooking]);
+
   const services = useMemo(
     () => (catalog.data?.services ?? []).filter((s) => skill === 'all' || s.skill === skill),
     [catalog.data, skill],
   );
+
+  // A service that the chosen category hides would stay selected out of sight, so it is cleared.
+  const pickCategory = (next: SkillId | 'all') => {
+    setSkill(next);
+    if (service && next !== 'all' && service.skill !== next) setService(null);
+  };
 
   const tz = dealership?.timezone ?? 'Europe/London';
   const today = isoDate(new Date());
@@ -190,9 +200,9 @@ export function Book() {
         <Step n={2} title="What does it need?" done={Boolean(service)} disabled={!vehicle}>
           {catalog.isLoading && <Spinner />}
           <div className="mb-4 flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Service categories">
-            <CategoryChip active={skill === 'all'} onClick={() => setSkill('all')} label="All" />
+            <CategoryChip active={skill === 'all'} onClick={() => pickCategory('all')} label="All" />
             {catalog.data?.skills.map((s) => (
-              <CategoryChip key={s.id} active={skill === s.id} onClick={() => setSkill(s.id)} label={s.name} imageKey={`category-${s.id}`} />
+              <CategoryChip key={s.id} active={skill === s.id} onClick={() => pickCategory(s.id)} label={s.name} imageKey={`category-${s.id}`} />
             ))}
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -264,7 +274,10 @@ export function Book() {
                     key={s.startTime}
                     disabled={!s.available}
                     aria-pressed={startTime === s.startTime}
-                    onClick={() => setStartTime(s.startTime)}
+                    onClick={() => {
+                      setStartTime(s.startTime);
+                      book.reset();
+                    }}
                     className={`rounded-lg px-2 py-2 text-sm font-semibold ring-1 transition-colors ${
                       startTime === s.startTime
                         ? 'bg-brand-500 text-ink-900 ring-brand-500'

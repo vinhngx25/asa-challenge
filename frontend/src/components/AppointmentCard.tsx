@@ -110,7 +110,7 @@ export function AppointmentCard({ appt, showCustomer = false }: { appt: Appointm
                     }}>
                     {cancel.isPending ? 'Cancelling...' : 'Yes, cancel'}
                   </Button>
-                  <Button variant="secondary" onClick={() => setConfirming(false)}>
+                  <Button variant="secondary" onClick={() => { setConfirming(false); cancel.reset(); }}>
                     Keep it
                   </Button>
                 </>
