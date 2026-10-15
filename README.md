@@ -1,4 +1,4 @@
-﻿# ASA Challenge: Unified Service Scheduler
+# ASA Challenge: Unified Service Scheduler
 
 An appointment scheduler for car dealerships that replaces manual booking. A customer requests a service for a vehicle at a dealership and time. The system confirms the booking only when a **service bay** and a **qualified technician** are both free for the whole service duration, then stores an appointment linking customer, vehicle, technician and bay.
 
@@ -6,7 +6,7 @@ An appointment scheduler for car dealerships that replaces manual booking. A cus
 - Design: [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DESIGN.md) (architecture diagram, components, data flow, technology choices, observability)
 - Plan and progress: [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md)
 
-> Status: design phase. The commands below describe the project as it will be delivered; the plan file tracks which parts exist.
+> Status: built, tested and deployed. Test results and screenshots are in [docs/test-evidence/](docs/test-evidence/).
 
 ## What you can do
 
@@ -46,7 +46,7 @@ docs/       System design, implementation plan, test evidence
 |---|---|---|
 | Node.js | current LTS (22 or newer) and npm 10+ | build, run, test |
 | Docker Desktop | any recent | DynamoDB Local for development |
-| Python | 3.11+ with `pip install requests` | black-box API and race tests |
+| Python | 3.9+ (standard library only, nothing to install) | black-box API and race tests |
 | AWS CLI v2 | 2.x | deploy only |
 | An AWS account and a configured CLI profile | | deploy only |
 
@@ -56,7 +56,7 @@ docs/       System design, implementation plan, test evidence
 npm install                 # installs all workspaces
 npm run db:up               # starts DynamoDB Local in Docker
 npm run seed:local          # creates the table and demo data
-npm run dev                 # API on http://localhost:3000, web app on http://localhost:5173
+npm run dev                 # API on http://localhost:3000, web app on http://localhost:5173 (Vite prints the URL if 5173 is busy)
 ```
 
 Open http://localhost:5173 and sign in with a demo account.
@@ -102,6 +102,15 @@ npx cdk bootstrap aws://<ACCOUNT_ID>/ap-southeast-1
 # only when you use a custom domain (CloudFront certificates live in us-east-1):
 npx cdk bootstrap aws://<ACCOUNT_ID>/us-east-1
 ```
+
+If the account already has a broken or shared default CDK bootstrap (stack `CDKToolkit` in a failed state), use a separate one instead:
+
+```bash
+npx cdk bootstrap aws://<ACCOUNT_ID>/ap-southeast-1 --qualifier asa --toolkit-stack-name CDKToolkit-asa
+export CDK_QUALIFIER=asa     # the deploy then uses that bootstrap
+```
+
+On Windows PowerShell, set variables with `$env:NAME = "value"` instead of `export NAME=value`.
 
 ### Deploy with the default CloudFront URL
 

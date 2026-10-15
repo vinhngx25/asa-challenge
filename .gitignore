@@ -12,4 +12,4 @@ frontend/dist/
 .vite/
 __pycache__/
 *.pyc
-.venv/
+.venv/infra/cdk-outputs.json

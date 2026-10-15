@@ -44,7 +44,7 @@ flowchart LR
 flowchart LR
   B["Browser<br/>localhost:5173"] --> V["Vite dev server<br/>proxies /api"]
   V --> N["Hono on Node<br/>localhost:3000<br/>same app code as Lambda"]
-  N --> D[("DynamoDB Local<br/>Docker, localhost:8000")]
+  N --> D[("DynamoDB Local<br/>Docker, localhost:8100")]
 ```
 
 The Hono application is a plain function `app.fetch`. A 5-line adapter exposes it to Lambda, another to Node. Local and cloud run the same business code.
@@ -147,7 +147,7 @@ For each slot an appointment covers, the booking writes three tiny lock items:
 
 All lock puts and the Appointment put go into **one `TransactWriteItems` call**. Each lock put carries the condition `attribute_not_exists(PK)`. The transaction is all-or-nothing: if any slot is taken, nothing is written. DynamoDB serializes concurrent transactions touching the same item, so two simultaneous requests for the same bay slot cannot both commit. The database enforces the rule, which holds even if the application code has a bug or runs on many Lambda instances at once.
 
-The largest booking (240 minutes) writes 8 slots × 3 locks + 1 appointment = 25 items, well under the 100-item transaction limit. The transaction also carries a `ClientRequestToken` derived from the appointment id, so a retried Lambda invocation cannot create a duplicate.
+The largest booking (240 minutes) writes 8 slots × 3 locks + 1 appointment = 25 items, well under the 100-item transaction limit. A double-clicked or retried request cannot create a duplicate either: the vehicle lock for the same slots is already taken, so the second request fails with `VEHICLE_BUSY`.
 
 ### 6.3 Single-table layout
 
@@ -191,7 +191,7 @@ All routes live under `/api`. Bodies are JSON validated by Zod. Errors use one s
 | `POST /api/appointments/{id}/cancel` | owner, staff | Cancel and free resources. |
 | `GET /api/health` | public | Liveness for smoke tests. |
 
-Status codes: `400` invalid input, `401` no or bad token, `403` wrong role or someone else's booking, `404` not found, `409` `SLOT_UNAVAILABLE` (includes alternative start times) or `ALREADY_CANCELLED`, `429` throttled.
+Status codes: `400` invalid input, `401` no or bad token, `403` wrong role or someone else's booking, `404` not found, `409` `SLOT_UNAVAILABLE` (includes alternative start times), `VEHICLE_BUSY`, `ALREADY_CANCELLED` or `CANNOT_CANCEL_PAST`, `422` `INVALID_START_TIME` (off the 30 minute grid, outside opening hours, less than 1 hour ahead or more than 60 days ahead), `429` throttled.
 
 ### Access control
 

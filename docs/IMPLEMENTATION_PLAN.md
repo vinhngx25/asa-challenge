@@ -8,46 +8,46 @@ Legend: [ ] not started, [~] in progress, [x] done. Update this file at the end 
 - [x] SYSTEM_DESIGN.md
 - [x] README.md (target form)
 - [x] IMPLEMENTATION_PLAN.md
-- [ ] Reviewer approval
+- [x] Reviewer approval
 
 ### M1 Foundation
-- [ ] npm workspaces: shared, backend, frontend, infra; TypeScript, ESLint, Prettier
-- [ ] Confirm latest stable versions with `npm view` before pinning
-- [ ] `docker-compose.yml` for DynamoDB Local; `npm run db:up`
-- [ ] `shared/`: Zod schemas and types for every API contract
+- [x] npm workspaces: shared, backend, frontend, infra; TypeScript, ESLint, Prettier
+- [x] Confirm latest stable versions with `npm view` before pinning
+- [x] `docker-compose.yml` for DynamoDB Local; `npm run db:up`
+- [x] `shared/`: Zod schemas and types for every API contract
 
 ### M2 Backend core
-- [ ] DynamoDB table definition (single table, GSI1, GSI2) and repository interface
-- [ ] Seed script: 3 English dealerships (Europe/London), 5 bays, 13 British-named technicians, 24 services, 3 users, 7 vehicles, appointments (`seed:local`, `seed:aws`)
-- [ ] Slot and interval utilities (30-minute slots, half-open intervals, timezone handling)
-- [ ] Booking service: candidate search, transactional commit with slot locks, bounded retry, alternatives on conflict
-- [ ] Cancel service: transactional lock release
-- [ ] Auth: scrypt hashes, JWT middleware, role guards
-- [ ] Routes from design section 7, uniform error shape, request id
-- [ ] Lambda and Node adapters for the same Hono app
+- [x] DynamoDB table definition (single table, GSI1, GSI2) and repository interface
+- [x] Seed script: 3 English dealerships (Europe/London), 5 bays, 13 British-named technicians, 24 services, 3 users, 7 vehicles, appointments (`seed:local`, `seed:aws`)
+- [x] Slot and interval utilities (30-minute slots, half-open intervals, timezone handling)
+- [x] Booking service: candidate search, transactional commit with slot locks, bounded retry, alternatives on conflict
+- [x] Cancel service: transactional lock release
+- [x] Auth: scrypt hashes, JWT middleware, role guards
+- [x] Routes from design section 7, uniform error shape, request id
+- [x] Lambda and Node adapters for the same Hono app
 
 ### M3 Backend tests
-- [ ] Vitest unit tests: slots, overlap, candidates, opening hours, roles
-- [ ] Integration tests on DynamoDB Local, including N parallel bookings of one slot (exactly one wins)
-- [ ] Python: `api_tests.py`, `race_booking.py`
+- [x] Vitest unit tests: slots, overlap, candidates, opening hours, roles
+- [x] Integration tests on DynamoDB Local, including N parallel bookings of one slot (exactly one wins)
+- [x] Python: `api_tests.py`, `race_booking.py`
 
 ### M4 Frontend
-- [ ] App shell, routing, auth guard, login page
-- [ ] Customer dashboard (upcoming, past, cancelled), cancel action
-- [ ] Booking wizard: vehicle, service category and type, dealership, date, free time slots, confirmation
-- [ ] Conflict state with alternative times
-- [ ] Staff overview with filters
-- [ ] Responsive layout, loading and error states
+- [x] App shell, routing, auth guard, login page
+- [x] Customer dashboard (upcoming, past, cancelled), cancel action
+- [x] Booking wizard: vehicle, service category and type, dealership, date, free time slots, confirmation
+- [x] Conflict state with alternative times
+- [x] Staff overview with filters
+- [x] Responsive layout, loading and error states
 
 ### M5 Visuals
-- [ ] Check remaining Gemini prepaid credit before generating
-- [ ] Fix one style prompt (flat vector, navy and amber palette) and test it on 3 images before the full set
-- [ ] Generate about 37 images with the Alice image skill: 16 portraits (2 customers, 1 staff, 13 technicians), 3 dealerships, 1 service bay, 7 vehicles, 7 service categories, logo, login hero, empty state
-- [ ] Optimize to WebP, place in `frontend/src/assets/`
+- [x] Check remaining Gemini prepaid credit before generating
+- [x] Fix one style prompt (flat vector, navy and amber palette) and test it on 3 images before the full set
+- [x] Generate about 37 images with the Alice image skill: 16 portraits (2 customers, 1 staff, 13 technicians), 3 dealerships, 1 service bay, 7 vehicles, 7 service categories, logo, login hero, empty state
+- [x] Optimize to WebP, place in `frontend/src/assets/`
 
 ### M6 Infrastructure and deploy
-- [ ] CDK: DynamoDB, Lambda (arm64), HTTP API, Secrets Manager, S3 + CloudFront (OAC, `/api/*` behavior, security headers, HTTP to HTTPS), optional domain and certificate
-- [ ] Observability: Powertools logs, metrics, tracing; dashboard; alarms; optional SNS topic
+- [x] CDK: DynamoDB, Lambda (arm64), HTTP API, Secrets Manager, S3 + CloudFront (OAC, `/api/*` behavior, security headers, HTTP to HTTPS), optional domain and certificate
+- [x] Observability: Powertools logs, metrics, tracing; dashboard; alarms; optional SNS topic
 - [ ] Deploy to ap-southeast-1 with alias `asa-challenge.fibosolutions.com`, reusing the existing wildcard certificate
 - [ ] `seed:aws`, `scripts/smoke_test.py`
 
