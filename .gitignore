@@ -1,0 +1,15 @@
+node_modules/
+dist/
+cdk.out/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+Thumbs.db
+coverage/
+frontend/dist/
+.vite/
+__pycache__/
+*.pyc
+.venv/
