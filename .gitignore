@@ -13,3 +13,4 @@ frontend/dist/
 __pycache__/
 *.pyc
 .venv/infra/cdk-outputs.json
+scripts/ui-regression/shots/

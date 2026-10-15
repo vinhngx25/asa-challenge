@@ -6,6 +6,8 @@ An appointment scheduler for car dealerships that replaces manual booking. A cus
 - Design: [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DESIGN.md) (architecture diagram, components, data flow, technology choices, observability)
 - Plan and progress: [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md)
 - Implementation results (what was built, differences from the design, test results, known limits): [docs/IMPLEMENTATION_RESULTS.md](docs/IMPLEMENTATION_RESULTS.md)
+- Testing guide (tools, every suite, API testing by hand, boundary and pairwise design): [docs/TESTING.md](docs/TESTING.md)
+- Manual test cases for a quick human check, by priority: [docs/MANUAL_TEST_CASES.md](docs/MANUAL_TEST_CASES.md)
 
 > Status: built, tested and deployed. Test results and screenshots are in [docs/test-evidence/](docs/test-evidence/).
 
@@ -37,8 +39,8 @@ backend/    Hono API (TypeScript) and booking service, runs on Node or AWS Lambd
 frontend/   React + Vite single-page app
 shared/     Zod schemas and types shared by backend and frontend
 infra/      AWS CDK stacks (S3, CloudFront, API Gateway, Lambda, DynamoDB, monitoring)
-scripts/    Python API tests, race-condition simulation, deploy smoke test
-docs/       System design, implementation plan, test evidence
+scripts/    Python API, race, boundary and pairwise tests, deploy smoke test; ui-regression/ (optional Playwright UI run)
+docs/       System design, plan, results, testing guide, manual test cases, test evidence
 ```
 
 ## Prerequisites
@@ -70,25 +72,33 @@ npm run build               # type-checks and builds shared, backend and fronten
 
 ## Test
 
+Full guide, including how to call the API by hand: [docs/TESTING.md](docs/TESTING.md).
+
 ```bash
-npm test                    # unit tests (Vitest)
-npm run test:integration    # booking and cancel against DynamoDB Local, includes the parallel-booking test
-python scripts/api_tests.py --base-url http://localhost:3000     # roles, validation, cancel frees slots
-python scripts/race_booking.py --base-url http://localhost:3000  # two customers, same slot, same moment
+npm test                    # 16 unit tests (Vitest)
+npm run test:integration    # 102 tests on DynamoDB Local: booking, API, boundary values, pairwise, parallel bookings
+
+# black-box scripts, no installs needed (Python standard library). Seeded data required; each cancels what it books.
+python scripts/api_tests.py      --base-url http://localhost:3000   # login, roles, validation, cancel frees slots
+python scripts/race_booking.py   --base-url http://localhost:3000   # simultaneous requests for the same slot
+python scripts/boundary_tests.py --base-url http://localhost:3000   # field lengths, dates, time grid, horizon
+python scripts/pairwise_tests.py --base-url http://localhost:3000   # all-pairs design of the booking request
 ```
 
-### UI test checklist (manual or driven by a browser agent)
+The same Python scripts run unchanged against the deployed site (`--base-url https://<your-url>`).
 
-1. Log in as `JoinWick`; the dashboard lists only JoinWick's bookings.
-2. Wrong case (`joinwick`) is rejected.
-3. Book a 120-minute service; the new booking appears with technician and bay.
-4. Book the same vehicle at an overlapping time; the app explains the conflict and offers free times.
-5. Cancel the booking; the same slot becomes bookable again.
-6. Log in as `JamesBond`; JoinWick's bookings are not visible.
-7. Log in as `Winston`; all bookings appear and filters work.
-8. Resize to phone width; layout stays usable.
+### Real-browser UI regression (optional, Playwright)
 
-Evidence from the author's run lives in `docs/test-evidence/`.
+```bash
+npm run dev                                   # in one terminal
+cd scripts/ui-regression
+npm install && npx playwright install chromium
+node ui-run.mjs http://localhost:5173 ./shots # 51 checks, screenshots in ./shots, exit code 1 on failure
+```
+
+### Manual test cases
+
+[docs/MANUAL_TEST_CASES.md](docs/MANUAL_TEST_CASES.md) lists customer and staff cases (happy and negative) ordered Must have, Should have and Nice to have, so a person can stop after any section. Evidence and results from the author's runs are in [docs/test-evidence/](docs/test-evidence/).
 
 ## Deploy to AWS
 
@@ -178,9 +188,9 @@ Her workspace separates Alice's own knowledge from client and personal work. Eve
 
 - **Planned first.** She wrote the design and plan documents and waited for review before coding.
 - **Cloud operations.** She uses the AWS CLI with a dedicated profile to create and update infrastructure, deploy the frontend and backend, seed data and read logs.
-- **UI testing through a real browser.** She drives Chrome through the Claude in Chrome extension: logging in as each role, booking, cancelling, checking layout at several widths and capturing screenshots as evidence.
-- **API and rare-case testing.** She writes Python scripts that call the API directly, including simulations of rare cases such as two customers booking the same slot at the same moment, the same vehicle double-submitted, and cancel-then-rebook.
-- **Visuals.** She generates the cinematic images in the app (portraits, dealerships, cars, service categories) with her Gemini image skill.
+- **UI testing through a real browser.** She drives Chrome through the Claude in Chrome extension: logging in as each role, booking, cancelling, reading the rendered page and capturing screenshots as evidence. For a repeatable run she also uses Playwright (`scripts/ui-regression/`), with two browser windows racing for one slot, phone width and keyboard-only sign-in.
+- **API and rare-case testing.** She writes Python scripts that call the API directly, including simulations of rare cases such as two customers booking the same slot at the same moment, the same vehicle double-submitted, and cancel-then-rebook. She also designs boundary-value and pairwise (all-pairs) tests and checks that they can fail by deliberately breaking the code.
+- **Visuals.** She generates every image and thumbnail (37: portraits, dealerships, cars, service categories, logo, hero) with Google's "nano banana" Gemini image models through her image skill. One shared cinematic style prompt keeps the set consistent, and she reviews each batch on a contact sheet before converting it to WebP.
 
 ## License
 

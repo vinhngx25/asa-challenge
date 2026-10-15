@@ -131,8 +131,9 @@ export function Book() {
   const conflict = book.error instanceof ApiError ? book.error : null;
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_20rem]">
-      <div className="space-y-10">
+    <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
+      {/* min-w-0 lets the scrolling category chips shrink instead of widening the whole page on a phone */}
+      <div className="min-w-0 space-y-10">
         <header>
           <h1 className="text-2xl font-bold">Book a service</h1>
           <p className="text-ink-500">We confirm a free bay and a qualified technician for the whole service before you book.</p>
@@ -165,7 +166,7 @@ export function Book() {
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             {services.map((s) => (
-              <button key={s.id} onClick={() => setService(s)} aria-pressed={service?.id === s.id} className={`flex items-center gap-3 p-3 ${choiceClass(service?.id === s.id)}`}>
+              <button key={s.id} onClick={() => setService(s)} aria-pressed={service?.id === s.id} className={`flex min-w-0 items-center gap-3 p-3 ${choiceClass(service?.id === s.id)}`}>
                 <Img k={`category-${s.skill}`} alt="" className="size-14 shrink-0 rounded-xl" />
                 <div className="min-w-0 flex-1">
                   <div className="font-semibold leading-tight">{s.name}</div>
@@ -208,7 +209,9 @@ export function Book() {
               onChange={(e) => e.target.value && setDate(e.target.value)}
               className="rounded-lg border-0 bg-white px-3 py-2 ring-1 ring-ink-200"
             />
-            <span className="text-sm text-ink-500">Times shown in {dealership?.city ?? 'local'} time</span>
+            <span className="text-sm text-ink-500">
+              Times shown in {tz === 'Europe/London' ? 'UK local time' : (dealership?.city ?? 'local') + ' time'}
+            </span>
           </div>
 
           {availability.isLoading && <Spinner label="Checking bays and technicians" />}

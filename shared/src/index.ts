@@ -142,10 +142,21 @@ export interface VehicleDto {
 /* Availability                                                        */
 /* ------------------------------------------------------------------ */
 
+/** True for a real calendar day written YYYY-MM-DD (rejects 2026-02-30, month 13, year 0000). */
+export function isRealDate(value: string): boolean {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!m) return false;
+  const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  if (y < 1) return false;
+  const dt = new Date(Date.UTC(y, mo - 1, d));
+  dt.setUTCFullYear(y); // years 0 to 99 would otherwise map to 1900 to 1999
+  return dt.getUTCFullYear() === y && dt.getUTCMonth() === mo - 1 && dt.getUTCDate() === d;
+}
+
 export const availabilityQuerySchema = z.object({
   dealershipId: z.string().min(1),
   serviceTypeId: z.string().min(1),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'date must be YYYY-MM-DD'),
+  date: z.string().refine(isRealDate, 'date must be a real calendar day written YYYY-MM-DD'),
   vehicleId: z.string().min(1).optional(),
 });
 export type AvailabilityQuery = z.infer<typeof availabilityQuerySchema>;
