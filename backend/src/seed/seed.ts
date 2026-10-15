@@ -17,9 +17,22 @@ import { localParts, zonedToUtc } from '../lib/time.js';
 import { BOOKINGS, DEALERSHIPS, SERVICES, USERS, VEHICLES } from './data.js';
 
 /** Table definition used for DynamoDB Local. The CDK stack defines the same shape for AWS. */
+/** DynamoDB Local needs a few seconds after `npm run db:up`, so wait for it instead of failing on the first refused connection. */
+async function describeWhenReady(client: DynamoDBClient): Promise<void> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await client.send(new DescribeTableCommand({ TableName: config.tableName }));
+      return;
+    } catch (err) {
+      if (err instanceof ResourceNotFoundException || attempt >= 30) throw err;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  }
+}
+
 export async function ensureTable(client: DynamoDBClient): Promise<void> {
   try {
-    await client.send(new DescribeTableCommand({ TableName: config.tableName }));
+    await describeWhenReady(client);
     return;
   } catch (err) {
     if (!(err instanceof ResourceNotFoundException)) throw err;

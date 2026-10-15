@@ -8,7 +8,6 @@ How the project is tested, how to run every suite, the latest results, and how t
 |---|---|---|
 | Backend unit and integration | **Vitest** with DynamoDB Local in Docker | Includes the parallel-booking, boundary and pairwise tests |
 | Frontend state | **Vitest** with React Testing Library (jsdom), API mocked | Booking page resets, staff filters, sign-in and sign-out, times shown in the dealership time zone |
-| Continuous integration | **GitHub Actions** (`.github/workflows/ci.yml`) | On every push and pull request: build, unit, frontend and integration tests |
 | API black-box and concurrency | **Python scripts** (standard library only) in `scripts/` | Roles, validation, boundaries, pairwise, concurrency, every text input, post-deploy smoke test. Run against local or the live site |
 | UI | The manual sheet, run by hand or through **Claude in Chrome** (driven by Alice) | Real browser, real clicks; screenshots in `docs/test-evidence/` |
 | Images | Google "nano banana" (Gemini image models) through Alice's image skill | 38 WebP files; one shared style prompt keeps the set consistent |
@@ -29,7 +28,7 @@ How the project is tested, how to run every suite, the latest results, and how t
 | Post-deploy smoke | `python scripts/smoke_test.py --base-url <url>` | deployed site | yes |
 | UI | [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md) | local app or the deployed site | yes, with a sign-in typed by a person |
 
-`<url>` is `http://localhost:3000` for the API on your machine, or the site address. Every script cancels the bookings it makes. All Python scripts exit with code 1 when a check fails, so they can run in CI. `npm run seed:local` and `npm run seed:aws` wipe the table and load the demo data, so a run starts from the same state; if a run is interrupted, re-seed.
+`<url>` is `http://localhost:3000` for the API on your machine, or the site address. Every script cancels the bookings it makes. All Python scripts exit with code 1 when a check fails, so a pipeline could run them. `npm run seed:local` and `npm run seed:aws` wipe the table and load the demo data, so a run starts from the same state; if a run is interrupted, re-seed.
 
 ## 3. Latest results
 
@@ -48,7 +47,7 @@ All suites pass.
 | `pairwise_tests.py` | 39 of 39 |
 | `smoke_test.py` (live site) | 10 of 10 |
 
-The same four steps (build, unit, frontend, integration) run in GitHub Actions. The Python suites pass locally and on the live site (https://asa-challenge.fibosolutions.com). The manual sheet is run in Chrome on the local app; signing in on the deployed site is done by a person.
+The Python suites pass locally and on the live site (https://asa-challenge.fibosolutions.com). The manual sheet is run in Chrome on the local app; signing in on the deployed site is done by a person.
 
 What the race script proves, also on the live DynamoDB table:
 

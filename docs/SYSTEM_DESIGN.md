@@ -160,7 +160,7 @@ This gate suits a demo; a product would use a managed identity provider (for exa
 
 ## 10. Testing
 
-Commands and latest results: [TESTING.md](TESTING.md). GitHub Actions runs the build, unit, frontend and integration tests on every push.
+Commands and latest results: [TESTING.md](TESTING.md).
 
 | Level | Tool | Covers |
 |---|---|---|

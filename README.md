@@ -40,21 +40,25 @@ docs/       Design, testing guide, manual test cases, out-of-scope list, test ev
 
 | Tool | Version | Used for |
 |---|---|---|
-| Node.js | 22 or newer, npm 10+ | build, run, test |
-| Docker | any recent | DynamoDB Local |
-| Python | 3.9+ (standard library only) | black-box API tests |
-| AWS CLI v2 and an account with a configured profile | | deploy only |
+| Node.js | 22 or newer, with npm 10+ | build, run, test, deploy |
+| Docker | Docker Desktop or Engine with Compose v2 (`docker compose`) | DynamoDB Local |
+| Python | 3.9+ (standard library only, nothing to install) | black-box API tests |
+| AWS account and credentials (CLI profile, SSO or environment variables) | | deploy only |
+
+Commands below use `python`; on macOS and Linux use `python3` if `python` is not found. On Windows PowerShell set variables with `$env:NAME = "value"` instead of `export NAME=value`.
 
 ## Run locally
 
 ```bash
-npm install                 # all workspaces
-npm run db:up               # DynamoDB Local in Docker
-npm run seed:local          # creates the table and the demo data
+git clone https://github.com/vinhngx25/asa-challenge.git
+cd asa-challenge
+npm install                 # all workspaces, run once from the repository root
+npm run db:up               # DynamoDB Local in Docker (port 8100)
+npm run seed:local          # waits for the database, creates the table and the demo data
 npm run dev                 # API on http://localhost:3000, web app on http://localhost:5173
 ```
 
-Open http://localhost:5173 and sign in with a demo account. `npm run build` type-checks every workspace and builds the frontend.
+Open http://localhost:5173 (Vite prints the address if that port is busy) and sign in with a demo account. Stop with Ctrl+C and `npm run db:down`. `npm run build` type-checks every workspace and builds the frontend.
 
 ## Test
 
@@ -71,20 +75,23 @@ python scripts/pairwise_tests.py --base-url http://localhost:3000
 python scripts/input_tests.py    --base-url http://localhost:3000
 ```
 
-The Python scripts run unchanged against a deployed site (`--base-url https://<your-url>`). GitHub Actions runs the build, unit, frontend and integration tests on every push. The UI is checked with the [manual test cases](docs/MANUAL_TEST_CASES.md). Details and API examples are in the [testing guide](docs/TESTING.md).
+The Python scripts run unchanged against a deployed site (`--base-url https://<your-url>`). The UI is checked with the [manual test cases](docs/MANUAL_TEST_CASES.md). Details and API examples are in the [testing guide](docs/TESTING.md).
 
 ## Deploy to AWS
 
 One environment, in **ap-southeast-1 (Singapore)**, served over HTTPS (CloudFront; HTTP redirects to HTTPS).
 
-One-time setup:
+One-time setup (run `npm install` first, from the repository root):
 
 ```bash
 aws configure --profile <your-profile>        # or use an existing SSO profile
 export AWS_PROFILE=<your-profile>
 npx cdk bootstrap aws://<ACCOUNT_ID>/ap-southeast-1
-npx cdk bootstrap aws://<ACCOUNT_ID>/us-east-1     # only with a custom domain (CloudFront certificates live there)
+# only if you use a custom domain and let CDK create its certificate (CloudFront certificates live in us-east-1):
+npx cdk bootstrap aws://<ACCOUNT_ID>/us-east-1
 ```
+
+The stack creates a DynamoDB table named `asa-challenge`, so the deploy fails if the account already has one with that name in the region.
 
 If the account's default CDK bootstrap is broken or shared, bootstrap separately and tell the deploy about it:
 
@@ -93,8 +100,6 @@ npx cdk bootstrap aws://<ACCOUNT_ID>/ap-southeast-1 --qualifier asa --toolkit-st
 export CDK_QUALIFIER=asa
 ```
 
-On PowerShell, set variables with `$env:NAME = "value"`.
-
 Deploy with the default CloudFront URL:
 
 ```bash
@@ -102,7 +107,7 @@ npm run deploy
 npm run seed:aws
 ```
 
-The command prints the `https://dxxxxxxxxxxxx.cloudfront.net` address. The first deploy takes 5 to 10 minutes because CloudFront must propagate.
+`npm run deploy` type-checks, builds the frontend, bundles the API and deploys the stack. It prints `SiteUrl` (the `https://dxxxxxxxxxxxx.cloudfront.net` address) at the end. The first deploy takes 5 to 10 minutes because CloudFront must propagate. `npm run seed:aws` loads the demo data into the new table; run it again at any time to reset the data.
 
 Deploy with your own domain (its DNS must be in a Route 53 hosted zone in the same account):
 
