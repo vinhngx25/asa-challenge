@@ -1,4 +1,4 @@
-/** One JSON object per line on stdout; Lambda sends it to CloudWatch Logs, where each field can be queried. */
+/** One JSON object per line on stdout (not console.log, which Lambda prefixes); CloudWatch Logs then makes every field queryable. */
 const LEVELS = { DEBUG: 10, INFO: 20, WARN: 30, ERROR: 40 } as const;
 type Level = keyof typeof LEVELS;
 
@@ -6,7 +6,8 @@ const threshold = LEVELS[(process.env.LOG_LEVEL as Level | undefined) ?? 'INFO']
 
 function write(level: Level, message: string, fields: Record<string, unknown> = {}): void {
   if (LEVELS[level] < threshold) return;
-  console.log(JSON.stringify({ level, time: new Date().toISOString(), message, ...fields }));
+  process.stdout.write(`${JSON.stringify({ level, time: new Date().toISOString(), message, ...fields })}
+`);
 }
 
 export const logger = {
