@@ -3,8 +3,8 @@
 What was built, how it differs from the design, what was tested and what was not. This is the record to read after [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) (intent) and [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) (milestones). Raw test output and screenshots are in [test-evidence/](test-evidence/).
 
 - **Live:** https://asa-challenge.fibosolutions.com (AWS ap-southeast-1)
-- **Delivered:** 2026-10-15, in 6 commits on `main`
-- **Status:** all milestones M0 to M8 complete
+- **Delivered:** 2026-10-15; hardened with boundary, pairwise and browser tests, then redeployed the same day
+- **Status:** all milestones M0 to M9 complete; the latest full run of every suite is green (section 5)
 
 ## 1. Summary
 
@@ -20,7 +20,11 @@ What was built, how it differs from the design, what was tested and what was not
 | Frontend and backend separate | `frontend/` and `backend/` with a shared contract package |
 | One environment on AWS with SSL at `asa-challenge.fibosolutions.com` | Deployed, CloudFront with the wildcard certificate, HTTP redirects to HTTPS |
 | Observability | Structured logs, custom metrics, X-Ray tracing, dashboard, 5 alarms |
-| Reviewer can follow the README to build, run, test and deploy | Rehearsed from a fresh clone up to seeding and tests (see section 6) |
+| Reviewer can follow the README to build, run, test and deploy | Rehearsed from a fresh clone: install, build, unit tests, seed, integration tests (section 6) |
+| Boundary and pairwise testing | Done: 26 boundary tests and 38 pairwise rows in the integration suite, plus 55 boundary and 39 pairwise HTTP checks that also run on the live site (sections 5.2 and 5.3) |
+| Real UI testing | Claude in Chrome for exploratory runs, plus a repeatable Playwright run of 51 checks (section 5.4) |
+| Manual test cases for a person, by priority | [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md): 14 must have, 21 should have, 12 nice to have |
+| Tools recorded | Google nano banana for images, Claude in Chrome and Playwright for the UI, Python and curl for the API (section 10, [TESTING.md](TESTING.md)) |
 
 ## 2. Milestone log
 
@@ -29,12 +33,13 @@ What was built, how it differs from the design, what was tested and what was not
 | M0 Design | README, system design and plan written and reviewed before any code | `f35a8a9` |
 | M1 Foundation | npm workspaces, TypeScript, shared Zod contracts, DynamoDB Local in Docker | `4272114` |
 | M2 Backend core | Slot-lock booking service, cancel, auth, routes, seed data, Lambda and Node adapters | `4272114` |
-| M3 Backend tests | 13 unit tests and 38 integration tests, Python API and race scripts | `4272114`, `2aac2e9` |
+| M3 Backend tests | 13 unit tests and 38 integration tests, Python API and race scripts (extended in M9) | `4272114`, `2aac2e9` |
 | M4 Frontend | Login, customer dashboard, booking flow, staff view | `c9b43b5` |
 | M5 Visuals | 37 images generated with Alice's Gemini image skill and converted to WebP. First set was flat vector; replaced by a cinematic poster set after review (see section 9) | `c9b43b5`, then the cinematic set |
 | M6 Infrastructure and deploy | CDK stack, bootstrap, deploy, seed, smoke test | `2aac2e9` |
 | M7 Verification | Python suites against the live site, browser checks, evidence | `2aac2e9` |
 | M8 Hand-over | README checked, fresh-clone rehearsal, plan closed | `754f6bb` |
+| M9 Hardening and test depth | Boundary and pairwise tests, mutation checks, Playwright UI regression, testing guide, manual test cases, three defects fixed, redeploy and live re-test | `4569a79` and the results commit that follows |
 
 ## 3. What was built
 
@@ -42,14 +47,14 @@ What was built, how it differs from the design, what was tested and what was not
 
 | Area | Files | Lines (TypeScript, Python, CSS) |
 |---|---|---|
-| `shared/` contracts | 1 | 188 |
-| `backend/src` | 16 | 1,364 |
-| `backend/test` | 4 | 479 |
-| `frontend/src` | 13 | 1,179 |
-| `infra/` | 2 | 390 |
-| `scripts/` (Python) | 4 | 301 |
+| `shared/` contracts | 1 | 227 |
+| `backend/src` | 16 | 1,526 |
+| `backend/test` | 8 | 1,164 |
+| `frontend/src` | 13 | 1,301 |
+| `infra/` | 2 | 427 |
+| `scripts/` (Python and the Playwright run) | 9 | 983 |
 
-Production build: JavaScript 544 KB (gzip about 166 KB), CSS 23 KB. Lambda bundle about 1.2 MB, minified, with the AWS SDK bundled.
+Production build: JavaScript 548 KB (gzip about 167 KB), CSS 23 KB. Lambda bundle about 1.2 MB, minified, with the AWS SDK bundled.
 
 ### Versions installed (latest at the time)
 
@@ -89,14 +94,15 @@ Deployment time: 865 seconds (CloudFront dominates). Region: ap-southeast-1. Cer
 
 ## 5. Results by area
 
-### 5.1 Unit tests: 13 passed
+### 5.1 Unit tests: 16 passed
 
 | File | Tests | Covers |
 |---|---|---|
 | `time.test.ts` | 10 | UTC offsets in winter and summer, both clock changes (27/28 March 2027 and 24/25 October 2026), local date vs UTC date, opening windows, Sunday closed, Saturday open, slot splitting, half-open end |
 | `auth.test.ts` | 3 | Password check is case sensitive, salts differ, malformed hash rejected |
+| `pairwise.test.ts` | 3 | The all-pairs generator covers every pair with far fewer rows than the full product, is deterministic, and handles one or two parameters |
 
-### 5.2 Integration tests on DynamoDB Local: 38 passed
+### 5.2 Integration tests on DynamoDB Local: 102 passed (4 files)
 
 `booking.integration.test.ts` (25 tests)
 
@@ -112,17 +118,38 @@ Deployment time: 865 seconds (CloudFront dominates). Region: ap-southeast-1. Cer
 
 `api.integration.test.ts` (13 tests): case-sensitive login, uniform error for wrong user and wrong password, body validation, `/me`, closed API without or with a bad token, only `/health` public, per-customer isolation, staff overview and filter, staff cannot book, 403 on another customer's booking, booking returns 201 with the full record, 409 with alternatives and rebooking after cancel, request validation, catalog counts.
 
+`boundary.integration.test.ts` (26 tests): the value just inside, exactly on and just outside each limit.
+
+| Group | Tests | What is proved |
+|---|---|---|
+| Opening hours | 6 | For 30, 60, 120 and 240 minute services: first start and last start that fits are booked; one slot before opening, one slot too late and the closing time itself are refused. Saturday follows the same hours, Sunday is closed from first to last minute, Manchester opens on the half hour |
+| 30 minute grid | 1 | Only exact slot starts are accepted; plus or minus 1 ms, 1 min and 29 min are refused |
+| Lead time and horizon | 4 | Exactly 60 minutes ahead is allowed, one slot or one millisecond less is not; exactly 60 days is allowed, one slot more is not; a start in the past is refused |
+| Cancel cut-off | 1 | Allowed 1 ms before the start, refused exactly at the start and after |
+| Clock changes | 3 | Opening time in UTC moves by one hour between Saturday 24 and Monday 26 Oct 2026 and between 27 and 29 Mar 2027; the day lists the same number of slots on both sides |
+| Capacity | 1 | A one-bay day takes exactly 18 thirty-minute jobs, then refuses the 19th and a start after closing; availability shows none free |
+| Locks written | 5 | 1, 2, 4 and 8 slots write exactly slots x 3 locks, all removed on cancel; lock partitions hold the right slot keys in order |
+| HTTP inputs | 5 | Login field lengths (0, 1, 64, 65 and 0, 1, 128, 129), malformed JSON, array, null, wrong types, extra fields; 11 invalid and 5 valid calendar dates; 8 invalid start time formats; bad list filters |
+
+`pairwise.integration.test.ts` (38 tests: 1 coverage check and 37 rows): 3,150 combinations of dealership (3), service (7), day (Monday, Saturday, Sunday), start position (first, middle, last fit, after close, before open), contention (none, one bay taken, all qualified technicians taken, all bays taken, vehicle taken) and customer (2) are reduced to 37 rows. Each row arranges the contention in the table, books, and compares the result with an oracle written from the rules. Rows inside opening hours also compare the availability endpoint with the booking result. All 37 pass.
+
+**Mutation checks** show the tests can fail. Locking only the first slot of a booking failed 6 tests. Searching only the first slot failed 1 test, because the transaction locks still stop the double booking (defence in depth).
+
 ### 5.3 Black-box Python tests (local and live)
 
-| Script | Local | Live |
+| Script | Local | Live (after the final deploy) |
 |---|---|---|
 | `api_tests.py` | 38 of 38 | 38 of 38 |
 | `race_booking.py` | 11 of 11 | 11 of 11 |
+| `boundary_tests.py` | 55 of 55 | 55 of 55 |
+| `pairwise_tests.py` | 39 of 39 | 39 of 39 |
 | `smoke_test.py` | not applicable | 10 of 10 |
+
+`pairwise_tests.py` covers the booking request (caller, vehicle, service, dealership, start): 648 combinations reduced to 24 pairwise rows, plus a baseline and 14 one-factor-at-a-time rows, 39 in all.
 
 The race script fires every scenario at the same instant with a barrier. On the live table: 7 requests for one bay gave exactly 1 booking and 6 conflicts; 2 bays and 2 technicians gave exactly 2; the same vehicle 5 times gave 1; an overlapping long and short job gave 1; four rivals for a freed slot gave 1. It cancels everything it creates.
 
-### 5.4 Browser checks (Claude in Chrome, local copy)
+### 5.4 Browser checks (Claude in Chrome and Playwright, local app)
 
 | Check | Result |
 |---|---|
@@ -135,7 +162,17 @@ The race script fires every scenario at the same instant with a barrier. On the 
 | Phone width (390 px): header wraps, cards stack | passed |
 | Live site: HTTPS login page renders | passed |
 
-A defect found and fixed during this run: the "Sign out" text was too faint against the header. The staff list was also reordered so upcoming bookings come first.
+A defect found and fixed during the first run: the "Sign out" text was too faint against the header. The staff list was also reordered so upcoming bookings come first.
+
+**Playwright regression, 51 of 51 passed** (`scripts/ui-regression/ui-run.mjs`, run twice to prove it cleans up after itself). It uses the case ids of the manual sheet: every Must-have customer and staff case, most Should-have cases and several Nice-to-have cases. Highlights:
+
+- Two browser windows act as two people. Both reach the last free slot; window A confirms; window B is refused with the message and the four nearest times and books one of them.
+- Taken and overlapping times are greyed out while back-to-back times stay open; a vehicle booked elsewhere is greyed everywhere.
+- Staff: summary, dealership tiles, status and date filters, the empty state, Clear filters, cancelling a customer's booking (the customer then sees it as Cancelled), no booking menu, `/book` returns to the list.
+- Signed out: deep links and unknown addresses go to the login, Back reveals nothing, an invalid token returns to the login, the API answers 401.
+- Keyboard-only sign-in, reload on `/book`, all 39 images on the booking page load, and no sideways scrolling at 390 px on four pages.
+
+Claude in Chrome was used for exploratory runs of the same flows, including the race (the second person booked through the API while the first page waited on the time step). Screenshots are in [test-evidence/](test-evidence/).
 
 ### 5.5 Performance on the live site (single client, warm path)
 
@@ -151,7 +188,7 @@ No load test was run.
 
 ## 6. Fresh-clone rehearsal
 
-A new clone of the public repository, with `npm install`, `npm run build`, `npm test`, `npm run seed:local` and `npm run test:integration`, completed with no manual steps: build succeeded, 13 unit tests passed, seed created 10 appointments, 38 integration tests passed. The AWS deployment steps were exercised by the real deploy rather than from the clone.
+A new clone of the public repository, with `npm install`, `npm run build`, `npm test`, `npm run seed:local` and `npm run test:integration`, completed with no manual steps (repeated after the final push): build succeeded, 16 unit tests passed, seed created 10 appointments, 102 integration tests passed. The optional `scripts/ui-regression` folder also installs and parses from a clone. The AWS deployment steps were exercised by the real deploy rather than from the clone.
 
 ## 7. Problems met and how they were solved
 
@@ -162,13 +199,17 @@ A new clone of the public repository, with `npm install`, `npm run build`, `npm 
 | Local DynamoDB container would not start | Port 8000 in use | Moved to 8100 |
 | CDK deploy blocked | Account's `CDKToolkit` stack in `UPDATE_ROLLBACK_FAILED` (roles deleted by hand) | Separate bootstrap with its own qualifier; the stack was not modified |
 | Dev server moved to port 5175 | 5173 and 5174 in use | Documented in the README; Vite prints the URL |
-| A browser tab stopped answering screenshots once | Transient renderer stall | Re-opened a tab; no app defect |
+| Screenshots and long scripts timed out in Chrome now and then | Chrome throttles timers and stops rendering a background tab | Keep one tab in front; use a message-channel wait inside page scripts; no app defect |
+| `GET /availability?date=2026-02-30` returned 200 with another day's hours | The date check only matched the pattern `YYYY-MM-DD` | Dates are checked as real calendar days (400 otherwise). Found by the boundary tests |
+| The booking page scrolled sideways on a phone (708 px wide) | Service cards and the category chip row widened their grid column | `min-w-0` on the column and cards. Found by the Playwright phone-width check |
+| "Times shown in Manchester time" | The label used the city for a UK-wide zone | Now "UK local time" |
 
 ## 8. Known limitations and not verified
 
 - **Not verified:** CloudWatch dashboard layout, X-Ray trace content and alarm firing were created by the deploy but not inspected or triggered. No load or soak test. No real-device phone test. No accessibility audit beyond semantic markup and keyboard-reachable controls.
-- **Browser sign-in on the live site** was not performed by the agent; it was verified through the API scripts.
-- **Frontend has no automated component tests.** UI behaviour is covered by the browser checklist.
+- **Browser sign-in on the live site** was not performed by the agent; it was verified through the API scripts and the smoke test. The manual sheet is for the author to run there.
+- **Frontend has no component-level tests.** UI behaviour is covered end to end by the Playwright run and the manual sheet.
+- **The Playwright run was executed on the local app only.** It signs in with the demo accounts through a browser, so the agent did not point it at the live site.
 - **JavaScript bundle is one 544 KB file.** No code splitting; acceptable for this size of app.
 - **Staff list is not paginated.** Fine for demo volumes.
 - **Login gate is not production authentication.** Fixed users, no lockout beyond API throttling and an alarm.
@@ -189,3 +230,23 @@ The first image set used a flat vector illustration style, chosen by the agent w
 | Process | one 3-image style test, then the full set | 6-image sample for review of the look, then the remaining 31 |
 
 Changes outside the images: the empty-state picture now fills its frame instead of being contained. File names are unchanged, so no component code depends on the style. Browser checks were repeated for login, booking, customer dashboard and staff view; screenshots in `docs/test-evidence/` show the new look.
+
+## 10. Tools used
+
+| Job | Tool |
+|---|---|
+| Images and thumbnails (37) | **Google "nano banana" (Gemini image models, `gemini-3.1-flash-image`)** through Alice's image skill, with one shared style prompt, contact-sheet review and WebP conversion |
+| Real UI testing | **Claude in Chrome** (Alice driving the author's Chrome) and **Playwright** (headless Chromium, repeatable) |
+| API testing | Python scripts (standard library only) against local or live; `curl` and PowerShell examples in [TESTING.md](TESTING.md) |
+| Unit and integration | Vitest with DynamoDB Local in Docker |
+| Cloud | AWS CLI and CDK, with the dedicated `aiadmin` profile |
+
+## 11. Defects found by testing
+
+| Found by | Defect | Status |
+|---|---|---|
+| First browser run | "Sign out" text too faint | Fixed |
+| Boundary tests | Impossible calendar dates accepted by the availability endpoint | Fixed, covered by tests |
+| Playwright, phone width | Booking page 708 px wide, scrolled sideways | Fixed, covered by the UI run |
+| Browser review | "Manchester time" label | Fixed |
+| Mutation checks | None: the tests fail when the code is broken, as intended | n/a |
