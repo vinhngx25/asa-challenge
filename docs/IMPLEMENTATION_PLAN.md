@@ -43,9 +43,9 @@ Status: all milestones complete. Outcomes, deviations from the design and test r
 
 ### M5 Visuals
 - [x] Check remaining Gemini prepaid credit before generating
-- [x] Fix one style prompt (flat vector, navy and amber palette) and test it on 3 images before the full set
+- [x] Fix one style prompt (cinematic poster look: teal and navy shadows, amber highlights) and test it on 6 images before the full set
 - [x] Generate about 37 images with the Alice image skill: 16 portraits (2 customers, 1 staff, 13 technicians), 3 dealerships, 1 service bay, 7 vehicles, 7 service categories, logo, login hero, empty state
-- [x] Optimize to WebP, place in `frontend/src/assets/`
+- [x] Optimize to WebP, place in `frontend/public/images/`
 
 ### M6 Infrastructure and deploy
 - [x] CDK: DynamoDB, Lambda (arm64), HTTP API, Secrets Manager, S3 + CloudFront (OAC, `/api/*` behavior, security headers, HTTP to HTTPS), optional domain and certificate

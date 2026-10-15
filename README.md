@@ -28,7 +28,7 @@ The login keeps the public API closed to casual visitors. It suits a demo; a pro
 
 ### Demo data
 
-3 dealerships in England (London, Birmingham, Manchester), 5 service bays, 13 technicians, 24 service types (30, 60, 120 and 240 minutes, including MOT, Interim Service and Full Service), 2 customers with 3 and 4 classic and film-famous cars, and a spread of past, upcoming and cancelled bookings. People, places and cars carry illustrated thumbnails.
+3 dealerships in England (London, Birmingham, Manchester), 5 service bays, 13 technicians, 24 service types (30, 60, 120 and 240 minutes, including MOT, Interim Service and Full Service), 2 customers with 3 and 4 classic and film-famous cars, and a spread of past, upcoming and cancelled bookings. People, places, cars and service categories carry cinematic poster-style thumbnails.
 
 ## Repository layout
 
@@ -180,7 +180,7 @@ Her workspace separates Alice's own knowledge from client and personal work. Eve
 - **Cloud operations.** She uses the AWS CLI with a dedicated profile to create and update infrastructure, deploy the frontend and backend, seed data and read logs.
 - **UI testing through a real browser.** She drives Chrome through the Claude in Chrome extension: logging in as each role, booking, cancelling, checking layout at several widths and capturing screenshots as evidence.
 - **API and rare-case testing.** She writes Python scripts that call the API directly, including simulations of rare cases such as two customers booking the same slot at the same moment, the same vehicle double-submitted, and cancel-then-rebook.
-- **Visuals.** She generates the illustrations in the app with her Gemini image skill.
+- **Visuals.** She generates the cinematic images in the app (portraits, dealerships, cars, service categories) with her Gemini image skill.
 
 ## License
 

@@ -16,7 +16,7 @@ What was built, how it differs from the design, what was tested and what was not
 | Login gate, customer dashboard, staff view | Built (3 accounts, case-sensitive, JWT) |
 | Cancel and free resources | Built, transactional |
 | Demo data: 5 bays, 13 technicians, 24 services, 3 dealerships | Built, matches exactly |
-| Generated illustrations | 37 images, 401 KB total as WebP |
+| Generated illustrations | 37 cinematic images, 745 KB total as WebP |
 | Frontend and backend separate | `frontend/` and `backend/` with a shared contract package |
 | One environment on AWS with SSL at `asa-challenge.fibosolutions.com` | Deployed, CloudFront with the wildcard certificate, HTTP redirects to HTTPS |
 | Observability | Structured logs, custom metrics, X-Ray tracing, dashboard, 5 alarms |
@@ -31,7 +31,7 @@ What was built, how it differs from the design, what was tested and what was not
 | M2 Backend core | Slot-lock booking service, cancel, auth, routes, seed data, Lambda and Node adapters | `4272114` |
 | M3 Backend tests | 13 unit tests and 38 integration tests, Python API and race scripts | `4272114`, `2aac2e9` |
 | M4 Frontend | Login, customer dashboard, booking flow, staff view | `c9b43b5` |
-| M5 Visuals | 37 images generated with Alice's Gemini image skill, converted to WebP | `c9b43b5` |
+| M5 Visuals | 37 images generated with Alice's Gemini image skill and converted to WebP. First set was flat vector; replaced by a cinematic poster set after review (see section 9) | `c9b43b5`, then the cinematic set |
 | M6 Infrastructure and deploy | CDK stack, bootstrap, deploy, seed, smoke test | `2aac2e9` |
 | M7 Verification | Python suites against the live site, browser checks, evidence | `2aac2e9` |
 | M8 Hand-over | README checked, fresh-clone rehearsal, plan closed | `754f6bb` |
@@ -174,3 +174,18 @@ A new clone of the public repository, with `npm install`, `npm run build`, `npm 
 - **Login gate is not production authentication.** Fixed users, no lockout beyond API throttling and an alarm.
 - **Out of scope as agreed:** payments, notifications, rescheduling, waitlists, registration, multi-day jobs, holidays.
 - **Demo data is reset by every `seed` run**, which wipes the table first.
+
+## 9. Visual direction change
+
+The first image set used a flat vector illustration style, chosen by the agent without samples. On review the author asked for a cinematic poster look, so every image was regenerated and the old files removed from the working tree (earlier versions remain in git history).
+
+| Item | Before | After |
+|---|---|---|
+| Style | flat vector illustration, navy and amber | cinematic neo-noir poster look, teal and navy shadows, amber highlights, haze and grain |
+| People | stylised avatars | fictional painterly portraits, each in a themed scene |
+| Cars and places | studio side views, flat | each car on its own road or street, dealerships at dusk or night |
+| Service categories | flat icons | dramatic macro shots (glowing brake disc, pouring oil, electrical arcs) |
+| Size | 401 KB for 37 files | 745 KB for 37 files |
+| Process | one 3-image style test, then the full set | 6-image sample for review of the look, then the remaining 31 |
+
+Changes outside the images: the empty-state picture now fills its frame instead of being contained. File names are unchanged, so no component code depends on the style. Browser checks were repeated for login, booking, customer dashboard and staff view; screenshots in `docs/test-evidence/` show the new look.

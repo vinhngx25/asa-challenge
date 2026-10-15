@@ -37,6 +37,6 @@ Results from the author's run (Alice, with Claude in Chrome for the UI). Re-run 
 | `JamesBond` sees only their own bookings (see `customer-dashboard-jamesbond.jpg`) | passed |
 | `Winston` (staff) sees every booking, with summary, dealership tiles and filters (see `staff-all-bookings.jpg`) | passed |
 | Phone width (390 px) layout | passed |
-| Live site served over HTTPS with the login page (see `live-login.jpg`) | passed |
+| Login, booking page, customer dashboard and staff view with the cinematic images (see `login-page.jpg`, `booking-page.jpg`, `customer-dashboard-jamesbond.jpg`, `staff-all-bookings.jpg`) | passed |
 
 Sign-in on the live site was verified through the API scripts above; the browser run used the local copy.

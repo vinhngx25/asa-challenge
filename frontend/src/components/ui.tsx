@@ -111,7 +111,7 @@ export function ErrorNote({ children }: { children: ReactNode }) {
 export function EmptyState({ title, text, action }: { title: string; text: string; action?: ReactNode }) {
   return (
     <div className="flex flex-col items-center gap-3 rounded-2xl bg-white px-6 py-10 text-center ring-1 ring-ink-100">
-      <Img k="app-empty" alt="" className="h-36 w-48 rounded-xl" fit="contain" />
+      <Img k="app-empty" alt="" className="h-36 w-52 rounded-xl" />
       <h3 className="text-lg font-semibold">{title}</h3>
       <p className="max-w-sm text-sm text-ink-500">{text}</p>
       {action}
