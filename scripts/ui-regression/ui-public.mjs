@@ -28,8 +28,11 @@ try {
   const res = await page.goto(BASE + '/login', { waitUntil: 'load' });
   const loadMs = Date.now() - started;
   await page.getByRole('heading', { name: 'Service Scheduler' }).waitFor();
-  check('P-01', 'login page loads and shows the title, username, password and Sign in', (await page.getByLabel('Username').isVisible()) && (await page.getByLabel('Password').isVisible()) && (await page.getByRole('button', { name: 'Sign in' }).isVisible()));
+  check('P-01', 'login page loads and shows the title, username, password and Sign in', (await page.getByLabel('Username', { exact: true }).isVisible()) && (await page.getByLabel('Password', { exact: true }).isVisible()) && (await page.getByRole('button', { name: 'Sign in' }).isVisible()));
   check('P-02', `login page loads quickly (${loadMs} ms, limit 5000)`, loadMs < 5000);
+  const pageText = await page.locator('body').innerText();
+  check('P-22', 'the login page explains the rules: 32 characters, case sensitive, no spaces in a password, who signs in, session length, demo note',
+    /Up to 32 characters\. Case sensitive\./.test(pageText) && /Up to 32 characters, no spaces\. Case sensitive\./.test(pageText) && /Customers and staff sign in on this page/.test(pageText) && /8 hours/.test(pageText) && /demo/i.test(pageText), pageText.slice(0, 300));
   check('P-03', 'page title is "Service Scheduler"', (await page.title()) === 'Service Scheduler');
 
   // Security headers and transport
@@ -53,13 +56,16 @@ try {
   // Accessibility and keyboard
   const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
   check('P-09', 'no WCAG 2.1 A/AA violations on the login page', axe.violations.length === 0, axe.violations.map((v) => `${v.id}(${v.nodes.length})`).join(', '));
-  await page.keyboard.press('Tab');
-  const first = await page.evaluate(() => document.activeElement?.getAttribute('autocomplete'));
-  await page.keyboard.press('Tab');
-  const second = await page.evaluate(() => document.activeElement?.getAttribute('autocomplete'));
-  await page.keyboard.press('Tab');
-  const third = await page.evaluate(() => document.activeElement?.textContent?.trim());
-  check('P-10', 'keyboard order: username, password, Sign in', first === 'username' && second === 'current-password' && third === 'Sign in', `${first} / ${second} / ${third}`);
+  const focused = async () => page.evaluate(() => {
+    const el = document.activeElement;
+    return el?.getAttribute('autocomplete') || (el instanceof HTMLInputElement && el.type === 'checkbox' ? 'show-password' : el?.textContent?.trim());
+  });
+  const order = [];
+  for (let i = 0; i < 4; i++) {
+    await page.keyboard.press('Tab');
+    order.push(await focused());
+  }
+  check('P-10', 'keyboard order: username, password, Show password, Sign in', JSON.stringify(order) === JSON.stringify(['username', 'current-password', 'show-password', 'Sign in']), order.join(' / '));
 
   // Redirects for signed-out visitors
   for (const [id, path] of [['P-11', '/book'], ['P-12', '/nothing-here'], ['P-13', '/']]) {
@@ -69,7 +75,7 @@ try {
   }
   await page.evaluate(() => localStorage.setItem('asa.token', 'invalid.token.value'));
   await page.goto(BASE + '/');
-  await page.getByLabel('Username').waitFor();
+  await page.getByLabel('Username', { exact: true }).waitFor();
   check('P-14', 'an invalid saved token returns to the login page and is cleared', (await page.evaluate(() => localStorage.getItem('asa.token'))) === null);
 
   // API through the browser's network stack

@@ -26,7 +26,7 @@ An appointment scheduler for car dealerships that replaces manual booking. A cus
 | `JamesBond` | `JamesBond` | customer (James Bond) |
 | `Winston` | `Winston` | staff (Winston Scott) |
 
-The login keeps the public API closed to casual visitors. It suits a demo; a production product would use a managed identity provider.
+The sign-in page explains the rules next to the boxes (live character counters, "no spaces" for passwords with an immediate warning, a show-password option) and has a Sign-in help panel: who signs in, the username and password rules, the 8 hour session and that this is a demo with fixed accounts. The login keeps the public API closed to casual visitors. It suits a demo; a production product would use a managed identity provider.
 
 ### Demo data
 
@@ -94,7 +94,7 @@ The same Python scripts run unchanged against the deployed site (`--base-url htt
 npm run dev                                   # in one terminal
 cd scripts/ui-regression
 npm install && npx playwright install chromium
-node ui-run.mjs http://localhost:5173 ./shots # 92 checks, screenshots in ./shots, exit code 1 on failure
+node ui-run.mjs http://localhost:5173 ./shots # 100 checks, screenshots in ./shots, exit code 1 on failure
 ```
 
 ### Manual test cases

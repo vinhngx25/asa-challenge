@@ -5,7 +5,7 @@ For a quick manual check of the live site by a person. Cases are ordered by prio
 | Priority | Meaning | Count | Rough time |
 |---|---|---|---|
 | **Must have** | The product is not usable or not safe if one fails | 15 | 20 to 25 minutes |
-| **Should have** | Important rules and everyday behaviour | 25 | 35 minutes |
+| **Should have** | Important rules and everyday behaviour | 26 | 35 minutes |
 | **Nice to have** | Polish, accessibility and edge behaviour | 13 | 20 minutes |
 
 Mark each result in the **Result** column: `P` pass, `F` fail, `-` skipped. Write failures down with the case ID and what you saw.
@@ -86,6 +86,7 @@ Services used below: **Oil & Filter Change** (60 min, Oil & Fluids), **Fluid Top
 | C-S14 | Qualified technician limit | Choose **Wheel Alignment** at Brum Auto Centre. Book it at DAY 10:00 with John, then try **Tyre Rotation & Balancing** at 10:00 with James. | The second is refused: Brum has only one tyre specialist, even though a bay is free. | |
 | C-S15 | Completed tab | Open the **Completed** tab. | Past bookings are listed with a "Completed" badge and no Cancel button. | |
 | C-S16 | Book another | After a confirmation, click **Book another**. | Wizard resets to an empty selection. | |
+| C-S19 | Sign-in help and live feedback | On the login page read the **Sign-in help** panel. Type a few characters in each box. Type a space in the password box, then delete it. Tick **Show password**. | Each box shows a counter such as `5 / 32` and its rule underneath. A red message appears as soon as the password has a space and goes when you remove it. Show password reveals the text and un-ticking hides it. The panel says who signs in, the username and password rules, the 8 hour session and that this is a demo. | |
 | C-S18 | Username and password limit (negative) | On the login page type 40 characters into Username, then into Password. Then type exactly 32 characters in each and sign in. | Each box stops at 32 characters. With 32 characters in each the page answers "Incorrect username or password" (not an error screen). | |
 | C-S17 | Date suggestion skips closed days | On a Saturday, open the booking page and choose a vehicle, a service and a dealership without touching the date. | The date moves from Sunday to the next open day (Monday). If you pick a date yourself it is never changed for you. | |
 

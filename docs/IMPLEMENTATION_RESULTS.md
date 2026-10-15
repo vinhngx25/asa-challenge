@@ -22,7 +22,7 @@ What was built, how it differs from the design, what was tested and what was not
 | Observability | Structured logs, custom metrics, X-Ray tracing, dashboard, 5 alarms |
 | Reviewer can follow the README to build, run, test and deploy | Rehearsed from a fresh clone: install, build, unit tests, seed, integration tests (section 6) |
 | Boundary and pairwise testing | Done: 26 boundary tests and 38 pairwise rows in the integration suite, plus 55 boundary and 39 pairwise HTTP checks that also run on the live site (sections 5.2 and 5.3) |
-| Real UI testing | Claude in Chrome for exploratory runs, plus a repeatable Playwright run of 92 checks including text-box limits and accessibility scans (section 5.4) |
+| Real UI testing | Claude in Chrome for exploratory runs, plus a repeatable Playwright run of 100 checks including text-box limits and accessibility scans (section 5.4) |
 | Manual test cases for a person, by priority | [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md): 14 must have, 21 should have, 12 nice to have |
 | Tools recorded | Google nano banana for images, Claude in Chrome and Playwright for the UI, Python and curl for the API (section 10, [TESTING.md](TESTING.md)) |
 
@@ -167,7 +167,7 @@ The race script fires every scenario at the same instant with a barrier. On the 
 
 A defect found and fixed during the first run: the "Sign out" text was too faint against the header. The staff list was also reordered so upcoming bookings come first.
 
-**Playwright regression, 92 of 92 passed** (`scripts/ui-regression/ui-run.mjs`, run twice to prove it cleans up after itself). It uses the case ids of the manual sheet: every Must-have customer and staff case, most Should-have cases and several Nice-to-have cases. Highlights:
+**Playwright regression, 100 of 100 passed** (`scripts/ui-regression/ui-run.mjs`, run twice to prove it cleans up after itself). It uses the case ids of the manual sheet: every Must-have customer and staff case, most Should-have cases and several Nice-to-have cases. Highlights:
 
 - Two browser windows act as two people. Both reach the last free slot; window A confirms; window B is refused with the message and the four nearest times and books one of them.
 - Taken and overlapping times are greyed out while back-to-back times stay open; a vehicle booked elsewhere is greyed everywhere.
@@ -338,7 +338,7 @@ Run against https://asa-challenge.fibosolutions.com after the final deploy.
 |---|---|---|
 | API: smoke, API, race, boundary, pairwise and input-sweep scripts | agent | 10, 38, 11, 57, 39 and 55 checks pass |
 | Browser, no sign-in (`ui-public.mjs`): page load speed, security headers, HTTP to HTTPS, console and network cleanliness, images, accessibility scan, keyboard order, signed-out redirects, API 401 shapes, forged token, malformed input, phone width | agent | 25 of 25 pass (login page loaded in about 0.6 s) |
-| Browser, signed in (`ui-run.mjs`, 92 checks) or the manual sheet | author | not run by the agent: it does not type the demo passwords into the login form of a deployed site. The same 92 checks pass on the local app; the author runs them on production with one command (see [TESTING.md](TESTING.md) section 6) |
+| Browser, signed in (`ui-run.mjs`, 100 checks) or the manual sheet | author | not run by the agent: it does not type the demo passwords into the login form of a deployed site. The same 100 checks pass on the local app; the author runs them on production with one command (see [TESTING.md](TESTING.md) section 6) |
 | Infrastructure: metrics, alarms, traces, logs, certificate | agent | verified in section 12.4 |
 
 The API scripts and the browser run exercise the same code. The browser run adds the screens and the rendering, which is why it is the part left for a person to run on production.
@@ -363,3 +363,11 @@ One difference between local and production was found by the input sweep on prod
 ### 14.1 Password rule
 
 The author's rule: a password has at most 32 characters and **no spaces**. It is enforced in three places: the shared schema (the API answers 400 `INVALID_INPUT` with "Password cannot contain spaces"), the login form (the browser stops the submit with the same message and sends nothing) and the hint under the box ("Up to 32 characters, no spaces"). The check is on any white space (space, tab, new line, non-breaking space). It applies at sign-in too, so a typed space can no longer be mistaken for a wrong password. The three demo passwords contain none. The username may still contain a space; it is just not an existing account.
+
+### 14.2 Sign-in page guidance
+
+Added at the author's request so customers and staff know the rules before they type. The page now has: a live counter on each box (`8 / 32`), the rule under each box (username up to 32 characters and case sensitive; password up to 32 characters, no spaces, case sensitive), a red warning the moment a password contains white space, a Show password option, and a **Sign-in help** panel (customers and staff use the same page and land on their own start page; the username and password rules; an 8 hour session and a reminder to sign out on a shared computer; this is a demo with fixed accounts that cannot be created or reset, listed in the README). The demo passwords are not shown on the page, so the gate keeps its purpose. Browser checks T-23 to T-26 and the public check P-22 cover it; the page still passes the accessibility scan and has no sideways scrolling at 390 px.
+
+### 14.3 Browser sign-in on deployed hosts
+
+The author asked twice for the agent to type the demo credentials into the production login form (once offering a separate staging address). The agent does not enter passwords into login forms on deployed hosts, whatever their name or purpose, so the signed-in production run stays with the author: the 100-check command in [TESTING.md](TESTING.md) section 6, or signing in once in a Chrome tab so the agent can drive the rest. The agent signs in only on a locally running copy of the app, where the same 100 checks pass.

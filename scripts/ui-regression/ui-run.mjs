@@ -54,8 +54,8 @@ const shot = (page, name, full = false) => page.screenshot({ path: path.join(OUT
 
 async function signIn(page, user, pass = user) {
   await page.goto(BASE + '/login');
-  await page.getByLabel('Username').fill(user);
-  await page.getByLabel('Password').fill(pass);
+  await page.getByLabel('Username', { exact: true }).fill(user);
+  await page.getByLabel('Password', { exact: true }).fill(pass);
   await page.getByRole('button', { name: 'Sign in' }).click();
 }
 const signOut = (page) => page.getByRole('button', { name: 'Sign out' }).click();
@@ -89,11 +89,11 @@ try {
       let sent = 0;
       page.on('request', (rq) => rq.url().includes('/api/auth/login') && sent++);
       await page.goto(BASE + '/login');
-      await page.getByLabel('Username').fill('JoinWick');
-      await page.getByLabel('Password').fill('Join Wick');
+      await page.getByLabel('Username', { exact: true }).fill('JoinWick');
+      await page.getByLabel('Password', { exact: true }).fill('Join Wick');
       await page.getByRole('button', { name: 'Sign in' }).click();
       await page.waitForTimeout(400);
-      const msg = await page.getByLabel('Password').evaluate((el) => el.validationMessage);
+      const msg = await page.getByLabel('Password', { exact: true }).evaluate((el) => el.validationMessage);
       check('C-M03b', 'a password with a space is stopped by the form with "Password cannot contain spaces" and nothing is sent', sent === 0 && /Password cannot contain spaces/.test(msg), `sent=${sent} message=${msg}`);
       check('C-M03c', 'the login page tells people the rule: up to 32 characters, no spaces', /Up to 32 characters, no spaces/.test(await page.locator('form').innerText()));
     }
@@ -311,7 +311,7 @@ try {
 
   /* ---------- Sign out, direct links, errors ---------- */
   await signOut(james.page);
-  await james.page.getByLabel('Username').waitFor();
+  await james.page.getByLabel('Username', { exact: true }).waitFor();
   await james.page.goBack();
   check('C-S02', 'after sign out, Back does not reveal bookings', new URL(james.page.url()).pathname === '/login' || (await james.page.locator('article').count()) === 0);
   await james.page.goto(BASE + '/book');
@@ -327,7 +327,7 @@ try {
   check('N-06', 'health endpoint is public', health.status === 'ok');
   await james.page.evaluate(() => localStorage.setItem('asa.token', 'invalid.token.value'));
   await james.page.goto(BASE + '/');
-  await james.page.getByLabel('Username').waitFor();
+  await james.page.getByLabel('Username', { exact: true }).waitFor();
   check('N-12', 'an invalid or expired token returns to login without an error screen', (await james.page.evaluate(() => localStorage.getItem('asa.token'))) === null);
 
   /* ---------- Date default, throttling message, accessibility ---------- */
@@ -384,8 +384,8 @@ try {
   {
     const tb = await newPage();
     await tb.page.goto(BASE + '/login');
-    const user = tb.page.getByLabel('Username');
-    const pass = tb.page.getByLabel('Password');
+    const user = tb.page.getByLabel('Username', { exact: true });
+    const pass = tb.page.getByLabel('Password', { exact: true });
     check('T-01', 'username box allows at most 32 characters (maxlength)', (await user.getAttribute('maxlength')) === '32');
     check('T-02', 'password box allows at most 32 characters (maxlength)', (await pass.getAttribute('maxlength')) === '32');
     await user.pressSequentially('u'.repeat(40));
@@ -433,6 +433,29 @@ try {
       check('T-22', `password ${JSON.stringify(bad)} is stopped by the form (nothing sent)`, sentNow === 0 && (await pass.evaluate((el) => !el.validity.valid)));
       tb.page.off('request', count);
     }
+    // Sign-in help: live feedback while typing, counters, show password, and the rules in plain words
+    await user.fill('');
+    await pass.fill('');
+    await user.pressSequentially('Joe');
+    await pass.pressSequentially('abcde');
+    const formText = await tb.page.locator('form').innerText();
+    check('T-23', 'live counters show how many characters are used: "3 / 32" and "5 / 32"', /3 \/ 32/.test(formText) && /5 \/ 32/.test(formText), formText.replace(/\n+/g, ' | ').slice(0, 200));
+    check('T-24a', 'no space warning while the password has no spaces', (await tb.page.getByText('Passwords cannot contain spaces').count()) === 0);
+    await pass.pressSequentially(' x');
+    await tb.page.getByText('Passwords cannot contain spaces. Remove the space to continue.').waitFor();
+    check('T-24b', 'typing a space in the password shows "Passwords cannot contain spaces" at once', (await pass.getAttribute('aria-invalid')) === 'true');
+    await pass.press('Backspace');
+    await pass.press('Backspace');
+    await tb.page.waitForTimeout(250);
+    check('T-24c', 'the warning goes away when the space is removed', (await tb.page.getByText('Passwords cannot contain spaces').count()) === 0 && (await pass.getAttribute('aria-invalid')) === 'false');
+    check('T-25a', 'the password is hidden by default', (await pass.getAttribute('type')) === 'password');
+    await tb.page.getByLabel('Show password').check();
+    check('T-25b', '"Show password" reveals what was typed', (await pass.getAttribute('type')) === 'text' && (await pass.inputValue()) === 'abcde');
+    await tb.page.getByLabel('Show password').uncheck();
+    check('T-25c', 'and hides it again', (await pass.getAttribute('type')) === 'password');
+    const help = await tb.page.getByRole('region', { name: 'Sign-in help' }).innerText();
+    check('T-26', 'the Sign-in help panel states who signs in, the username and password rules, session length and that this is a demo',
+      /Customers and staff sign in on this page/.test(help) && /Username: up to 32 characters, case sensitive/.test(help) && /Password: up to 32 characters, case sensitive, and no spaces/.test(help) && /8 hours/.test(help) && /demo/.test(help) && /README/.test(help), help.replace(/\n+/g, ' | ').slice(0, 250));
     check('T-12', 'the login form still works after all of that', await tb.page.getByRole('button', { name: 'Sign in' }).isEnabled());
     await tb.ctx.close();
 
