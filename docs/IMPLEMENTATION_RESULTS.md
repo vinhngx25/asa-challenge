@@ -314,7 +314,7 @@ Method: each requirement and design claim was traced to the code that implements
 
 ### 12.5 Open points: acknowledged, out of scope for this version
 
-These are recorded so the limits are visible. They are not open for discussion in this version and none changes the delivered behaviour; the maintained list, with reasons and what a next version would do, is [OUT_OF_SCOPE.md](OUT_OF_SCOPE.md) (25 items).
+These are recorded so the limits are visible. They are not open for discussion in this version and none changes the delivered behaviour; the maintained list, with reasons and what a next version would do, is [OUT_OF_SCOPE.md](OUT_OF_SCOPE.md) (28 items).
 
 
 | # | Point | Why it matters | What a next version could do |
@@ -409,7 +409,7 @@ Requested after the author spotted a header alignment problem on a phone and ask
 |---|---|---|
 | Layout audit, 7 sizes x 5 screens | 221 of 221 | First run: the phone header was 3 rows and 153 px tall (logo and title, menu, avatar and Sign out each on their own line); also a 320 px title cut and uneven staff filters. All fixed and re-measured |
 | Resilience | 46 of 46 | 5 time zones x 4 checks; 12 network checks; 11 session and navigation checks; random clicking for 3 users (660 steps) with no uncaught error |
-| Visual regression | 11 of 11 | Mutation check: one changed colour failed two comparisons; restored it passed. Baselines are not committed (item 30) |
+| Visual regression | 11 of 11 | Mutation check: one changed colour failed two comparisons; restored it passed. Baselines are not committed (item 29) |
 | Performance, deployed sign-in page | 10 of 10 | Desktop: FCP 0.78 s, LCP 0.82 s. Phone profile (CPU 4x, Fast 3G): FCP 1.76 s, LCP 2.13 s. Layout shift 0. 292 KB and 225 KB. The phone does not download the large desktop photo |
 | Performance, local build signed in | 18 of 18 | Dashboard after Sign in: 0.23 s desktop, 1.38 s phone profile; times after choosing a date: 71 ms and 466 ms |
 | Existing suites on the final build | all green | Unit 20, integration 104, Python 41 / 11 / 57 / 39 / 55, UI run 102 (three times in a row), public checks 27 local and 29 deployed |
@@ -417,3 +417,25 @@ Requested after the author spotted a header alignment problem on a phone and ask
 Defects found and fixed in this round: the phone header layout; uneven staff filters; a double click sending two booking requests (safe, because the database lock held, but wasteful and confusing); the page waiting for ever with no message when offline (the data library pauses requests offline by default, and there was no request timeout); sign-in always ending on the home page even after an expired session or a deep link. One flaw in the tests themselves is also recorded: the first resilience script hid its own errors and stopped after 25 of 46 checks without saying so.
 
 Changes to the product: two-row phone header; filters grid; guards against duplicate requests on Confirm, Cancel and Sign in; 20 second request limit and an offline message; requests always attempted so that message appears; sign-in returns to the page that was asked for (same-site paths only, and a deliberate sign-out returns to the home page); a `preview` proxy in `vite.config.ts` so a production build can run locally with the API.
+
+## 18. Sticky Confirm bar on phones, and testing through Claude in Chrome
+
+The author made the phone experience the first priority and asked for the Confirm button to be in reach (formerly out-of-scope item 29, now delivered and removed from that list), and asked that UI testing be done through Claude in Chrome (the built-in browser extension) instead of Playwright.
+
+**What changed.** Below 1024 px the "Your booking" panel is a bar pinned to the bottom of the screen: a one-line summary (or the next step to take, such as "Step 3: choose a dealership") and a full-width Confirm button. When a time is taken by someone else, the bar shows the message with the four nearest times in a two-by-two grid, and hides the one-line summary to save room. From 1024 px up it is unchanged: the detailed summary card is sticky on the right. There is still exactly one Confirm button, so nothing else in the app or the tests changed.
+
+**Measured in Chrome (a 390 px wide frame, signed in as a customer on the local production build).**
+
+| Check | Result |
+|---|---|
+| Bar pinned to the bottom with the Confirm button in view at the start, on a 4,321 px long page | yes, 109 px tall |
+| Summary text follows each step | "Step 1: choose your vehicle" through "Step 4: pick a date and a start time", then "MOT Test - Kensington Motor Works, Wed, 28 Oct 2026, 10:00 to 11:00" |
+| Pinned and Confirm in view at scroll positions 0, 600, 1800 and 3000 px | yes at all four, 128 px tall with a time chosen |
+| Conflict (another customer took the slot while this page waited) | message and four nearest times shown in the bar; first version took 54% of the screen, tightened to 37%; Confirm still in view |
+| Choosing a suggested time | the bar returns to 128 px with the new time, the message is gone |
+| Confirming from the suggested time | "Booking confirmed" |
+| Wide screen (1920 px) | sticky card at the right, 96 px from the top, detailed summary shown, compact line hidden, one Confirm button |
+
+**Core cases re-run in Chrome on the final build** (DOM-driven in the extension's tab, on the local copy): customer dashboard counts, own cars only, cancel with the inline prompt and updated counts, wrong-case and wrong-password sign-in, live "no spaces" warning, 32 character limits, the Sign-in help panel, staff overview, search by reference and plate, search symbols, dealership filter, a cancel prompt naming the customer, "Keep it", `/book` for staff going to All bookings, the signed-out `/book` visit returning to `/book` after sign-in, and a deliberate sign-out returning to the home page. All passed.
+
+**Limits of the Chrome route.** The extension cannot resize the browser window, so phone width is shown by loading the app in a 390 px wide frame, which makes the page's own media queries apply. The tab is often reported as hidden by Chrome, which makes real keystrokes and some screenshots unreliable; clicks and form fills are therefore done through the page's own scripts and screenshots are taken when the tab allows it. The earlier Playwright scripts stay in the repository as an optional, repeatable extra; they are not used for the checks above.

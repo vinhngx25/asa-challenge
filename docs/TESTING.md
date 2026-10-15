@@ -216,6 +216,10 @@ Beyond functional, boundary and pairwise checks, six more kinds of browser test 
 | **Time zone and locale** (part of resilience) | as above | Confirms times are shown and stored in the dealership's time (London) for a browser anywhere, UK-style dates in every locale, and that opening time reads 08:00 on both sides of the clock change | passed for all five zones |
 | **Random clicking** (part of resilience) | as above | Looks for crashes, blank pages and uncaught errors, not for expected results | no uncaught error in 660 steps |
 
+### Testing through Claude in Chrome
+
+The author prefers UI testing through Claude in Chrome (the browser extension). It is used for the phone Confirm bar and a re-run of the core cases (results in [IMPLEMENTATION_RESULTS.md](IMPLEMENTATION_RESULTS.md) section 18). Practical notes: the extension cannot resize the window, so phone width is shown in a 390 px wide frame (the page's own media queries apply inside it); Chrome often reports the tab as hidden, which makes real keystrokes and some screenshots unreliable, so clicks and form fills go through the page's scripts and screenshots are taken when the tab allows it; sign-in is typed or filled only on the local copy. The Playwright scripts remain as an optional repeatable extra.
+
 ### What these found
 
 | Found by | Defect | Fix |

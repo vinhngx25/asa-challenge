@@ -76,5 +76,7 @@ Two tools: **Claude in Chrome** (Alice driving the author's Chrome) and **Playwr
 | `16-phone-header-dashboard.jpg` | Phone header after the redesign: one line for logo, picture and Sign out; menu as equal buttons below |
 | `17-phone-staff-filters.jpg` | Staff filters as a tidy grid on a phone |
 | `18-phone-320-header.jpg` | The same header at the narrowest size, 320 px |
+| `19-phone-sticky-confirm-bar.jpg` | **Chrome screenshot**: phone, booking page with the bar pinned to the bottom (summary and Confirm) |
+| `20-phone-conflict-in-bar.jpg` | **Chrome screenshot**: phone, the conflict message and four nearest times inside the pinned bar |
 
 Browser sign-in on the deployed site is performed by the author; the deployed site was verified by the Python scripts and the post-deploy smoke test.

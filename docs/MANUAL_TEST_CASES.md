@@ -5,7 +5,7 @@ For a quick manual check of the live site by a person. Cases are ordered by prio
 | Priority | Meaning | Count | Rough time |
 |---|---|---|---|
 | **Must have** | The product is not usable or not safe if one fails | 15 | 20 to 25 minutes |
-| **Should have** | Important rules and everyday behaviour | 27 | 35 minutes |
+| **Should have** | Important rules and everyday behaviour | 28 | 35 minutes |
 | **Nice to have** | Polish, accessibility and edge behaviour | 17 | 25 minutes |
 
 Mark each result in the **Result** column: `P` pass, `F` fail, `-` skipped. Write failures down with the case ID and what you saw.
@@ -86,6 +86,7 @@ Services used below: **Oil & Filter Change** (60 min, Oil & Fluids), **Fluid Top
 | C-S14 | Qualified technician limit | Choose **Wheel Alignment** at Brum Auto Centre. Book it at DAY 10:00 with John, then try **Tyre Rotation & Balancing** at 10:00 with James. | The second is refused: Brum has only one tyre specialist, even though a bay is free. | |
 | C-S15 | Completed tab | Open the **Completed** tab. | Past bookings are listed with a "Completed" badge and no Cancel button. | |
 | C-S16 | Book another | After a confirmation, click **Book another**. | Wizard resets to an empty selection. | |
+| C-S21 | Confirm bar on a phone | On a phone (or a window under 1024 px wide) open the booking page and scroll through the steps. Choose a vehicle, a service, a dealership, a date and a time. | A bar stays at the bottom of the screen the whole time: it first says which step is next, then shows the service, dealership and time with a full-width **Confirm booking** button. You never have to scroll to the end to confirm. On a wide screen the summary is a card on the right instead. | |
 | C-S20 | Return to the page you asked for | Signed out, type the address of the booking page (`/book`) in the browser. Sign in as a customer. | After signing in you land on the booking page. After pressing **Sign out** yourself and signing in again you land on My bookings. | |
 | C-S19 | Sign-in help and live feedback | On the login page read the **Sign-in help** panel. Type a few characters in each box. Type a space in the password box, then delete it. Tick **Show password**. | Each box shows a counter such as `5 / 32` and its rule underneath. A red message appears as soon as the password has a space and goes when you remove it. Show password reveals the text and un-ticking hides it. The panel says who signs in, the 8 hour session and that this is a demo; the username and password rules appear once, under their boxes (not repeated in the panel). | |
 | C-S18 | Username and password limit (negative) | On the login page type 40 characters into Username, then into Password. Then type exactly 32 characters in each and sign in. | Each box stops at 32 characters. With 32 characters in each the page answers "Incorrect username or password" (not an error screen). | |

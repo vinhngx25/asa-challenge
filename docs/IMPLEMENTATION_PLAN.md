@@ -93,6 +93,11 @@ Status: all milestones complete. Outcomes, deviations from the design and test r
 - [x] Fix what they found: duplicate requests, offline hang, request timeout, return to the requested page
 - [x] Record skipped test types as out of scope (cross-browser, manual sessions, heavy data)
 
+### M13 Phone first
+- [x] Sticky Confirm bar on phones (promoted from out of scope); desktop card unchanged
+- [x] Verified through Claude in Chrome: pinned at every scroll position, conflict state, suggested time, desktop layout
+- [x] Core customer and staff cases re-run in Chrome on the final build
+
 ## Working agreements
 
 - Commit after each milestone to `asa-challenge`, one repository per commit.

@@ -144,6 +144,17 @@ export function Book() {
   }
 
   const conflict = book.error instanceof ApiError ? book.error : null;
+  const whenText =
+    startTime && service
+      ? `${fmtDate(startTime, tz)}, ${fmtTime(startTime, tz)} to ${fmtTime(new Date(Date.parse(startTime) + service.durationMinutes * 60_000).toISOString(), tz)}`
+      : null;
+  const nextStep = !vehicle
+    ? 'Step 1: choose your vehicle.'
+    : !service
+      ? 'Step 2: choose what it needs.'
+      : !dealership
+        ? 'Step 3: choose a dealership.'
+        : 'Step 4: pick a date and a start time.';
 
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
@@ -271,26 +282,36 @@ export function Book() {
         </Step>
       </div>
 
-      <aside className="lg:sticky lg:top-24 lg:self-start">
-        <Card className="space-y-4">
-          <h2 className="text-lg font-bold">Your booking</h2>
-          <dl className="space-y-3 text-sm">
+      {/* Below the lg breakpoint this is a bar pinned to the bottom of the screen (one-line summary and Confirm), so
+          Confirm is always in reach on a phone. From lg up it is the sticky card on the right. */}
+      <aside className="sticky bottom-0 z-10 -mx-4 lg:bottom-auto lg:top-24 lg:mx-0 lg:self-start" aria-label="Your booking">
+        <Card className="space-y-3 rounded-b-none border-t border-ink-100 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(11,31,58,0.14)] lg:space-y-4 lg:rounded-2xl lg:border-t-0 lg:pb-5 lg:shadow-sm">
+          <h2 className="hidden text-lg font-bold lg:block">Your booking</h2>
+          <dl className="hidden space-y-3 text-sm lg:block">
             <Row label="Vehicle" value={vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : null} />
             <Row label="Service" value={service ? `${service.name} · ${fmtDuration(service.durationMinutes)}` : null} />
             <Row label="Dealership" value={dealership?.name ?? null} />
-            <Row
-              label="When"
-              value={startTime && service ? `${fmtDate(startTime, tz)}, ${fmtTime(startTime, tz)} to ${fmtTime(new Date(Date.parse(startTime) + service.durationMinutes * 60_000).toISOString(), tz)}` : null}
-            />
+            <Row label="When" value={whenText} />
           </dl>
 
+          <div className={`lg:hidden ${conflict ? 'hidden' : ''}`} data-testid="booking-bar-summary">
+            {whenText && service && dealership ? (
+              <p className="text-sm font-semibold leading-snug">
+                {service.name} · {dealership.name}
+                <span className="block font-normal text-ink-600">{whenText}</span>
+              </p>
+            ) : (
+              <p className="text-sm text-ink-600">{nextStep}</p>
+            )}
+          </div>
+
           {conflict && (
-            <div role="alert" className="space-y-2 rounded-xl bg-bad-50 p-3 text-sm text-bad-600 ring-1 ring-red-200">
+            <div role="alert" className="max-h-[34vh] space-y-2 overflow-y-auto rounded-xl bg-bad-50 p-3 text-sm text-bad-600 ring-1 ring-red-200 lg:max-h-none">
               <p className="font-semibold">{conflict.message}</p>
               {conflict.alternatives.length > 0 && (
                 <div>
                   <p className="mb-1 text-ink-700">Nearest free times:</p>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                     {conflict.alternatives.map((alt) => (
                       <button
                         key={alt}
@@ -302,7 +323,7 @@ export function Book() {
                           setTimeout(() => setStartTime(alt), 0);
                           book.reset();
                         }}
-                        className="rounded-lg bg-white px-2.5 py-1 font-semibold text-ink-800 ring-1 ring-ink-200 hover:bg-brand-50"
+                        className="min-h-9 rounded-lg bg-white px-2 py-1 text-xs font-semibold text-ink-800 ring-1 ring-ink-200 hover:bg-brand-50 sm:px-2.5 sm:text-sm"
                       >
                         {fmtDate(alt, tz)} {fmtTime(alt, tz)}
                       </button>
@@ -313,11 +334,15 @@ export function Book() {
             </div>
           )}
 
-          <Button className="w-full" disabled={!vehicle || !service || !dealership || !startTime || book.isPending} onClick={() => {
+          <Button
+            className="min-h-11 w-full"
+            disabled={!vehicle || !service || !dealership || !startTime || book.isPending}
+            onClick={() => {
               if (inFlight.current) return;
               inFlight.current = true;
               book.mutate();
-            }}>
+            }}
+          >
             {book.isPending ? 'Confirming...' : 'Confirm booking'}
           </Button>
         </Card>
