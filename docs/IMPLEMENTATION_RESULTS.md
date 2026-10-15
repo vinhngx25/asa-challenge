@@ -193,7 +193,7 @@ No load test was run.
 
 ## 6. Fresh-clone rehearsal
 
-A new clone of the public repository, with `npm install`, `npm run build`, `npm test`, `npm run seed:local` and `npm run test:integration`, completed with no manual steps (repeated after the final push): build succeeded, 16 unit tests passed, seed created 10 appointments, 102 integration tests passed. The optional `scripts/ui-regression` folder also installs and parses from a clone. The AWS deployment steps were exercised by the real deploy rather than from the clone.
+A new clone of the public repository, with `npm install`, `npm run build`, `npm test`, `npm run seed:local` and `npm run test:integration`, completed with no manual steps (repeated after the final push of the review fixes): build succeeded, 20 unit tests passed, seed created 10 appointments, 102 integration tests passed. The optional `scripts/ui-regression` folder also installs and parses from a clone. The AWS deployment steps were exercised by the real deploy rather than from the clone.
 
 ## 7. Problems met and how they were solved
 
