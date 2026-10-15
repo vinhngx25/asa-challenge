@@ -7,14 +7,14 @@ Results from the author's runs (Alice). Full detail, tool notes and method: [../
 | Suite | Where | Result |
 |---|---|---|
 | Type check (all workspaces) | local | clean |
-| Unit tests (`npm test`) | local | 16 passed (time zones including both clock changes, slot maths, password hashing, pairwise generator) |
+| Unit tests (`npm test`) | local | 20 passed (time zones including both clock changes, slot maths, password hashing, pairwise generator, appointment phase boundaries) |
 | Integration tests (`npm run test:integration`) | DynamoDB Local | 102 passed: booking and cancel 25, API and roles 13, **boundary values 26**, **pairwise 38** |
 | `scripts/api_tests.py` | local and live | 38 of 38 |
 | `scripts/race_booking.py` | local and live | 11 of 11 |
 | `scripts/boundary_tests.py` | local and live | 55 of 55 |
 | `scripts/pairwise_tests.py` | local and live | 39 of 39 |
 | `scripts/smoke_test.py` | live | 10 of 10 |
-| Playwright UI regression (`scripts/ui-regression`) | local app | 51 of 51 |
+| Playwright UI regression (`scripts/ui-regression`) | local app | 64 of 64 (includes staff search, date suggestion, throttled message and WCAG 2.1 AA scans of four screens) |
 
 "Live" is `https://asa-challenge.fibosolutions.com` on AWS (CloudFront, API Gateway, Lambda, DynamoDB).
 

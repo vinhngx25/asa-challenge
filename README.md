@@ -67,7 +67,7 @@ Open http://localhost:5173 and sign in with a demo account.
 ## Build
 
 ```bash
-npm run build               # type-checks and builds shared, backend and frontend
+npm run build               # type-checks every workspace and builds the frontend (the API is bundled at deploy time)
 ```
 
 ## Test

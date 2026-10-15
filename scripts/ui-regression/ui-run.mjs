@@ -3,6 +3,7 @@
 //   CHROME_PATH=<chrome.exe>  use an installed Chrome/Chromium instead of the one from "npx playwright install chromium"
 // Two browser contexts act as two people (the booking race). Bookings made by the run are cancelled again at the end.
 import { chromium } from 'playwright';
+import { AxeBuilder } from '@axe-core/playwright';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -245,9 +246,28 @@ try {
   await staff.page.getByRole('button', { name: 'Clear filters' }).click();
   await staff.page.waitForTimeout(700);
   check('S-S04b', 'Clear filters restores the full list', (await staff.page.locator('article').count()) === total);
+  // Search: staff find a booking from what a caller quotes
+  const search = staff.page.getByLabel('Search');
+  const someRef = (await staff.page.locator('article').first().innerText()).match(/ASA-[0-9A-F]{8}/)[0];
+  await search.fill(someRef);
+  await staff.page.waitForTimeout(300);
+  check('S-S06a', 'search by booking reference finds exactly that booking', (await staff.page.locator('article').count()) === 1 && (await staff.page.locator('article').first().innerText()).includes(someRef));
+  await search.fill('JB77 LTS');
+  await staff.page.waitForTimeout(300);
+  check('S-S06b', 'search by number plate finds that car', (await staff.page.locator('article').count()) >= 1 && (await staff.page.locator('article').allInnerTexts()).every((x) => x.includes('JB77 LTS')));
+  await search.fill('wick mustang');
+  await staff.page.waitForTimeout(300);
+  check('S-S06c', 'search words are combined (customer and car)', (await staff.page.locator('article').count()) >= 1 && (await staff.page.locator('article').allInnerTexts()).every((x) => /John Wick/.test(x) && /Mustang/.test(x)));
+  await search.fill('zzzz-no-such');
+  await staff.page.getByText('No bookings match').waitFor();
+  check('S-S06d', 'a search with no result shows "No bookings match"', true);
+  await staff.page.getByRole('button', { name: 'Clear filters' }).click();
+  await staff.page.waitForTimeout(500);
+  check('S-S06e', 'Clear filters also clears the search', (await search.inputValue()) === '' && (await staff.page.locator('article').count()) === total);
   const jamesCard = staff.page.locator('article').filter({ hasText: 'James Bond' }).filter({ hasText: 'Upcoming' }).first();
   const jamesRef = (await jamesCard.innerText()).match(/ASA-[0-9A-F]{8}/)[0];
   await jamesCard.getByRole('button', { name: 'Cancel booking' }).click();
+  check('S-M03a', "staff's cancel prompt names the customer", await jamesCard.getByText(/Cancel James Bond's booking/).isVisible());
   await jamesCard.getByRole('button', { name: 'Yes, cancel' }).click();
   await staff.page.waitForTimeout(1000);
   await james.page.getByRole('link', { name: 'My bookings' }).click();
@@ -274,6 +294,56 @@ try {
   await james.page.goto(BASE + '/');
   await james.page.getByLabel('Username').waitFor();
   check('N-12', 'an invalid or expired token returns to login without an error screen', (await james.page.evaluate(() => localStorage.getItem('asa.token'))) === null);
+
+  /* ---------- Date default, throttling message, accessibility ---------- */
+  {
+    const c = await newPage();
+    await signIn(c.page, 'JoinWick');
+    await c.page.getByRole('heading', { name: 'John Wick' }).waitFor();
+    // Pretend it is Saturday 17 Oct 2026 in the browser: "tomorrow" is a Sunday, when every dealership is closed.
+    await c.page.clock.setFixedTime(new Date('2026-10-17T12:00:00'));
+    await c.page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Book a service' }).click();
+    await c.page.getByRole('button', { name: /Mustang/ }).click();
+    await c.page.getByRole('button', { name: /MOT Test/ }).click();
+    const initial = await c.page.locator('#date').inputValue();
+    await c.page.getByRole('button', { name: /Kensington Motor Works/ }).click();
+    await c.page.waitForTimeout(500);
+    const moved = await c.page.locator('#date').inputValue();
+    check('C-S17a', 'when the suggested day is a Sunday, choosing a dealership moves it to the next open day', initial === '2026-10-18' && moved === '2026-10-19', `${initial} -> ${moved}`);
+    await c.page.locator('#date').fill('2026-10-18');
+    await c.page.getByRole('button', { name: /Northern Quarter Garage/ }).click();
+    await c.page.waitForTimeout(400);
+    check('C-S17b', 'a day the customer chose themselves is not changed behind their back', (await c.page.locator('#date').inputValue()) === '2026-10-18');
+    // A throttled request (API Gateway 429, not our error format) gets a readable message.
+    await c.page.getByRole('button', { name: /Kensington Motor Works/ }).click();
+    await c.page.locator('#date').fill(DAY);
+    await times(c.page).first().waitFor();
+    await timeBtn(c.page, '16:00').click();
+    await c.page.route('**/api/appointments', (route) => route.request().method() === 'POST' ? route.fulfill({ status: 429, contentType: 'application/json', body: '{"message":"Too Many Requests"}' }) : route.continue());
+    await c.page.getByRole('button', { name: 'Confirm booking' }).click();
+    await c.page.getByRole('alert').waitFor();
+    check('N-13', 'a throttled request (429) shows "Too many requests", not a generic error', /Too many requests/.test(await c.page.getByRole('alert').innerText()));
+    await c.page.unroute('**/api/appointments');
+    // Accessibility (WCAG 2.1 A and AA) on the main screens
+    const axe = async (page, label) => {
+      const r = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+      check('N-14', `no WCAG 2.1 AA violations: ${label}`, r.violations.length === 0, r.violations.map((v) => `${v.id}(${v.nodes.length})`).join(', '));
+    };
+    await c.page.getByRole('button', { name: /Kensington Motor Works/ }).click();
+    await c.page.locator('#date').fill(DAY);
+    await times(c.page).first().waitFor();
+    await axe(c.page, 'booking page');
+    await c.page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'My bookings' }).click();
+    await c.page.getByRole('heading', { name: 'John Wick' }).waitFor();
+    await c.page.waitForTimeout(500);
+    await axe(c.page, 'customer dashboard');
+    await axe(staff.page, 'staff overview');
+    const lp = await newPage();
+    await lp.page.goto(BASE + '/login');
+    await axe(lp.page, 'login page');
+    await lp.ctx.close();
+    await c.ctx.close();
+  }
 
   /* ---------- Deep link, keyboard, images ---------- */
   const kb = await newPage();

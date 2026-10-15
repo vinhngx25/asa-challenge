@@ -13,6 +13,7 @@ export function Staff() {
   const [status, setStatus] = useState<AppointmentStatus | ''>('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
+  const [query, setQuery] = useState('');
 
   // Date inputs are calendar days; widen to whole days in UTC for the API range.
   const filters = useMemo(
@@ -32,8 +33,17 @@ export function Staff() {
     const rows = data ?? [];
     const upcoming = rows.filter((a) => phaseOf(a) === 'upcoming');
     const rest = rows.filter((a) => phaseOf(a) !== 'upcoming').reverse();
-    return [...upcoming, ...rest];
-  }, [data]);
+    const all = [...upcoming, ...rest];
+    // Free-text search on what a caller usually quotes: reference, name, plate, car, service or technician.
+    const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+    if (words.length === 0) return all;
+    return all.filter((a) => {
+      const hay = [a.reference, a.customerName, a.customer, a.vehiclePlate, a.vehicleLabel, a.serviceName, a.technicianName, a.dealershipName]
+        .join(' ')
+        .toLowerCase();
+      return words.every((w) => hay.includes(w));
+    });
+  }, [data, query]);
 
   const stats = useMemo(() => {
     const rows = all.data ?? [];
@@ -86,6 +96,16 @@ export function Staff() {
       </section>
 
       <Card className="flex flex-wrap items-end gap-4">
+        <label className="min-w-56 flex-1 text-sm font-semibold">
+          <span className="mb-1 block">Search</span>
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Reference, customer, plate, car, service or technician"
+            className="w-full rounded-lg border-0 bg-white px-3 py-2 text-sm font-normal ring-1 ring-ink-200"
+          />
+        </label>
         <label className="text-sm font-semibold">
           <span className="mb-1 block">Dealership</span>
           <select className={selectClass} value={dealershipId} onChange={(e) => setDealershipId(e.target.value)}>
@@ -113,7 +133,7 @@ export function Staff() {
           <span className="mb-1 block">To</span>
           <input type="date" className={selectClass} value={to} onChange={(e) => setTo(e.target.value)} />
         </label>
-        {(dealershipId || status || from || to) && (
+        {(dealershipId || status || from || to || query) && (
           <button
             className="pb-2 text-sm font-semibold text-brand-700 underline"
             onClick={() => {
@@ -121,6 +141,7 @@ export function Staff() {
               setStatus('');
               setFrom('');
               setTo('');
+              setQuery('');
             }}
           >
             Clear filters
@@ -130,7 +151,13 @@ export function Staff() {
 
       {isLoading && <Spinner label="Loading bookings" />}
       {error && <ErrorNote>Could not load bookings. Please refresh.</ErrorNote>}
-      {data && data.length === 0 && <EmptyState title="No bookings match" text="Try changing or clearing the filters." />}
+      {data && ordered.length === 0 && <EmptyState title="No bookings match" text="Try changing or clearing the filters and the search." />}
+
+      {query && ordered.length > 0 && (
+        <p className="text-sm text-ink-500" role="status">
+          {ordered.length} of {data?.length ?? 0} bookings match "{query}"
+        </p>
+      )}
 
       <div className="space-y-4">
         {ordered.map((a) => (

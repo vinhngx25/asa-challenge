@@ -1,13 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import type { AppointmentDto } from '@asa/shared';
+import { appointmentPhase, type AppointmentDto } from '@asa/shared';
 import { ApiError, api } from '../api';
-import { fmtDate, fmtDuration, fmtTime, phaseOf } from '../lib/format';
+import { fmtDate, fmtDuration, fmtTime } from '../lib/format';
 import { useCatalog } from '../queries';
 import { Avatar, Badge, Button, ErrorNote, Img } from './ui';
 
 const phaseBadge = {
   upcoming: { tone: 'upcoming', label: 'Upcoming' },
+  'in-progress': { tone: 'ok', label: 'In progress' },
   past: { tone: 'past', label: 'Completed' },
   cancelled: { tone: 'cancelled', label: 'Cancelled' },
 } as const;
@@ -18,9 +19,9 @@ export function AppointmentCard({ appt, showCustomer = false }: { appt: Appointm
   const [confirming, setConfirming] = useState(false);
 
   const tz = catalog.data?.dealerships.find((d) => d.id === appt.dealershipId)?.timezone ?? 'Europe/London';
-  const phase = phaseOf(appt);
+  const phase = appointmentPhase(appt);
   const badge = phaseBadge[phase];
-  const canCancel = phase === 'upcoming' && Date.parse(appt.startTime) > Date.now();
+  const canCancel = phase === 'upcoming';
 
   const cancel = useMutation({
     mutationFn: () => api.cancel(appt.id),
@@ -33,10 +34,14 @@ export function AppointmentCard({ appt, showCustomer = false }: { appt: Appointm
   return (
     <article
       aria-label={`${appt.serviceName}, ${fmtDate(appt.startTime, tz)}`}
-      className={`overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-ink-100 ${phase === 'cancelled' ? 'opacity-75' : ''}`}
+      className={`overflow-hidden rounded-2xl shadow-sm ring-1 ring-ink-100 ${phase === 'cancelled' ? 'bg-ink-50' : 'bg-white'}`}
     >
       <div className="flex flex-col sm:flex-row">
-        <Img k={appt.vehicleImageKey} alt={appt.vehicleLabel} className="h-40 w-full sm:h-auto sm:w-52" />
+        <Img
+          k={appt.vehicleImageKey}
+          alt={appt.vehicleLabel}
+          className={`h-40 w-full sm:h-auto sm:w-52 ${phase === 'cancelled' ? 'grayscale' : ''}`}
+        />
         <div className="flex flex-1 flex-col gap-3 p-4 sm:p-5">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div>
@@ -91,7 +96,9 @@ export function AppointmentCard({ appt, showCustomer = false }: { appt: Appointm
             <div className="mt-auto flex flex-wrap items-center gap-2">
               {confirming ? (
                 <>
-                  <span className="text-sm text-ink-600">Cancel this booking and release the bay and technician?</span>
+                  <span className="text-sm text-ink-600">
+                    Cancel {showCustomer ? `${appt.customerName}'s booking` : 'this booking'} and release the bay and technician?
+                  </span>
                   <Button variant="danger" disabled={cancel.isPending} onClick={() => cancel.mutate()}>
                     {cancel.isPending ? 'Cancelling...' : 'Yes, cancel'}
                   </Button>

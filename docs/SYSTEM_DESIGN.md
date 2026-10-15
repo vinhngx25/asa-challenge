@@ -191,7 +191,7 @@ All routes live under `/api`. Bodies are JSON validated by Zod. Errors use one s
 | `POST /api/appointments/{id}/cancel` | owner, staff | Cancel and free resources. |
 | `GET /api/health` | public | Liveness for smoke tests. |
 
-Status codes: `400` invalid input, `401` no or bad token, `403` wrong role or someone else's booking, `404` not found, `409` `SLOT_UNAVAILABLE` (includes alternative start times), `VEHICLE_BUSY`, `ALREADY_CANCELLED` or `CANNOT_CANCEL_PAST`, `422` `INVALID_START_TIME` (off the 30 minute grid, outside opening hours, less than 1 hour ahead or more than 60 days ahead), `429` throttled.
+Status codes: `400` invalid input, `401` no or bad token, `403` wrong role or someone else's booking, `404` not found, `409` `SLOT_UNAVAILABLE` (includes alternative start times), `VEHICLE_BUSY`, `ALREADY_CANCELLED` or `CANNOT_CANCEL_PAST`, `422` `INVALID_START_TIME` (off the 30 minute grid, outside opening hours, less than 1 hour ahead or more than 60 days ahead), `429` throttled by API Gateway before the request reaches the function. That response has API Gateway's own body (`{"message":"Too Many Requests"}`), not the error shape above, so the web app maps any 429 to a readable "Too many requests" message.
 
 ### Access control
 
@@ -210,7 +210,7 @@ Goal: answer "is it working, how is it used, and what happened to this one reque
 |---|---|---|
 | **Logging** | Structured JSON logs through Powertools Logger | Every line carries `requestId`, `username`, `role`, route, latency. Booking logs add `appointmentId`, `dealershipId`, `bayId`, `technicianId`. Passwords and tokens are never logged. The client receives `X-Request-Id`, so a user report maps to one log query. Retention 30 days. |
 | **Metrics** | CloudWatch Embedded Metric Format through Powertools Metrics | Business: `BookingCreated`, `BookingConflict`, `BookingCancelled`, `AvailabilityQueried`, `LoginFailed`. Technical: `BookingLatency`, API 4xx and 5xx, Lambda errors, throttles, duration and DynamoDB throttled requests. |
-| **Tracing** | AWS X-Ray, active on API Gateway and Lambda, AWS SDK calls captured | One trace shows the booking: auth, catalog reads, lock reads, the transaction. Custom subsegments mark `findCandidates` and `commitBooking`. |
+| **Tracing** | AWS X-Ray, active on Lambda (HTTP APIs do not support X-Ray, so a trace starts at the function), AWS SDK calls captured | One trace shows the booking: catalog reads, lock reads, the transaction. Custom subsegments mark `findCandidates` and `commitBooking` (confirmed in live traces). Every log line carries the trace id and the request id. |
 | **Dashboard** | One CloudWatch dashboard | Requests, error rate, p50/p95 latency, bookings vs conflicts, cancellations, failed logins. |
 | **Alarms** | CloudWatch alarms | 5xx rate above threshold, p95 latency above threshold, Lambda errors, DynamoDB throttling, login failures spike. Alarm actions go to an optional SNS email topic set at deploy time. |
 

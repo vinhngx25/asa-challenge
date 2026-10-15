@@ -74,6 +74,10 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   const data: unknown = text ? JSON.parse(text) : undefined;
   if (!res.ok) {
     const e = (data as ApiErrorBody | undefined)?.error;
+    if (res.status === 429) {
+      // API Gateway answers a throttled request with its own body, not our error format.
+      throw new ApiError('RATE_LIMITED', 'Too many requests right now. Please wait a few seconds and try again.', 429);
+    }
     if (res.status === 401 && e?.code === 'UNAUTHENTICATED') onUnauthorized();
     throw new ApiError(
       e?.code ?? 'INTERNAL',

@@ -72,6 +72,13 @@ Status: all milestones complete. Outcomes, deviations from the design and test r
 - [x] Testing guide with tools and API testing by hand (docs/TESTING.md)
 - [x] Redeploy and re-run the live suites
 
+### M10 Review and polish
+- [x] Cross-check requirement, design, code, API tests and UI tests; list findings in IMPLEMENTATION_RESULTS.md section 12
+- [x] Verify observability on AWS: metrics, alarms, traces with custom subsegments, log content, HTTP to HTTPS, headers, certificate
+- [x] Walk through customer and staff journeys as users; fix friction found
+- [x] Accessibility scan; fix contrast
+- [x] Redeploy and re-run the live suites
+
 ## Working agreements
 
 - Commit after each milestone to `asa-challenge`, one repository per commit.

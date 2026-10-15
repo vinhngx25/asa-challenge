@@ -8,7 +8,7 @@ How the project is tested, which tools were used, how to run every suite, and ho
 |---|---|---|
 | Images and thumbnails (37 portraits, places, cars, service art, logo, hero) | **Google "nano banana" (Gemini image models, `gemini-3.1-flash-image`)** through Alice's image skill | One shared cinematic style prompt keeps the set consistent. Each image is checked by eye on a contact sheet, then converted to WebP. File names are fixed, so changing the art needs no code change |
 | Real UI testing | **Claude in Chrome**, driven by Alice | Opens the real app in the author's Chrome, signs in as each role, books, cancels, reads the page and captures screenshots. Used on the local app. Browser sign-in on the deployed site is left to the author |
-| Repeatable UI regression | **Playwright** (headless Chromium), `scripts/ui-regression/` | 51 checks that mirror the manual cases, including two browser windows racing for one slot, phone width, keyboard-only sign-in and a broken-image check. Optional, with its own `package.json` |
+| Repeatable UI regression | **Playwright** (headless Chromium), `scripts/ui-regression/` | 64 checks that mirror the manual cases, including two browser windows racing for one slot, phone width, keyboard-only sign-in, a broken-image check, a throttled-request message and an automated accessibility scan (axe, WCAG 2.1 A and AA). Optional, with its own `package.json` |
 | API black-box and rare cases | **Python scripts** (standard library only) in `scripts/` | Login, roles, validation, boundaries, pairwise, concurrency, post-deploy smoke test. Run against local or live |
 | Unit and integration | **Vitest** with DynamoDB Local in Docker | Includes the parallel-booking tests, boundary tests and pairwise tests |
 | Manual API calls | `curl` or PowerShell `Invoke-RestMethod` | Examples below |
@@ -144,7 +144,7 @@ node ui-run.mjs http://localhost:5173 ./shots
 
 Optional: `CHROME_PATH=<chrome.exe>` uses an existing browser instead of the downloaded one. The run prints PASS or FAIL per case id (the same ids as the manual sheet), writes screenshots and `results.json` to the folder, cancels the bookings it created and exits 1 on any failure. It can be run repeatedly.
 
-What the 51 checks include: every Must-have customer and staff case, most Should-have cases, keyboard-only sign-in (Tab, type, Enter), deep-link reload, an invalid token, a check that every image on the booking page loads, no sideways scrolling at 390 px on four pages, and a **two-window race**: window A and window B both reach the last free slot, A confirms first, B then sees the conflict message with the four nearest times and books one of them.
+What the 64 checks include: every Must-have customer and staff case, most Should-have cases, keyboard-only sign-in (Tab, type, Enter), deep-link reload, an invalid token, a check that every image on the booking page loads, no sideways scrolling at 390 px on four pages, and a **two-window race**: window A and window B both reach the last free slot, A confirms first, B then sees the conflict message with the four nearest times and books one of them.
 
 ## 7. Defects found by testing
 
@@ -154,6 +154,11 @@ What the 51 checks include: every Must-have customer and staff case, most Should
 | Playwright at 390 px | The booking page was 708 px wide on a phone and scrolled sideways: service cards and the category chips widened their grid column | `min-w-0` on the column and on the service cards; the page now fits |
 | Browser review | "Sign out" text was too faint in the header | Own button style with higher contrast |
 | Browser review | "Times shown in Manchester time" for a UK-wide time zone | Reads "UK local time" |
+| Review of design against code | `RATE_LIMITED` (429) was in the design but nothing produced it; API Gateway's own 429 body is not the API error shape and the page showed a generic error. Observed live: 79 of 400 requests in a 4 second burst were throttled | The web app maps 429 to "Too many requests" (checked by a UI test) |
+| Persona walkthrough as a customer | The suggested booking date could be a Sunday, when every dealership is closed | The suggestion moves to the next open day until the customer picks a date |
+| Persona walkthrough as staff | No way to find a booking from a reference, plate or name | Search box on All bookings |
+| Persona walkthrough | A booking that had started was labelled "Upcoming" with no Cancel button | Labelled "In progress"; the phase logic is shared and boundary-tested |
+| Accessibility scan (axe) | Colour contrast below WCAG AA on tabs, duration badges, small grey text and cancelled cards | Darker text tokens; cancelled cards use a greyscale photo instead of 75% opacity |
 
 ## 8. Test data and clean-up
 

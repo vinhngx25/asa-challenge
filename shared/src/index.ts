@@ -225,3 +225,23 @@ export interface AppointmentDto {
   createdAt: string;
   cancelledAt?: string;
 }
+
+/* ------------------------------------------------------------------ */
+/* Appointment phase (shared by the UI and the tests)                  */
+/* ------------------------------------------------------------------ */
+
+export type AppointmentPhase = 'upcoming' | 'in-progress' | 'past' | 'cancelled';
+
+/**
+ * Where an appointment is in its life. Half-open interval: the start instant is already "in progress",
+ * the end instant is already "past". A cancelled appointment stays cancelled whatever the clock says.
+ */
+export function appointmentPhase(
+  a: Pick<AppointmentDto, 'status' | 'startTime' | 'endTime'>,
+  nowMs: number = Date.now(),
+): AppointmentPhase {
+  if (a.status === 'CANCELLED') return 'cancelled';
+  if (Date.parse(a.endTime) <= nowMs) return 'past';
+  if (Date.parse(a.startTime) <= nowMs) return 'in-progress';
+  return 'upcoming';
+}

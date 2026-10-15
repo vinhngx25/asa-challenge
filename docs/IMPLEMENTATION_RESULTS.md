@@ -4,7 +4,7 @@ What was built, how it differs from the design, what was tested and what was not
 
 - **Live:** https://asa-challenge.fibosolutions.com (AWS ap-southeast-1)
 - **Delivered:** 2026-10-15; hardened with boundary, pairwise and browser tests, then redeployed the same day
-- **Status:** all milestones M0 to M9 complete; the latest full run of every suite is green (section 5)
+- **Status:** all milestones M0 to M10 complete; the latest full run of every suite is green (section 5); a cross-check review is in section 12
 
 ## 1. Summary
 
@@ -22,7 +22,7 @@ What was built, how it differs from the design, what was tested and what was not
 | Observability | Structured logs, custom metrics, X-Ray tracing, dashboard, 5 alarms |
 | Reviewer can follow the README to build, run, test and deploy | Rehearsed from a fresh clone: install, build, unit tests, seed, integration tests (section 6) |
 | Boundary and pairwise testing | Done: 26 boundary tests and 38 pairwise rows in the integration suite, plus 55 boundary and 39 pairwise HTTP checks that also run on the live site (sections 5.2 and 5.3) |
-| Real UI testing | Claude in Chrome for exploratory runs, plus a repeatable Playwright run of 51 checks (section 5.4) |
+| Real UI testing | Claude in Chrome for exploratory runs, plus a repeatable Playwright run of 64 checks including accessibility scans (section 5.4) |
 | Manual test cases for a person, by priority | [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md): 14 must have, 21 should have, 12 nice to have |
 | Tools recorded | Google nano banana for images, Claude in Chrome and Playwright for the UI, Python and curl for the API (section 10, [TESTING.md](TESTING.md)) |
 
@@ -94,12 +94,13 @@ Deployment time: 865 seconds (CloudFront dominates). Region: ap-southeast-1. Cer
 
 ## 5. Results by area
 
-### 5.1 Unit tests: 16 passed
+### 5.1 Unit tests: 20 passed
 
 | File | Tests | Covers |
 |---|---|---|
 | `time.test.ts` | 10 | UTC offsets in winter and summer, both clock changes (27/28 March 2027 and 24/25 October 2026), local date vs UTC date, opening windows, Sunday closed, Saturday open, slot splitting, half-open end |
 | `auth.test.ts` | 3 | Password check is case sensitive, salts differ, malformed hash rejected |
+| `phase.test.ts` | 4 | An appointment is upcoming until its start instant, in progress from the start to the end, past from the end instant, and cancelled whatever the clock says (boundaries at -1 ms, 0 and +1 ms) |
 | `pairwise.test.ts` | 3 | The all-pairs generator covers every pair with far fewer rows than the full product, is deterministic, and handles one or two parameters |
 
 ### 5.2 Integration tests on DynamoDB Local: 102 passed (4 files)
@@ -164,13 +165,17 @@ The race script fires every scenario at the same instant with a barrier. On the 
 
 A defect found and fixed during the first run: the "Sign out" text was too faint against the header. The staff list was also reordered so upcoming bookings come first.
 
-**Playwright regression, 51 of 51 passed** (`scripts/ui-regression/ui-run.mjs`, run twice to prove it cleans up after itself). It uses the case ids of the manual sheet: every Must-have customer and staff case, most Should-have cases and several Nice-to-have cases. Highlights:
+**Playwright regression, 64 of 64 passed** (`scripts/ui-regression/ui-run.mjs`, run twice to prove it cleans up after itself). It uses the case ids of the manual sheet: every Must-have customer and staff case, most Should-have cases and several Nice-to-have cases. Highlights:
 
 - Two browser windows act as two people. Both reach the last free slot; window A confirms; window B is refused with the message and the four nearest times and books one of them.
 - Taken and overlapping times are greyed out while back-to-back times stay open; a vehicle booked elsewhere is greyed everywhere.
 - Staff: summary, dealership tiles, status and date filters, the empty state, Clear filters, cancelling a customer's booking (the customer then sees it as Cancelled), no booking menu, `/book` returns to the list.
 - Signed out: deep links and unknown addresses go to the login, Back reveals nothing, an invalid token returns to the login, the API answers 401.
 - Keyboard-only sign-in, reload on `/book`, all 39 images on the booking page load, and no sideways scrolling at 390 px on four pages.
+- Staff search by reference, number plate, customer and car (words combined), the empty result, and Clear filters emptying the search; the cancel prompt names the customer.
+- The suggested booking date moves off a Sunday once a dealership is chosen, and a date the customer picked is never changed.
+- A throttled request (HTTP 429) shows "Too many requests" instead of a generic error.
+- WCAG 2.1 A and AA scan (axe) of the login page, customer dashboard, booking page and staff overview: no violations.
 
 Claude in Chrome was used for exploratory runs of the same flows, including the race (the second person booked through the API while the first page waited on the time step). Screenshots are in [test-evidence/](test-evidence/).
 
@@ -206,7 +211,7 @@ A new clone of the public repository, with `npm install`, `npm run build`, `npm 
 
 ## 8. Known limitations and not verified
 
-- **Not verified:** CloudWatch dashboard layout, X-Ray trace content and alarm firing were created by the deploy but not inspected or triggered. No load or soak test. No real-device phone test. No accessibility audit beyond semantic markup and keyboard-reachable controls.
+- **Not verified:** the CloudWatch dashboard was confirmed to exist but its layout was not looked at, and no alarm was made to fire (all five are in the OK state). Metrics, X-Ray traces and log content were checked (section 12.4). No load or soak test. No real-device phone test. Accessibility was checked with an automated scan (axe) and keyboard-only sign-in, not with a screen reader.
 - **Browser sign-in on the live site** was not performed by the agent; it was verified through the API scripts and the smoke test. The manual sheet is for the author to run there.
 - **Frontend has no component-level tests.** UI behaviour is covered end to end by the Playwright run and the manual sheet.
 - **The Playwright run was executed on the local app only.** It signs in with the demo accounts through a browser, so the agent did not point it at the live site.
@@ -250,3 +255,69 @@ Changes outside the images: the empty-state picture now fills its frame instead 
 | Playwright, phone width | Booking page 708 px wide, scrolled sideways | Fixed, covered by the UI run |
 | Browser review | "Manchester time" label | Fixed |
 | Mutation checks | None: the tests fail when the code is broken, as intended | n/a |
+
+## 12. Review: requirement, design, code and tests
+
+Method: each requirement and design claim was traced to the code that implements it and to the API and UI tests that exercise it, then the deployed stack was inspected, and finally the app was used as a customer and as staff.
+
+### 12.1 Consistency matrix
+
+| Requirement or design claim | Code | API and integration tests | UI tests | Verdict |
+|---|---|---|---|---|
+| Request a service for a vehicle, service type, dealership and time | `POST /appointments`, booking page | booking, pairwise, API tests | booking flow, conflict race | consistent |
+| Check a bay and a qualified technician for the whole duration, before confirming | read phase plus transaction locks | concurrency, boundary, pairwise (availability agrees with booking) | greyed times, race | consistent |
+| Persist an appointment linking customer, vehicle, technician, bay | appointment item, returned DTO | `api.integration`, `api_tests.py` | confirmation and dashboard | consistent |
+| Cancel frees every resource | transactional delete of locks | cancel tests, lock-count tests, race script | cancel then rebook | consistent |
+| Case-sensitive login, two customers and one staff, roles enforced on the server | scrypt, JWT, role guards | login, 403 and isolation tests | login negatives, staff pages | consistent |
+| Error model: one JSON shape and request id | `AppError`, `X-Request-Id` | asserted for every code except `RATE_LIMITED` | messages shown | **gap fixed**: see 12.2 |
+| Observability: logs, metrics, traces, dashboard, alarms | Powertools, CDK | none (infrastructure) | none | verified on AWS in 12.4; one wording error in the design fixed |
+| HTTPS only, security headers, wildcard certificate | CloudFront policy | smoke test, header checks | none | verified in 12.4 |
+| Dealership hours, 30 minute grid, lead time, horizon, UK clock changes | `time.ts`, `booking.ts` | boundary tests, `boundary_tests.py` | date and time checks | consistent |
+| Test documents match the app | n/a | API table in TESTING.md checked against `app.ts` routes (10 of 10) | manual case ids match the Playwright ids | consistent after the fixes below |
+
+### 12.2 Findings fixed in this review
+
+| Area | Finding | Fix |
+|---|---|---|
+| Design against code | `RATE_LIMITED` / 429 was promised but nothing produced it. API Gateway answers a throttled call itself with `{"message":"Too Many Requests"}`; the page showed a generic error. Measured live: 79 of 400 requests in 4 seconds were throttled and the site recovered immediately | The web app turns any 429 into "Too many requests right now. Please wait a few seconds and try again." (UI test added); the design states where the 429 comes from |
+| Design against AWS | The design said X-Ray is active on API Gateway. HTTP APIs do not support tracing, so traces start at Lambda | Design corrected; the custom `findCandidates` and `commitBooking` subsegments were confirmed in live traces |
+| Customer journey | The suggested booking date could be a Sunday, when every dealership is closed | Moves to the next open day until the customer picks a date (UI test added) |
+| Customer journey | A booking that had started was labelled "Upcoming" and had no Cancel button | New "In progress" label; the phase rule is shared and boundary-tested |
+| Staff journey | No way to find a booking from a caller's reference, plate or name | Search box (client-side, combines words); cancel prompt names the customer |
+| Accessibility | Colour contrast below WCAG AA on tabs, duration badges, small grey text and cancelled cards | Darker tokens; cancelled cards use a greyscale photo instead of 75% opacity; scan added to the UI run |
+| Documentation | README said the build "builds backend"; the API is bundled at deploy time | Wording corrected |
+
+### 12.3 Persona walkthrough
+
+**As a customer (John Wick)**: sign in, read the dashboard, book an MOT for the Charger (vehicle, service, dealership, date, time), read the confirmation, find the booking under Upcoming, cancel it and see it under Cancelled, then try another car on a Sunday and read the closed message. Verdict: the path is short and clear. Remaining friction is listed below as suggestions, not defects.
+
+**As staff (Winston)**: sign in, read the summary and dealership tiles, filter by dealership, find a specific booking, cancel it and watch the counts change. Verdict: workable; the missing search was the real gap and is fixed.
+
+### 12.4 Verified on AWS (live stack)
+
+| Check | Result |
+|---|---|
+| Custom metrics in namespace `ASA` | all 8 present: BookingCreated, BookingConflict, BookingCancelled, BookingLatency, RequestLatency, AvailabilityQueried, LoginSucceeded, LoginFailed |
+| Alarms | 5 of 5 in OK state; dashboard `asa-challenge` exists |
+| X-Ray | traces present; booking traces show `findCandidates` and `commitBooking` with DynamoDB calls nested under them |
+| Logs | JSON with `requestId` and `xray_trace_id` on each line; 30 day retention; no "password", "Bearer" or token strings in the last day of logs |
+| `http://` | 301 to `https://` |
+| Security headers on the site | HSTS (1 year, subdomains), CSP, X-Frame-Options DENY, nosniff, referrer policy |
+| Security headers on the API | HSTS, `cache-control: no-store`, nosniff, `X-Request-Id` |
+| Certificate | wildcard `*.fibosolutions.com` from Amazon, TLS 1.3, valid until February 2027 (ACM renews it) |
+| Throttling | works as configured (see 12.2) |
+
+### 12.5 Open points for a decision (not changed)
+
+| # | Point | Why it matters | Option |
+|---|---|---|---|
+| 1 | The throttle (50 requests per second, burst 100) is shared by all callers | One client flooding the API slows everyone | Per-IP rate rule with AWS WAF (small monthly cost), or accept for a demo |
+| 2 | Demo passwords are published and there is no per-account lockout | Fine for a gate on a public repo, not for real users | Managed identity provider (Cognito) if this ever leaves demo status |
+| 3 | Lock items of completed bookings are never removed | Storage grows slowly with every booking | DynamoDB TTL on locks (end of booking plus 30 days) |
+| 4 | The technician is always the first free one in id order | Uneven workload across technicians | Pick the least loaded technician |
+| 5 | Service list is ordered by duration, so MOT, Interim and Full Service sit far down | Common services are hard to find | Show popular services first, or group by category |
+| 6 | The staff list is not paginated | Fine for hundreds of bookings, slow beyond | Pagination or a date window by default |
+| 7 | Access token is kept in `localStorage` | Readable by script if XSS ever occurred | Mitigated today by a strict CSP and no third-party scripts; a cookie-based session would remove it |
+| 8 | The staff summary tiles ignore the filters | Could be read as the filtered count | Label them "all bookings" or make them follow the filter |
+| 9 | Seeded dates are relative to the day of the last seed | Demo data ages | Re-seed before a demo |
+| 10 | Accounts and cars refer to film characters; the portraits are fictional but evocative | A professional audience may read it as unserious or as borrowed branding | Neutral names and cars if the hiring team should not see the references |

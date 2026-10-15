@@ -40,6 +40,8 @@ export function Book() {
   const [service, setService] = useState<ServiceTypeDto | null>(null);
   const [dealership, setDealership] = useState<DealershipDto | null>(null);
   const [date, setDate] = useState(() => isoDate(new Date(Date.now() + 24 * 3_600_000)));
+  // Until the customer picks a date themselves, move the suggestion to the next day the dealership is open.
+  const [dateChosen, setDateChosen] = useState(false);
   const [startTime, setStartTime] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState<AppointmentDto | null>(null);
 
@@ -55,6 +57,14 @@ export function Book() {
       }),
     enabled: ready,
   });
+
+  useEffect(() => {
+    if (!dealership || dateChosen) return;
+    const next = new Date(`${date}T00:00:00Z`);
+    for (let i = 0; i < 7 && !dealership.openDays.includes(next.getUTCDay()); i++) next.setUTCDate(next.getUTCDate() + 1);
+    const nextDate = next.toISOString().slice(0, 10);
+    if (nextDate !== date) setDate(nextDate);
+  }, [dealership, date, dateChosen]);
 
   // A change of service, place, day or vehicle invalidates the chosen time.
   useEffect(() => setStartTime(null), [service?.id, dealership?.id, date, vehicle?.id]);
@@ -206,7 +216,11 @@ export function Book() {
               value={date}
               min={today}
               max={maxDate}
-              onChange={(e) => e.target.value && setDate(e.target.value)}
+              onChange={(e) => {
+                if (!e.target.value) return;
+                setDateChosen(true);
+                setDate(e.target.value);
+              }}
               className="rounded-lg border-0 bg-white px-3 py-2 ring-1 ring-ink-200"
             />
             <span className="text-sm text-ink-500">
@@ -277,6 +291,7 @@ export function Book() {
                         key={alt}
                         onClick={() => {
                           const altDate = new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(new Date(alt));
+                          setDateChosen(true);
                           setDate(altDate);
                           // The date effect clears the time, so select after it runs.
                           setTimeout(() => setStartTime(alt), 0);

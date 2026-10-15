@@ -1,4 +1,4 @@
-import type { AppointmentDto } from '@asa/shared';
+import { appointmentPhase, type AppointmentDto } from '@asa/shared';
 
 const cache = new Map<string, Intl.DateTimeFormat>();
 
@@ -35,11 +35,12 @@ export const fmtDuration = (minutes: number): string => {
 export const isoDate = (d: Date): string =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
+/** Dashboard groups: a booking that has started but not ended still counts as upcoming. */
 export type Phase = 'upcoming' | 'past' | 'cancelled';
 
 export function phaseOf(a: AppointmentDto, now = Date.now()): Phase {
-  if (a.status === 'CANCELLED') return 'cancelled';
-  return Date.parse(a.endTime) < now ? 'past' : 'upcoming';
+  const p = appointmentPhase(a, now);
+  return p === 'in-progress' ? 'upcoming' : p;
 }
 
 export const initials = (name: string): string =>
