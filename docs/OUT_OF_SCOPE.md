@@ -2,7 +2,7 @@
 
 These points were found during design, build, testing and a cross-check review. They are **acknowledged and deliberately not addressed in this version**: the brief asks for a working, correct appointment scheduler, and this version delivers that. Nothing here is a known defect in the delivered behaviour, and none of it is open for discussion in this version. The list shows what a next version would look at first.
 
-Where they came from: [IMPLEMENTATION_RESULTS.md](IMPLEMENTATION_RESULTS.md) section 12 (review), the design assumptions in [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) section 14, and the questions raised at the end of the review.
+Where they came from: [IMPLEMENTATION_RESULTS.md](IMPLEMENTATION_RESULTS.md) section 12 (review), the design assumptions in [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) section 11, and the questions raised at the end of the review.
 
 ## 1. Security and abuse
 
@@ -32,7 +32,7 @@ Where they came from: [IMPLEMENTATION_RESULTS.md](IMPLEMENTATION_RESULTS.md) sec
 | 12 | A booking cannot be rescheduled; the customer cancels and books again | Keeps the transactional rule simple and safe | Move a booking in one transaction |
 | 13 | Staff cannot create bookings, block a bay for maintenance or mark a technician absent | The brief is about customers booking against available resources | Add resource calendars for staff |
 | 14 | No e-mail, SMS or calendar-file confirmation | Notifications were not requested | Send a confirmation with an `.ics` attachment |
-| 15 | Opening hours are fixed per dealership: no holidays, breaks or multi-day jobs; every dealership uses UK time | Stated in the design assumptions | Hours as data, with exceptions |
+| 15 | Opening hours are fixed per dealership: no holidays, breaks or multi-day jobs; every dealership uses UK time | Stated in the design assumptions (section 11) | Hours as data, with exceptions |
 | 16 | No payments, deposits, waiting list or customer registration | Not part of the brief | Product decisions for later |
 
 ## 4. Presentation and test coverage

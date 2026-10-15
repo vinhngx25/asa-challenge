@@ -1,6 +1,6 @@
 # Implementation Results
 
-What was built, how it differs from the design, what was tested and what was not. This is the record to read after [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) (intent) and [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) (milestones). Raw test output and screenshots are in [test-evidence/](test-evidence/).
+What was built, build notes, what was tested and what was not. This is the record to read after [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) (the design) and [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) (milestones). Raw test output and screenshots are in [test-evidence/](test-evidence/).
 
 - **Live:** https://asa-challenge.fibosolutions.com (AWS ap-southeast-1)
 - **Delivered:** 2026-10-15; hardened with boundary, pairwise and browser tests, then redeployed the same day
@@ -23,7 +23,7 @@ What was built, how it differs from the design, what was tested and what was not
 | Reviewer can follow the README to build, run, test and deploy | Rehearsed from a fresh clone: install, build, unit tests, seed, integration tests (section 6) |
 | Boundary and pairwise testing | Done: 26 boundary tests and 38 pairwise rows in the integration suite, plus 55 boundary and 39 pairwise HTTP checks that also run on the live site (sections 5.2 and 5.3) |
 | Real UI testing | Claude in Chrome for exploratory runs, plus a Playwright run of 102 checks (script since removed to keep the repository simple) including text-box limits and accessibility scans (section 5.4) |
-| Manual test cases for a person, by priority | [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md): 14 must have, 21 should have, 12 nice to have |
+| Manual test cases for a person, by priority | [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md): 15 must have, 32 should have, 17 nice to have |
 | Tools recorded | Google nano banana for images, Claude in Chrome for the UI, Python and curl for the API (section 10, [TESTING.md](TESTING.md)) |
 
 ## 2. Milestone log
@@ -58,14 +58,14 @@ Production build: JavaScript 548 KB (gzip about 167 KB), CSS 23 KB. Lambda bundl
 
 ### Versions installed (latest at the time)
 
-Hono 4.13.13, Zod 4.6.7, jose 6.2.12, Powertools for AWS Lambda 2.36.0, React 19.3.1, React Router 7.18.4, TanStack Query 5.104, Vite 8.3.4, Tailwind CSS 4.3.3, Vitest 5.0.4, TypeScript 7.0.2, AWS CDK library 2.273.0, Node.js 22.
+Hono 4.13.13, Zod 4.6.7, jose 6.2.12, Powertools for AWS Lambda 2.36.0, React 19.3.1, React Router 7.18.4, TanStack Query 5.104, Vite 8.3.4, Tailwind CSS 4.3.3, Vitest 5.0.4, TypeScript 7.0.2, AWS CDK library 2.273.0, Node.js 24 on Lambda.
 
 ### AWS resources created (stack `AsaChallenge`, 36 resources)
 
 | Group | Resources |
 |---|---|
 | Web | S3 bucket (private), CloudFront distribution with origin access control, security-headers policy, SPA rewrite function, bucket deployment with cache invalidation |
-| API | HTTP API with throttling (50 requests per second, burst 100) and access logs, Lambda function (Node.js 22, arm64, 512 MB, X-Ray active) |
+| API | HTTP API with throttling (50 requests per second, burst 100) and access logs, Lambda function (Node.js 24, arm64, 512 MB, X-Ray active) |
 | Data | DynamoDB table `asa-challenge` (on-demand, point-in-time recovery, two GSIs), Secrets Manager secret for the token key |
 | DNS | Route 53 A and AAAA aliases for the domain |
 | Monitoring | CloudWatch dashboard `asa-challenge`, 5 alarms, SNS topic (no subscribers), two log groups with 30-day retention |
@@ -76,21 +76,20 @@ Deployment time: 865 seconds (CloudFront dominates). Region: ap-southeast-1. Cer
 
 3 dealerships, 5 bays (2, 2, 1), 13 technicians (5, 4, 4), 24 services (6 x 30, 8 x 60, 6 x 120, 4 x 240 minutes, 7 skill categories), 3 users, 7 vehicles, 10 appointments (4 completed, 4 upcoming, 2 cancelled at seed time).
 
-## 4. Differences from the design
+## 4. Build notes
 
-| Area | Design said | As built | Why |
-|---|---|---|---|
-| Local DynamoDB port | 8000 | 8100 | Port 8000 was taken by another container on the author's machine; 8100 avoids a clash |
-| Duplicate protection | `ClientRequestToken` on the transaction | Vehicle lock | The vehicle lock already stops a double submit with `VEHICLE_BUSY`; a token added nothing |
-| Time rule errors | `400` | `422 INVALID_START_TIME` | Separates a malformed body (`400`) from a valid body that breaks a business rule |
-| Extra error codes | not listed | `VEHICLE_BUSY`, `CANNOT_CANCEL_PAST` | Needed for clear messages |
-| Dev launcher | concurrently | `scripts/dev.mjs` | `concurrently` pulled in a dependency with critical advisories |
-| Python tests | `requests` | standard library only | Reviewers install nothing |
-| Cache policy | not specified | 5 minutes for site files plus a full invalidation on every deploy | Simple and always fresh after a deploy |
-| CloudFront price class | not specified | Price class 200 (includes Asia) | Singapore and UK audiences |
-| CDK bootstrap | default | optional `CDK_QUALIFIER` | The account's default `CDKToolkit` stack was broken (`UPDATE_ROLLBACK_FAILED`); the live deploy uses its own bootstrap |
-| Alarm e-mail | optional | not configured | No subscriber was requested |
-| UI testing of the live site | Claude in Chrome | local copy in Chrome, live site by API scripts | Signing in on the deployed site stays with the author |
+| Area | As built | Why |
+|---|---|---|
+| Local DynamoDB port | 8100 | Port 8000 was taken by another container on the author's machine |
+| Duplicate protection | The vehicle lock (`VEHICLE_BUSY`) | It already stops a double submit; a transaction token added nothing |
+| Time rule errors | `422 INVALID_START_TIME` | Separates a malformed body (`400`) from a valid body that breaks a business rule |
+| Dev launcher | `scripts/dev.mjs` | `concurrently` pulled in a dependency with critical advisories |
+| Python tests | Standard library only | Reviewers install nothing |
+| Cache policy | 5 minutes with revalidation for site files, plus a full invalidation on every deploy | Simple and always fresh after a deploy |
+| CloudFront price class | Price class 200 (includes Asia) | Singapore and UK audiences |
+| CDK bootstrap | Optional `CDK_QUALIFIER` | The account's default `CDKToolkit` stack was broken (`UPDATE_ROLLBACK_FAILED`); the live deploy uses its own bootstrap |
+| Alarm e-mail | Optional `ALARM_EMAIL`, not set on the live stack | No subscriber was requested |
+| UI testing of the live site | Local copy in Chrome; live site by API scripts and sign-in-free checks | Signing in on the deployed site stays with the author |
 
 ## 5. Results by area
 

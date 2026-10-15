@@ -2,7 +2,7 @@
 
 Legend: [ ] not started, [~] in progress, [x] done. Update this file at the end of each milestone.
 
-Status: all milestones complete. Outcomes, deviations from the design and test results are recorded in [IMPLEMENTATION_RESULTS.md](IMPLEMENTATION_RESULTS.md).
+Status: all milestones complete. Outcomes, build notes and test results are recorded in [IMPLEMENTATION_RESULTS.md](IMPLEMENTATION_RESULTS.md).
 
 ## Milestones
 
@@ -19,13 +19,13 @@ Status: all milestones complete. Outcomes, deviations from the design and test r
 - [x] `shared/`: Zod schemas and types for every API contract
 
 ### M2 Backend core
-- [x] DynamoDB table definition (single table, GSI1, GSI2) and repository interface
+- [x] DynamoDB table definition (single table, GSI1, GSI2)
 - [x] Seed script: 3 English dealerships (Europe/London), 5 bays, 13 British-named technicians, 24 services, 3 users, 7 vehicles, appointments (`seed:local`, `seed:aws`)
 - [x] Slot and interval utilities (30-minute slots, half-open intervals, timezone handling)
 - [x] Booking service: candidate search, transactional commit with slot locks, bounded retry, alternatives on conflict
 - [x] Cancel service: transactional lock release
 - [x] Auth: scrypt hashes, JWT middleware, role guards
-- [x] Routes from design section 7, uniform error shape, request id
+- [x] Routes from the API table in the design, uniform error shape, request id
 - [x] Lambda and Node adapters for the same Hono app
 
 ### M3 Backend tests

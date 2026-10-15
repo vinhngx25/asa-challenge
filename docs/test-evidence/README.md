@@ -1,6 +1,6 @@
 # Test evidence
 
-Results from the author's runs (Alice). Full detail, tool notes and method: [../TESTING.md](../TESTING.md). Outcomes, differences from the design and known gaps: [../IMPLEMENTATION_RESULTS.md](../IMPLEMENTATION_RESULTS.md). Re-run everything with the commands in the root README.
+Results from the author's runs (Alice). Full detail, tool notes and method: [../TESTING.md](../TESTING.md). Outcomes, build notes and known gaps: [../IMPLEMENTATION_RESULTS.md](../IMPLEMENTATION_RESULTS.md). Re-run everything with the commands in the root README.
 
 ## Automated results (latest full run)
 

@@ -3,9 +3,9 @@
 An appointment scheduler for car dealerships that replaces manual booking. A customer requests a service for a vehicle at a dealership and time. The system confirms the booking only when a **service bay** and a **qualified technician** are both free for the whole service duration, then stores an appointment linking customer, vehicle, technician and bay.
 
 - Live: https://asa-challenge.fibosolutions.com
-- Design: [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DESIGN.md) (architecture diagram, components, data flow, technology choices, observability)
+- Design: [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DESIGN.md) (architecture diagram, components, data flow, data model, technology choices, observability)
 - Plan and progress: [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md)
-- Implementation results (what was built, differences from the design, test results, known limits): [docs/IMPLEMENTATION_RESULTS.md](docs/IMPLEMENTATION_RESULTS.md)
+- Implementation results (what was built, build notes, test results, known limits): [docs/IMPLEMENTATION_RESULTS.md](docs/IMPLEMENTATION_RESULTS.md)
 - Testing guide (tools, every suite, API testing by hand, boundary and pairwise design): [docs/TESTING.md](docs/TESTING.md)
 - Manual test cases for a quick human check, by priority: [docs/MANUAL_TEST_CASES.md](docs/MANUAL_TEST_CASES.md)
 
@@ -75,7 +75,7 @@ npm run build               # type-checks every workspace and builds the fronten
 Full guide, including how to call the API by hand: [docs/TESTING.md](docs/TESTING.md).
 
 ```bash
-npm test                    # 16 unit tests (Vitest)
+npm test                    # 20 unit tests (Vitest)
 npm run test:integration    # 104 tests on DynamoDB Local: booking, API, boundary values, pairwise, parallel bookings
 
 # black-box scripts, no installs needed (Python standard library). Seeded data required; each cancels what it books.
@@ -154,7 +154,7 @@ npm run destroy
 
 ## Observability
 
-Structured JSON logs, business and technical metrics, X-Ray traces, a CloudWatch dashboard and alarms are created by the deploy. The dashboard name is printed at the end of `npm run deploy`. See section 8 of the design document.
+Structured JSON logs, business and technical metrics, X-Ray traces, a CloudWatch dashboard and alarms are created by the deploy. The dashboard name is printed at the end of `npm run deploy`. See section 5 of the [design document](docs/SYSTEM_DESIGN.md).
 
 ## Scope and known limitations
 
