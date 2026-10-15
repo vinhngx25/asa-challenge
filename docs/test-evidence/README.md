@@ -39,4 +39,6 @@ Results from the author's run (Alice, with Claude in Chrome for the UI). Re-run 
 | Phone width (390 px) layout | passed |
 | Login, booking page, customer dashboard and staff view with the cinematic images (see `login-page.jpg`, `booking-page.jpg`, `customer-dashboard-jamesbond.jpg`, `staff-all-bookings.jpg`) | passed |
 
+The live site after the image change is shown in `live-login.jpg` (HTTPS, cinematic hero served from CloudFront).
+
 Sign-in on the live site was verified through the API scripts above; the browser run used the local copy.
