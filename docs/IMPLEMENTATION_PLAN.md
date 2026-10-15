@@ -2,6 +2,8 @@
 
 Legend: [ ] not started, [~] in progress, [x] done. Update this file at the end of each milestone.
 
+Status: all milestones complete. Outcomes, deviations from the design and test results are recorded in [IMPLEMENTATION_RESULTS.md](IMPLEMENTATION_RESULTS.md).
+
 ## Milestones
 
 ### M0 Design (this document set)

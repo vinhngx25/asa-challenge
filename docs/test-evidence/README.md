@@ -1,5 +1,7 @@
 # Test evidence
 
+Full detail, including per-test coverage, performance and known gaps: [../IMPLEMENTATION_RESULTS.md](../IMPLEMENTATION_RESULTS.md).
+
 Results from the author's run (Alice, with Claude in Chrome for the UI). Re-run everything with the commands in the root README.
 
 ## Automated results

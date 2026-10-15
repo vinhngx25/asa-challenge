@@ -1,6 +1,6 @@
 # System Design Document: Unified Service Scheduler
 
-> Status: design approved for implementation planning. Code follows this document.
+> Status: implemented. This document states the design intent; where the build differs, section 4 of [IMPLEMENTATION_RESULTS.md](IMPLEMENTATION_RESULTS.md) lists each difference and the reason.
 > Scenario A (Ownership): replace manual dealership booking with a system that books only what the dealership can actually serve.
 
 ## 1. Problem and goals
