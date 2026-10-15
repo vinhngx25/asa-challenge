@@ -48,17 +48,17 @@ Legend: [ ] not started, [~] in progress, [x] done. Update this file at the end 
 ### M6 Infrastructure and deploy
 - [x] CDK: DynamoDB, Lambda (arm64), HTTP API, Secrets Manager, S3 + CloudFront (OAC, `/api/*` behavior, security headers, HTTP to HTTPS), optional domain and certificate
 - [x] Observability: Powertools logs, metrics, tracing; dashboard; alarms; optional SNS topic
-- [ ] Deploy to ap-southeast-1 with alias `asa-challenge.fibosolutions.com`, reusing the existing wildcard certificate
-- [ ] `seed:aws`, `scripts/smoke_test.py`
+- [x] Deploy to ap-southeast-1 with alias `asa-challenge.fibosolutions.com`, reusing the existing wildcard certificate
+- [x] `seed:aws`, `scripts/smoke_test.py`
 
 ### M7 Verification
-- [ ] Browser run through the UI checklist as each role, local and live; screenshots into `docs/test-evidence/`
-- [ ] Python race and API tests against the live URL
-- [ ] Fresh-clone rehearsal: follow the README from scratch in an empty folder
+- [x] Browser run through the UI checklist as each role, local and live; screenshots into `docs/test-evidence/`
+- [x] Python race and API tests against the live URL
+- [x] Fresh-clone rehearsal: follow the README from scratch in an empty folder
 
 ### M8 Hand-over
-- [ ] README commands checked against reality, status banner removed
-- [ ] Final commit, tag, confirm the repository is public
+- [x] README commands checked against reality, status banner removed
+- [x] Final commit, tag, confirm the repository is public
 
 ## Working agreements
 

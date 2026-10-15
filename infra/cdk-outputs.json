@@ -1,0 +1,9 @@
+{
+  "AsaChallenge": {
+    "TableName": "asa-challenge",
+    "CloudFrontUrl": "https://d372pzaxr15a6q.cloudfront.net",
+    "DistributionId": "E3TYMV5C8CMEES",
+    "SiteUrl": "https://asa-challenge.fibosolutions.com",
+    "DashboardUrl": "https://ap-southeast-1.console.aws.amazon.com/cloudwatch/home?region=ap-southeast-1#dashboards:name=asa-challenge"
+  }
+}
