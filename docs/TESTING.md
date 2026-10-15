@@ -7,7 +7,7 @@ How the project is tested, how to run every suite, the latest results, and how t
 | Job | Tool | Notes |
 |---|---|---|
 | Backend unit and integration | **Vitest** with DynamoDB Local in Docker | Includes the parallel-booking, boundary and pairwise tests |
-| Frontend state | **Vitest** with React Testing Library (jsdom), API mocked | Booking page resets, staff filters, sign-in and sign-out |
+| Frontend state | **Vitest** with React Testing Library (jsdom), API mocked | Booking page resets, staff filters, sign-in and sign-out, times shown in the dealership time zone |
 | Continuous integration | **GitHub Actions** (`.github/workflows/ci.yml`) | On every push and pull request: build, unit, frontend and integration tests |
 | API black-box and concurrency | **Python scripts** (standard library only) in `scripts/` | Roles, validation, boundaries, pairwise, concurrency, every text input, post-deploy smoke test. Run against local or the live site |
 | UI | The manual sheet, run by hand or through **Claude in Chrome** (driven by Alice) | Real browser, real clicks; screenshots in `docs/test-evidence/` |
@@ -39,8 +39,8 @@ All suites pass.
 |---|---|
 | Type check (all workspaces) | clean |
 | Backend unit tests | 20 passed |
-| Frontend tests | 11 passed (booking page 7, staff overview 2, sign-in and sign-out 2) |
-| Integration tests | 104 passed (booking and cancel 25, API and roles 13, boundary values 28, pairwise 38) |
+| Frontend tests | 15 passed (booking page 7, staff overview 2, sign-in and sign-out 2, time zone display 4) |
+| Integration tests | 105 passed (booking and cancel 26, API and roles 13, boundary values 28, pairwise 38) |
 | `api_tests.py` | 41 of 41 |
 | `race_booking.py` | 11 of 11 |
 | `boundary_tests.py` | 57 of 57 |

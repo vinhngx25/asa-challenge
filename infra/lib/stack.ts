@@ -106,13 +106,11 @@ export class AsaStack extends cdk.Stack {
       architecture: lambda.Architecture.ARM_64,
       memorySize: 512,
       timeout: cdk.Duration.seconds(15),
-      tracing: lambda.Tracing.ACTIVE,
       logGroup: apiLogs,
       environment: {
         TABLE_NAME: table.tableName,
         JWT_SECRET_ARN: jwtSecret.secretArn,
         LOG_LEVEL: 'INFO',
-        POWERTOOLS_SERVICE_NAME: 'asa-api',
         NODE_OPTIONS: '--enable-source-maps',
       },
       bundling: {
@@ -130,17 +128,12 @@ export class AsaStack extends cdk.Stack {
       apiName: 'asa-challenge',
       createDefaultStage: false,
     });
-    const stageLogs = new logs.LogGroup(this, 'ApiAccessLogs', {
-      retention: logs.RetentionDays.ONE_MONTH,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
     new apigwv2.HttpStage(this, 'DefaultStage', {
       httpApi,
       stageName: '$default',
       autoDeploy: true,
       // First line of defence against abuse of the public URL.
       throttle: { rateLimit: 50, burstLimit: 100 },
-      accessLogSettings: { destination: new apigwv2.LogGroupLogDestination(stageLogs) },
     });
     httpApi.addRoutes({
       path: '/api/{proxy+}',
@@ -253,8 +246,6 @@ export class AsaStack extends cdk.Stack {
     /* ------------------------------------------------------------ */
 
     const five = cdk.Duration.minutes(5);
-    const app = (metricName: string, statistic = 'Sum') =>
-      new cw.Metric({ namespace: 'ASA', metricName, dimensionsMap: { service: 'asa-api' }, statistic, period: five });
     const api = (metricName: string, statistic = 'Sum') =>
       new cw.Metric({
         namespace: 'AWS/ApiGateway',
@@ -309,13 +300,6 @@ export class AsaStack extends cdk.Stack {
         evaluationPeriods: 1,
         treatMissingData: cw.TreatMissingData.NOT_BREACHING,
       }),
-      new cw.Alarm(this, 'AlarmLoginFailures', {
-        alarmDescription: 'Spike of failed sign-ins (possible password guessing)',
-        metric: app('LoginFailed'),
-        threshold: 20,
-        evaluationPeriods: 1,
-        treatMissingData: cw.TreatMissingData.NOT_BREACHING,
-      }),
     ];
     for (const alarm of alarms) alarm.addAlarmAction(alarmAction);
 
@@ -332,23 +316,8 @@ export class AsaStack extends cdk.Stack {
         width: 12,
       }),
       new cw.GraphWidget({
-        title: 'Bookings, conflicts and cancellations',
-        left: [app('BookingCreated'), app('BookingConflict'), app('BookingCancelled')],
-        width: 12,
-      }),
-      new cw.GraphWidget({
-        title: 'Sign-ins',
-        left: [app('LoginSucceeded'), app('LoginFailed')],
-        width: 12,
-      }),
-      new cw.GraphWidget({
         title: 'Lambda invocations, errors, throttles',
         left: [fn.metricInvocations({ period: five }), fn.metricErrors({ period: five }), fn.metricThrottles({ period: five })],
-        width: 12,
-      }),
-      new cw.GraphWidget({
-        title: 'Booking latency (ms)',
-        left: [app('BookingLatency', 'p50'), app('BookingLatency', 'p95')],
         width: 12,
       }),
       new cw.GraphWidget({

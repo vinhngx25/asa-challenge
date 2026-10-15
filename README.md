@@ -60,8 +60,8 @@ Open http://localhost:5173 and sign in with a demo account. `npm run build` type
 
 ```bash
 npm test                    # 20 backend unit tests
-npm run test:frontend       # 11 frontend tests (booking page, staff filters, sign-in)
-npm run test:integration    # 104 tests on DynamoDB Local (needs npm run db:up)
+npm run test:frontend       # 15 frontend tests (booking page, staff filters, sign-in, time display)
+npm run test:integration    # 105 tests on DynamoDB Local (needs npm run db:up)
 
 # Black-box scripts (Python standard library, seeded data required, each cancels what it books)
 python scripts/api_tests.py      --base-url http://localhost:3000
@@ -125,7 +125,7 @@ python scripts/smoke_test.py --base-url https://<your-url>
 npm run destroy
 ```
 
-The deploy creates structured logs, metrics, X-Ray traces, a CloudWatch dashboard (`asa-challenge`) and alarms. All services are pay-per-use, so the demo costs cents per month when idle.
+The deploy creates JSON logs in CloudWatch, a dashboard (`asa-challenge`) and four alarms. All services are pay-per-use, so the demo costs cents per month when idle.
 
 ## About Alice, the assistant that built this
 

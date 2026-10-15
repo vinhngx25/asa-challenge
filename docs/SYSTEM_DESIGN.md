@@ -2,7 +2,7 @@
 
 Proof of concept for Scenario A (Ownership). A customer books a service for a vehicle at a dealership; the system confirms only when a **service bay** and a **qualified technician** are both free for the whole duration, and stores an **appointment** linking customer, vehicle, technician and bay. It is live at https://asa-challenge.fibosolutions.com.
 
-In scope: sign-in with customer and staff roles, a customer dashboard, booking, cancelling (which frees the resources), a staff overview, seeded demo data, deployment to AWS, and observability. Out of scope: see section 11 and [OUT_OF_SCOPE.md](OUT_OF_SCOPE.md).
+In scope: sign-in with customer and staff roles, a customer dashboard, booking, cancelling (which frees the resources), a staff overview, seeded demo data, deployment to AWS, and basic observability. Out of scope: see section 11 and [OUT_OF_SCOPE.md](OUT_OF_SCOPE.md).
 
 ## 1. Architecture
 
@@ -13,11 +13,11 @@ flowchart LR
   U["Browser<br/>React single-page app"] -->|HTTPS| CF["CloudFront<br/>TLS 1.2+, security headers"]
   R53["Route 53 alias"] --> CF
   CF -->|"default"| S3[("S3 private bucket<br/>built frontend")]
-  CF -->|"/api/*"| APIGW["API Gateway HTTP API<br/>throttling, access logs"]
+  CF -->|"/api/*"| APIGW["API Gateway HTTP API<br/>throttling"]
   APIGW --> L["Lambda: Hono API<br/>Node.js 24, arm64"]
   L --> DDB[("DynamoDB<br/>single table, on-demand")]
   L --> SM["Secrets Manager<br/>JWT secret"]
-  L -.-> CW["CloudWatch logs, metrics,<br/>dashboard, alarms; X-Ray"]
+  L -.-> CW["CloudWatch logs,<br/>dashboard, alarms"]
 ```
 
 Local development: Vite dev server (proxies `/api`) and the same Hono app on Node, against DynamoDB Local in Docker. The Hono app is one `fetch` function; a small adapter exposes it to Lambda and another to Node, so local and cloud run the same code.
@@ -103,15 +103,14 @@ Access control is enforced on the server: every route except login and health ne
 
 ## 5. Observability
 
+Logs plus the metrics AWS already provides; nothing custom.
+
 | Area | What is implemented |
 |---|---|
-| Logs | Structured JSON (Powertools Logger), one line per request with request id, username, role, route, status and latency; booking lines add appointment, dealership, bay and technician. Passwords and tokens are never logged. The client gets an `X-Request-Id` header, so a user report maps to one log query. 30-day retention. API Gateway access logs go to their own group. |
-| Metrics | Business metrics through CloudWatch Embedded Metric Format: `BookingCreated`, `BookingConflict`, `BookingCancelled`, `AvailabilityQueried`, `LoginSucceeded`, `LoginFailed`, `BookingLatency`. Plus API Gateway, Lambda and DynamoDB metrics. |
-| Tracing | X-Ray on the Lambda function (HTTP APIs cannot trace, so a trace starts at the function), with subsegments `findCandidates` and `commitBooking`. |
-| Dashboard | One CloudWatch dashboard `asa-challenge`: requests and errors, p50/p95/p99 latency, bookings vs conflicts vs cancellations, sign-ins, Lambda and DynamoDB throttling, booking latency, alarm status. |
-| Alarms | API 5xx, Lambda errors, p95 latency above 3 s, DynamoDB throttling, 20 or more failed sign-ins in 5 minutes. They notify an SNS topic that emails an address if `ALARM_EMAIL` is set at deploy time. |
-
-The conflict rate is the business signal that a dealership needs another bay or technician.
+| Logs | One JSON line per request on stdout (a 25-line logger, `backend/src/lib/logger.ts`): time, level, request id, method, path, status, latency, username and role. Booking, cancel and failed-login events add a line with the appointment, dealership, bay and technician. Passwords and tokens are never logged. The client gets an `X-Request-Id` header, so a user report maps to one log query in CloudWatch Logs (30-day retention). |
+| Metrics | The built-in API Gateway, Lambda and DynamoDB metrics. |
+| Dashboard | One CloudWatch dashboard `asa-challenge`: requests and errors, p50/p95/p99 latency, Lambda invocations, errors and throttles, DynamoDB throttling, alarm status. |
+| Alarms | API 5xx, Lambda errors, p95 latency above 3 s, DynamoDB throttling. They notify an SNS topic that emails an address if `ALARM_EMAIL` is set at deploy time. |
 
 ## 6. Security
 
@@ -121,7 +120,7 @@ The conflict rate is the business signal that a dealership needs another bay or 
 | Token | HS256 JWT, secret from Secrets Manager, 8-hour expiry, role in the claims. |
 | Transport | HTTPS only (HTTP redirects), TLS 1.2+, HSTS, CSP and other security headers set by CloudFront. |
 | Storage | S3 private behind CloudFront origin access control; DynamoDB encrypted at rest with point-in-time recovery. |
-| Abuse | API Gateway throttling (50 requests/second, burst 100); failed sign-ins are a metric and an alarm. |
+| Abuse | API Gateway throttling (50 requests/second, burst 100); failed sign-ins are logged. |
 | IAM | The Lambda role can reach only its own table and secret. |
 | Input | Zod validation on every request. Username and password 1 to 32 characters, no white space in a password, record ids up to 64, search up to 100; every text box has the same `maxlength`. The API stores no free text from users. |
 
@@ -138,7 +137,7 @@ This gate suits a demo; a product would use a managed identity provider (for exa
 | Frontend | React, Vite, Tailwind, TanStack Query, React Router | Mainstream and easy to review; static build suits S3 and a CDN |
 | Hosting | S3 + CloudFront | Nothing to run; CDN, TLS and security headers in one place |
 | Infrastructure | AWS CDK (TypeScript) | One command deploys and the stack is readable as code |
-| Observability | Powertools for AWS Lambda, CloudWatch, X-Ray | Consistent log, metric and trace fields with little code |
+| Observability | JSON logs to CloudWatch, built-in AWS metrics, a dashboard and four alarms | Enough to see errors, latency and throttling without extra libraries |
 | Tests | Vitest (with DynamoDB Local), Python scripts, Claude in Chrome | See section 10 |
 | Images | Generated with Gemini through Alice's image skill (38 WebP files, about 1.1 MB) | Faces, places and cars instead of text blocks; one shared style prompt keeps them consistent; each record stores an image key, so art can be replaced without code changes |
 

@@ -15,7 +15,7 @@ import { config } from '../lib/config.js';
 import { db } from '../lib/db.js';
 import { AppError } from '../lib/errors.js';
 import { GSI1, GSI2, key, type LockKind } from '../lib/keys.js';
-import { count, latency, logger, traced } from '../lib/observability.js';
+import { logger } from '../lib/logger.js';
 import { SLOT_MS, iso, localDate, openingWindow, slotStarts } from '../lib/time.js';
 import type { Principal } from './auth.js';
 import { getCatalog, getVehicle } from './catalog.js';
@@ -173,7 +173,6 @@ export async function getAvailability(
   if (query.vehicleId && !(await getVehicle(principal.username, query.vehicleId))) {
     throw new AppError('NOT_FOUND', 'Vehicle not found.');
   }
-  count('AvailabilityQueried');
   return dayAvailability(p, query.date, query.vehicleId, options.now ?? Date.now());
 }
 
@@ -211,8 +210,7 @@ export async function createAppointment(
   principal: Principal,
   options: BookingOptions = {},
 ): Promise<AppointmentDto> {
-  const started = Date.now();
-  const nowMs = options.now ?? started;
+  const nowMs = options.now ?? Date.now();
   const startMs = Date.parse(input.startTime);
 
   if (!Number.isFinite(startMs) || startMs % SLOT_MS !== 0) {
@@ -234,14 +232,12 @@ export async function createAppointment(
   }
 
   for (let attempt = 1; attempt <= MAX_COMMIT_ATTEMPTS; attempt++) {
-    const picked = await traced('findCandidates', async () => {
-      const resources: Resource[] = [...p.bays, ...p.techs, { kind: 'VEH', id: vehicle.id }];
-      const busy = await loadBusy(resources, startMs, endMs);
-      if (!isFree(busy.get(`VEH#${vehicle.id}`), startMs, p.service.durationMinutes)) {
-        throw new AppError('VEHICLE_BUSY', 'This vehicle already has an appointment that overlaps this time.');
-      }
-      return pickResources(p, busy, startMs);
-    });
+    const resources: Resource[] = [...p.bays, ...p.techs, { kind: 'VEH', id: vehicle.id }];
+    const busy = await loadBusy(resources, startMs, endMs);
+    if (!isFree(busy.get(`VEH#${vehicle.id}`), startMs, p.service.durationMinutes)) {
+      throw new AppError('VEHICLE_BUSY', 'This vehicle already has an appointment that overlaps this time.');
+    }
+    const picked = pickResources(p, busy, startMs);
 
     if (!picked) break;
 
@@ -281,9 +277,7 @@ export async function createAppointment(
     };
 
     try {
-      await traced('commitBooking', () => commit(item, startMs, p.service.durationMinutes));
-      count('BookingCreated');
-      latency('BookingLatency', Date.now() - started);
+      await commit(item, startMs, p.service.durationMinutes);
       logger.info('Appointment booked', {
         appointmentId: id,
         dealershipId: p.dealership.id,
@@ -300,7 +294,6 @@ export async function createAppointment(
     }
   }
 
-  count('BookingConflict');
   const alternatives = await nearestAlternatives(p, vehicle.id, startMs, nowMs);
   throw new AppError(
     'SLOT_UNAVAILABLE',
@@ -412,7 +405,6 @@ export async function cancelAppointment(
     throw err;
   }
 
-  count('BookingCancelled');
   logger.info('Appointment cancelled', { appointmentId: id, cancelledBy: principal.username });
   return toDto({ ...item, status: 'CANCELLED', cancelledAt });
 }

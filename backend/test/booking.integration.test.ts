@@ -299,3 +299,18 @@ describe('listing and roles', () => {
     expect(await listAppointments(winston, { from: at(10, 30), to: at(23) })).toHaveLength(1);
   });
 });
+
+describe('time zone: stored in UTC, read back in the dealership time', () => {
+  it('a booking made for 10:00 London time is stored and returned as UTC instants that read back as 10:00 and 11:00 London time', async () => {
+    const start = at(10);
+    const appt = await book(wick, 'wick-mustang', 'oil-change', 'kensington', start);
+
+    for (const value of [appt.startTime, appt.endTime, (await getAppointment(appt.id, wick)).startTime]) {
+      expect(value).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    }
+    expect(appt.startTime).toBe(start);
+    expect(Date.parse(appt.endTime) - Date.parse(appt.startTime)).toBe(60 * 60_000);
+    expect(localParts(Date.parse(appt.startTime), 'Europe/London')).toMatchObject({ hour: 10, minute: 0 });
+    expect(localParts(Date.parse(appt.endTime), 'Europe/London')).toMatchObject({ hour: 11, minute: 0 });
+  });
+});

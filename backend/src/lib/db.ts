@@ -1,7 +1,6 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { config } from './config.js';
-import { tracer } from './observability.js';
 
 export interface DbTarget {
   endpoint?: string;
@@ -10,11 +9,10 @@ export interface DbTarget {
 
 export function createDocClient(target: DbTarget = {}): DynamoDBDocumentClient {
   const endpoint = target.endpoint ?? config.dynamoEndpoint;
-  const base = new DynamoDBClient({
+  const client = new DynamoDBClient({
     region: target.region ?? config.region,
     ...(endpoint ? { endpoint, credentials: { accessKeyId: 'local', secretAccessKey: 'local' } } : {}),
   });
-  const client = config.inLambda ? tracer.captureAWSv3Client(base) : base;
   return DynamoDBDocumentClient.from(client, { marshallOptions: { removeUndefinedValues: true } });
 }
 

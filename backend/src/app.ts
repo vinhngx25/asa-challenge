@@ -16,7 +16,7 @@ import { config } from './lib/config.js';
 import { db } from './lib/db.js';
 import { AppError } from './lib/errors.js';
 import { key } from './lib/keys.js';
-import { count, flushMetrics, latency, logger } from './lib/observability.js';
+import { logger } from './lib/logger.js';
 import { login, verifyToken, type Principal } from './services/auth.js';
 import {
   cancelAppointment,
@@ -48,21 +48,19 @@ async function readJson(req: { json: () => Promise<unknown> }): Promise<unknown>
   }
 }
 
-/** Assigns a request id, logs one line per request and flushes metrics. */
+/** Assigns a request id, returns it in X-Request-Id and logs one line per request. */
 const requestContext: MiddlewareHandler<Env> = async (c, next) => {
   const requestId = randomUUID();
   const started = Date.now();
   c.set('requestId', requestId);
-  // Lambda handles one request at a time per instance, so appended keys never mix between requests there.
-  logger.appendKeys({ requestId });
   try {
     await next();
   } finally {
     const ms = Date.now() - started;
     c.header('X-Request-Id', requestId);
     c.header('Cache-Control', 'no-store');
-    latency('RequestLatency', ms);
     logger.info('request', {
+      requestId,
       method: c.req.method,
       path: c.req.path,
       status: c.res.status,
@@ -70,8 +68,6 @@ const requestContext: MiddlewareHandler<Env> = async (c, next) => {
       username: c.get('principal')?.username,
       role: c.get('principal')?.role,
     });
-    flushMetrics();
-    logger.removeKeys(['requestId']);
   }
 };
 
@@ -108,10 +104,10 @@ export function createApp(): Hono<Env> {
           ...(err.alternatives ? { alternatives: err.alternatives } : {}),
         },
       };
-      if (err.status >= 500) logger.error('Request failed', err);
+      if (err.status >= 500) logger.error('Request failed', err, { requestId });
       return c.json(body, err.status as 400);
     }
-    logger.error('Unhandled error', err);
+    logger.error('Unhandled error', err, { requestId });
     const body: ApiErrorBody = { error: { code: 'INTERNAL', message: 'Something went wrong.', requestId } };
     return c.json(body, 500);
   });
@@ -131,12 +127,10 @@ export function createApp(): Hono<Env> {
     const body = parse(loginRequestSchema, await readJson(c.req));
     try {
       const result = await login(body.username, body.password);
-      count('LoginSucceeded');
       logger.info('Login succeeded', { username: result.user.username, role: result.user.role });
       return c.json(result);
     } catch (err) {
       if (err instanceof AppError && err.code === 'INVALID_CREDENTIALS') {
-        count('LoginFailed');
         logger.warn('Login failed');
       }
       throw err;

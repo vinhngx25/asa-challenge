@@ -6,7 +6,6 @@ export const config = {
   dynamoEndpoint: process.env.DYNAMODB_ENDPOINT,
   region: process.env.AWS_REGION ?? 'ap-southeast-1',
   tokenTtlSeconds: 8 * 60 * 60,
-  inLambda: Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME),
 };
 
 let secret: Uint8Array | undefined;
