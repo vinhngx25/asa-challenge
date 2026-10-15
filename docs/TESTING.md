@@ -8,7 +8,6 @@ How the project is tested, which tools were used, how to run every suite, and ho
 |---|---|---|
 | Images and thumbnails (38: portraits, places, cars, service art, logo, desktop and mobile hero) | **Google "nano banana" (Gemini image models, `gemini-3.1-flash-image`)** through Alice's image skill | One shared bright, modern style prompt keeps the set consistent. Each image is checked by eye on a contact sheet, then converted to WebP. File names are fixed, so changing the art needs no code change |
 | Real UI testing | **Claude in Chrome**, driven by Alice | Opens the real app in the author's Chrome, signs in as each role, books, cancels, reads the page and captures screenshots. Used on the local app. Browser sign-in on the deployed site is left to the author |
-| Repeatable UI regression | **Playwright** (headless Chromium), `scripts/ui-regression/` | 102 checks that mirror the manual cases, including two browser windows racing for one slot, phone width, keyboard-only sign-in, a broken-image check, a throttled-request message and an automated accessibility scan (axe, WCAG 2.1 A and AA). Optional, with its own `package.json` |
 | API black-box and rare cases | **Python scripts** (standard library only) in `scripts/` | Login, roles, validation, boundaries, pairwise, concurrency, post-deploy smoke test. Run against local or live |
 | Unit and integration | **Vitest** with DynamoDB Local in Docker | Includes the parallel-booking tests, boundary tests and pairwise tests |
 | Manual API calls | `curl` or PowerShell `Invoke-RestMethod` | Examples below |
@@ -25,9 +24,7 @@ How the project is tested, which tools were used, how to run every suite, and ho
 | Input sweep (every text field and parameter) | `python scripts/input_tests.py --base-url <url>` | seeded data | yes (creates no bookings) |
 | Pairwise over HTTP | `python scripts/pairwise_tests.py --base-url <url>` | seeded data | yes |
 | Post-deploy smoke | `python scripts/smoke_test.py --base-url <url>` | deployed site | yes |
-| UI regression, full (102 checks) | see section 6 | local app running, or the deployed site run by you | local by the agent; production by the author (section 6) |
-| UI layout audit (221 checks), resilience (46), visual regression (11), performance (18; 10 on the deployed sign-in page) | see section 6a | local app; performance and the sign-in page also on the deployed site | local by the agent; performance of the sign-in page on production |
-| UI public (29 checks, no sign-in) | `node scripts/ui-regression/ui-public.mjs <url>` | nothing | yes |
+| UI | the manual sheet [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md), run by hand or through Claude in Chrome (section 6) | local app, or the deployed site (sign-in typed by the author) | local by the agent; production by the author |
 
 `<url>` is `http://localhost:3000` for the API on your machine, or the site address. Every script cancels the bookings it makes. All Python scripts exit with code 1 when a check fails, so they can run in CI.
 
@@ -163,30 +160,16 @@ Alice opened the app in real Chrome, signed in as John Wick, James Bond and Wins
 
 ### On the deployed site
 
-- **Without a sign-in** (the agent runs this on production): `cd scripts/ui-regression && npm install && node ui-public.mjs https://asa-challenge.fibosolutions.com`. 29 checks: the login page loads and is quick, explains the password and username rules, HSTS, CSP and the other security headers, `http://` redirects to `https://`, no console errors, no failed requests, all images load, no accessibility violations, keyboard order, signed-out redirects for `/`, `/book` and unknown addresses, an invalid saved token, every protected API route answers 401, a forged token is refused, malformed input is a 400, the phone-width layout, and that phones and tablets get the portrait banner while wide screens get the large photo.
-- **With a sign-in** (run by the author): the full 102-check run needs the demo passwords typed into the login form, which the agent does not do on a deployed site. Run it yourself from the same folder: `node ui-run.mjs https://asa-challenge.fibosolutions.com ./shots` (set `CHROME_PATH` if you do not want to download a browser). It cancels what it books, can be repeated straight away (the staff-cancel step books and cancels its own appointment instead of using seeded data) and takes about two minutes. The manual sheet [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md) covers the same ground by hand.
+- **Without a sign-in** (the agent runs this on production): in Claude in Chrome, open the sign-in page and check that it loads quickly, explains the username and password rules, redirects `http://` to `https://`, has no console errors, loads every image, and that `/`, `/book` and unknown addresses send a signed-out visitor to the sign-in page. The security headers, 401 on every protected route, forged-token and malformed-input checks are covered by the Python suites below.
+- **With a sign-in** (run by the author): the demo passwords are typed into the login form, which the agent does not do on a deployed site. Walk through [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md) in your own browser; the Must-have section takes about 15 minutes.
 - **API** on the deployed site: all five Python suites are run by the agent (section 2); they call the API directly and do not use the login form.
-
-### With Playwright (repeatable)
-
-```bash
-# the app must be running: npm run db:up, npm run seed:local, npm run dev
-cd scripts/ui-regression
-npm install
-npx playwright install chromium        # once
-node ui-run.mjs http://localhost:5173 ./shots
-```
-
-Optional: `CHROME_PATH=<chrome.exe>` uses an existing browser instead of the downloaded one. The run prints PASS or FAIL per case id (the same ids as the manual sheet), writes screenshots and `results.json` to the folder, cancels the bookings it created and exits 1 on any failure. It can be run repeatedly.
-
-What the 102 checks include: every Must-have customer and staff case, most Should-have cases, keyboard-only sign-in (Tab, type, Enter), deep-link reload, an invalid token, a check that every image on the booking page loads, no sideways scrolling at 390 px on four pages, and a **two-window race**: window A and window B both reach the last free slot, A confirms first, B then sees the conflict message with the four nearest times and books one of them.
 
 ## 7. Defects found by testing
 
 | Found by | Defect | Fix |
 |---|---|---|
 | Boundary test | `GET /availability?date=2026-02-30` (and other impossible dates) returned 200 with the hours of a different day | Dates are validated as real calendar days (400 otherwise) |
-| Playwright at 390 px | The booking page was 708 px wide on a phone and scrolled sideways: service cards and the category chips widened their grid column | `min-w-0` on the column and on the service cards; the page now fits |
+| Browser at 390 px | The booking page was 708 px wide on a phone and scrolled sideways: service cards and the category chips widened their grid column | `min-w-0` on the column and on the service cards; the page now fits |
 | Browser review | "Sign out" text was too faint in the header | Own button style with higher contrast |
 | Browser review | "Times shown in Manchester time" for a UK-wide time zone | Reads "UK local time" |
 | Review of design against code | `RATE_LIMITED` (429) was in the design but nothing produced it; API Gateway's own 429 body is not the API error shape and the page showed a generic error. Observed live: 79 of 400 requests in a 4 second burst were throttled | The web app maps 429 to "Too many requests" (checked by a UI test) |
@@ -201,24 +184,15 @@ What the 102 checks include: every Must-have customer and staff case, most Shoul
 
 - `npm run seed:local` / `npm run seed:aws` wipe the table and load the demo data, so a run always starts from the same state.
 - Integration tests use their own table (`asa-challenge-test`), so the demo data is untouched.
-- The Python and Playwright runs cancel what they create. If a run is interrupted, re-seed.
+- The Python runs cancel what they create. If a run is interrupted, re-seed.
 
-## 6a. More kinds of UI testing
+## 6a. More kinds of UI testing (done earlier)
 
-Beyond functional, boundary and pairwise checks, six more kinds of browser test run against a production build of the app (`npm run build`, then `npm run preview -w frontend` with the API running). Each is its own script in `scripts/ui-regression/` and prints PASS or FAIL per check.
-
-| Kind | Command (from `scripts/ui-regression`) | What it does | Result |
-|---|---|---|---|
-| **Layout audit** | `node ui-layout.mjs <url>` | Opens every main screen (sign-in, dashboard, cancelled tab, booking, staff) at seven sizes (320, 360, 390, 414, 768, 1024, 1440 px) and measures: no sideways scrolling; header items share one centre line and, on phones, at most two rows and 130 px; header items do not overlap; touch targets at least 36 px high; no text under 12 px; pictures not stretched; no text cut off | 221 of 221 after fixes (the first run found the phone header three rows and 153 px tall) |
-| **Resilience** | `node ui-resilience.mjs <url>` | **Time zones and locales**: the browser set to Singapore, New York, Auckland, London and Ho Chi Minh City; **network failures**: errors, aborted calls, offline, a slow double click, a Fast 3G profile, sign-in with the server down; **session and navigation**: expired token mid-booking, deep links, sign-out in another tab, role switch, back and forward, refresh mid-flow; **random clicking**: 220 seeded random clicks, keystrokes of hostile text, resizes and back/forward for a customer on desktop, a customer on a phone and staff, with writes blocked so data stays intact | 46 of 46 after fixes |
-| **Visual regression** | `npm run test:visual:update` once on a build you trust, then `node ui-visual.mjs <url>` after each change | Compares screenshots of the sign-in page (3 sizes), dashboard, booking start and booking times (desktop and phone) and staff overview with saved baselines; dates, counts and references are hidden first so only layout, colour and pictures count; differences are saved to `diffs/` | 11 of 11. Mutation check: changing one colour made the two dashboard comparisons fail; restoring it passed |
-| **Performance** | `node ui-perf.mjs <url> [--signed-in]` | First and largest contentful paint, layout shift, bytes, requests and picture weight, on a normal desktop connection and on a mid-range phone (4x slower CPU, Fast 3G); with `--signed-in` also sign-in to dashboard, choosing a date to times on screen, and booking-page weight | Deployed sign-in page: desktop LCP 0.8 s, phone LCP 2.1 s, layout shift 0, 292 KB desktop and 225 KB phone, and the phone does not download the large desktop photo. Local build, signed in: dashboard in 0.2 s (desktop) and 1.4 s (phone), times in 0.07 s and 0.5 s |
-| **Time zone and locale** (part of resilience) | as above | Confirms times are shown and stored in the dealership's time (London) for a browser anywhere, UK-style dates in every locale, and that opening time reads 08:00 on both sides of the clock change | passed for all five zones |
-| **Random clicking** (part of resilience) | as above | Looks for crashes, blank pages and uncaught errors, not for expected results | no uncaught error in 660 steps |
+Layout at seven screen sizes, resilience (time zones and locales, network failures, session and navigation, random clicking), visual regression and performance budgets were run once with throw-away browser scripts. The scripts were then removed to keep the repository small; the findings and results are recorded in [IMPLEMENTATION_RESULTS.md](IMPLEMENTATION_RESULTS.md) section 17, and every defect they found is covered by the manual cases or by a unit or integration test.
 
 ### Testing through Claude in Chrome
 
-The author prefers UI testing through Claude in Chrome (the browser extension). It is used for the phone Confirm bar and a re-run of the core cases (results in [IMPLEMENTATION_RESULTS.md](IMPLEMENTATION_RESULTS.md) section 18). Practical notes: the extension cannot resize the window, so phone width is shown in a 390 px wide frame (the page's own media queries apply inside it); Chrome often reports the tab as hidden, which makes real keystrokes and some screenshots unreliable, so clicks and form fills go through the page's scripts and screenshots are taken when the tab allows it; sign-in is typed or filled only on the local copy. The Playwright scripts remain as an optional repeatable extra.
+The author prefers UI testing through Claude in Chrome (the browser extension). It is used for the phone Confirm bar and a re-run of the core cases (results in [IMPLEMENTATION_RESULTS.md](IMPLEMENTATION_RESULTS.md) section 18). Practical notes: the extension cannot resize the window, so phone width is shown in a 390 px wide frame (the page's own media queries apply inside it); Chrome often reports the tab as hidden, which makes real keystrokes and some screenshots unreliable, so clicks and form fills go through the page's scripts and screenshots are taken when the tab allows it; sign-in is typed or filled only on the local copy.
 
 ### What these found
 

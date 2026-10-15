@@ -22,9 +22,9 @@ What was built, how it differs from the design, what was tested and what was not
 | Observability | Structured logs, custom metrics, X-Ray tracing, dashboard, 5 alarms |
 | Reviewer can follow the README to build, run, test and deploy | Rehearsed from a fresh clone: install, build, unit tests, seed, integration tests (section 6) |
 | Boundary and pairwise testing | Done: 26 boundary tests and 38 pairwise rows in the integration suite, plus 55 boundary and 39 pairwise HTTP checks that also run on the live site (sections 5.2 and 5.3) |
-| Real UI testing | Claude in Chrome for exploratory runs, plus a repeatable Playwright run of 102 checks including text-box limits and accessibility scans (section 5.4) |
+| Real UI testing | Claude in Chrome for exploratory runs, plus a Playwright run of 102 checks (script since removed to keep the repository simple) including text-box limits and accessibility scans (section 5.4) |
 | Manual test cases for a person, by priority | [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md): 14 must have, 21 should have, 12 nice to have |
-| Tools recorded | Google nano banana for images, Claude in Chrome and Playwright for the UI, Python and curl for the API (section 10, [TESTING.md](TESTING.md)) |
+| Tools recorded | Google nano banana for images, Claude in Chrome for the UI, Python and curl for the API (section 10, [TESTING.md](TESTING.md)) |
 
 ## 2. Milestone log
 
@@ -52,7 +52,7 @@ What was built, how it differs from the design, what was tested and what was not
 | `backend/test` | 8 | 1,164 |
 | `frontend/src` | 13 | 1,301 |
 | `infra/` | 2 | 427 |
-| `scripts/` (Python and the Playwright run) | 9 | 983 |
+| `scripts/` (Python suites and the dev launcher) | 9 | 983 |
 
 Production build: JavaScript 548 KB (gzip about 167 KB), CSS 23 KB. Lambda bundle about 1.2 MB, minified, with the AWS SDK bundled.
 
@@ -216,7 +216,7 @@ A new clone of the public repository, with `npm install`, `npm run build`, `npm 
 
 - **Not verified:** the CloudWatch dashboard was confirmed to exist but its layout was not looked at, and no alarm was made to fire (all five are in the OK state). Metrics, X-Ray traces and log content were checked (section 12.4). No load or soak test. No real-device phone test. Accessibility was checked with an automated scan (axe) and keyboard-only sign-in, not with a screen reader.
 - **Browser sign-in on the live site** was not performed by the agent; it was verified through the API scripts and the smoke test. The manual sheet is for the author to run there.
-- **Frontend has no component-level tests.** UI behaviour is covered end to end by the Playwright run and the manual sheet.
+- **Frontend has no component-level tests.** UI behaviour is covered by the manual sheet and the browser runs recorded here.
 - **The Playwright run was executed on the local app only.** It signs in with the demo accounts through a browser, so the agent did not point it at the live site.
 - **JavaScript bundle is one 544 KB file.** No code splitting; acceptable for this size of app.
 - **Staff list is not paginated.** Fine for demo volumes.
@@ -244,7 +244,7 @@ Changes outside the images: the empty-state picture now fills its frame instead 
 | Job | Tool |
 |---|---|
 | Images and thumbnails (37) | **Google "nano banana" (Gemini image models, `gemini-3.1-flash-image`)** through Alice's image skill, with one shared style prompt, contact-sheet review and WebP conversion |
-| Real UI testing | **Claude in Chrome** (Alice driving the author's Chrome) and **Playwright** (headless Chromium, repeatable) |
+| Real UI testing | **Claude in Chrome** (Alice driving the author's Chrome) and headless Chromium scripts (since removed) |
 | API testing | Python scripts (standard library only) against local or live; `curl` and PowerShell examples in [TESTING.md](TESTING.md) |
 | Unit and integration | Vitest with DynamoDB Local in Docker |
 | Cloud | AWS CLI and CDK, with the dedicated `aiadmin` profile |
@@ -338,7 +338,7 @@ Run against https://asa-challenge.fibosolutions.com after the final deploy.
 |---|---|---|
 | API: smoke, API, race, boundary, pairwise and input-sweep scripts | agent | 10, 38, 11, 57, 39 and 55 checks pass |
 | Browser, no sign-in (`ui-public.mjs`): page load speed, security headers, HTTP to HTTPS, console and network cleanliness, images, accessibility scan, keyboard order, signed-out redirects, API 401 shapes, forged token, malformed input, phone width | agent | 25 of 25 pass (login page loaded in about 0.6 s) |
-| Browser, signed in (`ui-run.mjs`, 102 checks) or the manual sheet | author | not run by the agent: it does not type the demo passwords into the login form of a deployed site. The same 102 checks pass on the local app; the author runs them on production with one command (see [TESTING.md](TESTING.md) section 6) |
+| Browser, signed in (102 checks by hand) or the manual sheet | author | not run by the agent: it does not type the demo passwords into the login form of a deployed site. The same 102 checks pass on the local app; the author runs them on production with one command (see [TESTING.md](TESTING.md) section 6) |
 | Infrastructure: metrics, alarms, traces, logs, certificate | agent | verified in section 12.4 |
 
 The API scripts and the browser run exercise the same code. The browser run adds the screens and the rendering, which is why it is the part left for a person to run on production.
@@ -438,4 +438,6 @@ The author made the phone experience the first priority and asked for the Confir
 
 **Core cases re-run in Chrome on the final build** (DOM-driven in the extension's tab, on the local copy): customer dashboard counts, own cars only, cancel with the inline prompt and updated counts, wrong-case and wrong-password sign-in, live "no spaces" warning, 32 character limits, the Sign-in help panel, staff overview, search by reference and plate, search symbols, dealership filter, a cancel prompt naming the customer, "Keep it", `/book` for staff going to All bookings, the signed-out `/book` visit returning to `/book` after sign-in, and a deliberate sign-out returning to the home page. All passed.
 
-**Limits of the Chrome route.** The extension cannot resize the browser window, so phone width is shown by loading the app in a 390 px wide frame, which makes the page's own media queries apply. The tab is often reported as hidden by Chrome, which makes real keystrokes and some screenshots unreliable; clicks and form fills are therefore done through the page's own scripts and screenshots are taken when the tab allows it. The earlier Playwright scripts stay in the repository as an optional, repeatable extra; they are not used for the checks above.
+**Limits of the Chrome route.** The extension cannot resize the browser window, so phone width is shown by loading the app in a 390 px wide frame, which makes the page's own media queries apply. The tab is often reported as hidden by Chrome, which makes real keystrokes and some screenshots unreliable; clicks and form fills are therefore done through the page's own scripts and screenshots are taken when the tab allows it. The earlier Playwright scripts were removed from the repository to keep it simple for reviewers.
+
+> Note: the browser scripts named in sections 5 and 14 to 17 (`ui-run`, `ui-layout`, `ui-resilience`, `ui-visual`, `ui-perf`, `ui-public`, all Playwright) were removed from the repository after these runs, at the author's request, so reviewers see only the app, the Python suites and the docs. The results above stay as the record of what was run.

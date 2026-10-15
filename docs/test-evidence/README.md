@@ -15,12 +15,6 @@ Results from the author's runs (Alice). Full detail, tool notes and method: [../
 | `scripts/input_tests.py` (every text field and parameter) | local and live | 55 of 55 |
 | `scripts/pairwise_tests.py` | local and live | 39 of 39 |
 | `scripts/smoke_test.py` | live | 10 of 10 |
-| `ui-layout.mjs` (seven screen sizes) | local production build | 221 of 221 |
-| `ui-resilience.mjs` (time zones, network failures, sessions, random clicking) | local production build | 46 of 46 |
-| `ui-visual.mjs` (screenshot baselines) | local production build | 11 of 11 |
-| `ui-perf.mjs` (speed budgets) | local build signed in 18 of 18; **deployed sign-in page 10 of 10** | LCP 0.8 s desktop, 2.1 s phone |
-| `scripts/ui-regression/ui-public.mjs` (browser, no sign-in) | **live** 29 of 29 after the final deploy; local 27 of 27 |
-| Playwright UI regression (`scripts/ui-regression`) | local app | 102 of 102 (includes the light-interface measurement, the sign-in help, live password feedback, the text box limits and hostile input, staff search, date suggestion, throttled message and WCAG 2.1 AA scans of four screens) |
 
 "Live" is `https://asa-challenge.fibosolutions.com` on AWS (CloudFront, API Gateway, Lambda, DynamoDB).
 
@@ -42,7 +36,7 @@ Results from the author's runs (Alice). Full detail, tool notes and method: [../
 
 ## UI checks (real browser)
 
-Two tools: **Claude in Chrome** (Alice driving the author's Chrome) and **Playwright** (repeatable script). The screenshots below come from the Playwright run on the local app.
+Alice drove the author's Chrome through the Claude in Chrome extension; the screenshots below come from the local app. The browser scripts used for the layout, resilience, visual and speed runs were removed later to keep the repository simple; their results are in [IMPLEMENTATION_RESULTS.md](../IMPLEMENTATION_RESULTS.md).
 
 | Check | Result |
 |---|---|

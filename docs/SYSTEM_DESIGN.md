@@ -293,7 +293,7 @@ Details, commands and results: [TESTING.md](TESTING.md) and [IMPLEMENTATION_RESU
 | Boundary value | Vitest + DynamoDB Local, Python over HTTP | Just inside, on and just outside every limit: opening hours per service length, 30 minute grid, lead time, 60 day horizon, cancel cut-off, clock changes, capacity, field lengths, dates, time formats |
 | Pairwise | Vitest + DynamoDB Local, Python over HTTP | All pairs of values for the booking decision (dealership, service, day, start position, contention, customer) and for the booking request (caller, vehicle, service, dealership, start), each with a hand-written expected result |
 | API black-box | Python scripts | Login and roles, validation errors, concurrency (two customers, same slot, same moment), cancel frees the slot, isolation between customers |
-| UI | **Claude in Chrome** (Alice), **Playwright** (`scripts/ui-regression`), and the manual sheet [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md) | Login, dashboard, booking, conflict with nearest times, two windows racing, cancel, staff view, phone width, keyboard sign-in, image loading. Screenshots saved as evidence |
+| UI | **Claude in Chrome** (Alice) and the manual sheet [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md) | Login, dashboard, booking, conflict with nearest times, cancel, staff view, phone width, keyboard sign-in, image loading. Screenshots saved as evidence |
 | Post-deploy smoke | Python script | Health, security headers, deep link, login, one booking, one cancel against the live URL |
 
 Precedence of rule checks on `POST /api/appointments` (used as the oracle in the pairwise tests): authentication 401, role 403, body shape 400, start time rules 422, unknown dealership, service or vehicle 404, then resource availability 409.

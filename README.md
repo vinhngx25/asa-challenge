@@ -39,7 +39,7 @@ backend/    Hono API (TypeScript) and booking service, runs on Node or AWS Lambd
 frontend/   React + Vite single-page app
 shared/     Zod schemas and types shared by backend and frontend
 infra/      AWS CDK stacks (S3, CloudFront, API Gateway, Lambda, DynamoDB, monitoring)
-scripts/    Python API, race, boundary and pairwise tests, deploy smoke test; ui-regression/ (optional Playwright UI run)
+scripts/    Python API, race, boundary and pairwise tests, deploy smoke test
 docs/       System design, plan, results, testing guide, manual test cases, test evidence
 ```
 
@@ -87,25 +87,6 @@ python scripts/input_tests.py    --base-url http://localhost:3000   # every text
 ```
 
 The same Python scripts run unchanged against the deployed site (`--base-url https://<your-url>`).
-
-### Real-browser UI regression (optional, Playwright)
-
-```bash
-npm run dev                                   # in one terminal
-cd scripts/ui-regression
-npm install && npx playwright install chromium
-node ui-run.mjs http://localhost:5173 ./shots # 102 checks, screenshots in ./shots, exit code 1 on failure
-```
-
-More browser tests (layout at seven screen sizes, resilience, visual regression, performance), run against a production build, are described in [docs/TESTING.md](docs/TESTING.md) section 6a:
-
-```bash
-cd scripts/ui-regression
-node ui-layout.mjs http://localhost:4173        # 221 checks: alignment, touch targets, overflow at 7 sizes
-node ui-resilience.mjs http://localhost:4173    # 46 checks: time zones, network failures, sessions, random clicking
-npm run test:visual:update                      # once: save baselines (then: node ui-visual.mjs http://localhost:4173)
-node ui-perf.mjs https://<your-url>             # speed budgets; add --signed-in on a local build
-```
 
 ### Manual test cases
 
@@ -203,7 +184,7 @@ Her workspace separates Alice's own knowledge from client and personal work. Eve
 
 - **Planned first.** She wrote the design and plan documents and waited for review before coding.
 - **Cloud operations.** She uses the AWS CLI with a dedicated profile to create and update infrastructure, deploy the frontend and backend, seed data and read logs.
-- **UI testing through a real browser.** She drives Chrome through the Claude in Chrome extension: logging in as each role, booking, cancelling, reading the rendered page and capturing screenshots as evidence. For a repeatable run she also uses Playwright (`scripts/ui-regression/`), with two browser windows racing for one slot, phone width and keyboard-only sign-in.
+- **UI testing through a real browser.** She drives Chrome through the Claude in Chrome extension: logging in as each role, booking, cancelling, reading the rendered page and capturing screenshots as evidence, including the phone layout and a second customer taking the same slot.
 - **API and rare-case testing.** She writes Python scripts that call the API directly, including simulations of rare cases such as two customers booking the same slot at the same moment, the same vehicle double-submitted, and cancel-then-rebook. She also designs boundary-value and pairwise (all-pairs) tests and checks that they can fail by deliberately breaking the code.
 - **Visuals.** She generates every image and thumbnail (38: portraits, dealerships, cars, service categories, logo, desktop and mobile hero, empty state) with Google's "nano banana" Gemini image models through her image skill. One shared bright, modern style prompt keeps the set consistent, and she reviews each batch on a contact sheet before converting it to WebP.
 

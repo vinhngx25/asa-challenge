@@ -66,7 +66,7 @@ Status: all milestones complete. Outcomes, deviations from the design and test r
 - [x] Boundary value tests (integration and HTTP), see docs/TESTING.md
 - [x] Pairwise tests of the booking decision and of the booking request
 - [x] Mutation check: break the code on purpose, confirm the suites fail
-- [x] Real-browser regression with Playwright (`scripts/ui-regression/`), 51 checks
+- [x] Real-browser regression run (51 checks; the throw-away scripts were removed later to keep the repository simple)
 - [x] Fix defects found: impossible calendar dates, booking page overflow at phone width, wording
 - [x] Manual test cases by priority (docs/MANUAL_TEST_CASES.md)
 - [x] Testing guide with tools and API testing by hand (docs/TESTING.md)

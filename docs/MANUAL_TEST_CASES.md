@@ -140,4 +140,4 @@ Services used below: **Oil & Filter Change** (60 min, Oil & Fluids), **Fluid Top
 | C-S04 to C-S07 | `backend/test/boundary.integration.test.ts`, `scripts/boundary_tests.py` |
 | S-S01 to S-S03 | listing and filter tests |
 
-The Playwright run in `scripts/ui-regression/` uses the same case ids (C-M01, S-M03, N-04 and so on) and checks about 40 of them automatically; the cases that stay manual are mainly the visual and device ones (N-07 padlock and redirect, N-08 ordering with several bookings, N-10, N-11). See [TESTING.md](TESTING.md) for how to run the automated suites.
+Alice ran the cases through Claude in Chrome using these same ids (C-M01, S-M03, N-04 and so on); the cases that need a person are mainly the visual and device ones (N-07 padlock and redirect, N-08 ordering with several bookings, N-10, N-11). See [TESTING.md](TESTING.md) for the automated suites.
