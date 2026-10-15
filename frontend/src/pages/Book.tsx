@@ -131,6 +131,11 @@ export function Book() {
               variant="secondary"
               onClick={() => {
                 setConfirmed(null);
+                setService(null);
+                setSkill('all');
+                setDealership(null);
+                setDateChosen(false);
+                setDate(isoDate(new Date(Date.now() + 24 * 3_600_000)));
                 setStartTime(null);
                 book.reset();
               }}
