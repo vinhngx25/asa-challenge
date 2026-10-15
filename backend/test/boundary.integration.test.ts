@@ -256,6 +256,11 @@ describe('locks written: exactly one per slot and resource', () => {
   });
 });
 
+function testDateString(): string {
+  const { y, m, d } = testDay();
+  return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+}
+
 describe('request inputs through the HTTP layer', () => {
   const app = createApp();
   let token = '';
@@ -279,15 +284,46 @@ describe('request inputs through the HTTP layer', () => {
     token = r.body.token;
   });
 
-  it('login field lengths: 0 and over-limit are invalid input, limit and below are just wrong credentials', async () => {
+  it('login field lengths: 0 and over 32 are invalid input, 1 to 32 are just wrong credentials', async () => {
     const login = (username: string, password: string) => call('POST', '/auth/login', { username, password }, false);
     expect((await login('', 'x')).status).toBe(400);
     expect((await login('x', '')).status).toBe(400);
     expect((await login('a', 'b')).status).toBe(401);
-    expect((await login('a'.repeat(64), 'b')).status).toBe(401);
-    expect((await login('a'.repeat(65), 'b')).status).toBe(400);
-    expect((await login('a', 'b'.repeat(128))).status).toBe(401);
-    expect((await login('a', 'b'.repeat(129))).status).toBe(400);
+    expect((await login('a'.repeat(31), 'b')).status).toBe(401);
+    expect((await login('a'.repeat(32), 'b')).status).toBe(401);
+    expect((await login('a'.repeat(33), 'b')).status).toBe(400);
+    expect((await login('a', 'b'.repeat(31))).status).toBe(401);
+    expect((await login('a', 'b'.repeat(32))).status).toBe(401);
+    expect((await login('a', 'b'.repeat(33))).status).toBe(400);
+    // The server counts characters (code points): 32 emoji fit, 33 do not. The browser box counts UTF-16 units, so it
+    // stops at 16 emoji; that is stricter than the server, never looser.
+    expect((await login('\u{1F697}'.repeat(32), 'b')).status).toBe(401);
+    expect((await login('\u{1F697}'.repeat(33), 'b')).status).toBe(400);
+  });
+
+  it('record ids: up to 64 characters are looked up (404), 65 or more are invalid input (400), in every position', async () => {
+    const ok = 'a'.repeat(64);
+    const bad = 'a'.repeat(65);
+    const book = (vehicleId: string, serviceTypeId: string, dealershipId: string) =>
+      call('POST', '/appointments', { vehicleId, serviceTypeId, dealershipId, startTime: iso(localMs(10)) });
+    expect((await book(ok, 'mot', 'kensington')).status).toBe(404);
+    expect((await book(bad, 'mot', 'kensington')).status).toBe(400);
+    expect((await book('wick-mustang', ok, 'kensington')).status).toBe(404);
+    expect((await book('wick-mustang', bad, 'kensington')).status).toBe(400);
+    expect((await book('wick-mustang', 'mot', ok)).status).toBe(404);
+    expect((await book('wick-mustang', 'mot', bad)).status).toBe(400);
+    const avail = (q: string) => call('GET', `/availability?${q}&date=${testDateString()}`);
+    expect((await avail(`dealershipId=${ok}&serviceTypeId=mot`)).status).toBe(404);
+    expect((await avail(`dealershipId=${bad}&serviceTypeId=mot`)).status).toBe(400);
+    expect((await avail(`dealershipId=kensington&serviceTypeId=${bad}`)).status).toBe(400);
+    expect((await avail(`dealershipId=kensington&serviceTypeId=mot&vehicleId=${ok}`)).status).toBe(404);
+    expect((await avail(`dealershipId=kensington&serviceTypeId=mot&vehicleId=${bad}`)).status).toBe(400);
+    expect((await call('GET', `/appointments/${ok}`)).status).toBe(404);
+    expect((await call('GET', `/appointments/${bad}`)).status).toBe(400);
+    expect((await call('POST', `/appointments/${bad}/cancel`)).status).toBe(400);
+    // Far past DynamoDB's key limits: still a clean 400, never a server error.
+    expect((await call('GET', `/appointments/${'a'.repeat(3000)}`)).status).toBe(400);
+    expect((await avail(`dealershipId=kensington&serviceTypeId=mot&vehicleId=${'a'.repeat(1500)}`)).status).toBe(400);
   });
 
   it('body shapes: malformed JSON, array, null, wrong types and missing fields are 400', async () => {

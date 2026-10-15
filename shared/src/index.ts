@@ -8,6 +8,17 @@ export const SLOT_MINUTES = 30;
 export const MIN_LEAD_MINUTES = 60;
 export const MAX_DAYS_AHEAD = 60;
 
+/** Limits on every text a person can type or send. One definition for the API schemas and the UI inputs. */
+export const LIMITS = {
+  /** Username and password: at most 32 characters each. */
+  username: 32,
+  password: 32,
+  /** Record ids (vehicle, service, dealership, appointment). Real ids are far shorter; the cap keeps keys inside DynamoDB's limits. */
+  id: 64,
+  /** The staff search box. */
+  search: 100,
+} as const;
+
 export const ROLES = ['customer', 'staff'] as const;
 export type Role = (typeof ROLES)[number];
 
@@ -62,9 +73,11 @@ export interface ApiErrorBody {
 /* Auth                                                                */
 /* ------------------------------------------------------------------ */
 
+export const idSchema = z.string().min(1).max(LIMITS.id);
+
 export const loginRequestSchema = z.object({
-  username: z.string().min(1).max(64),
-  password: z.string().min(1).max(128),
+  username: z.string().min(1).max(LIMITS.username),
+  password: z.string().min(1).max(LIMITS.password),
 });
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 
@@ -154,10 +167,10 @@ export function isRealDate(value: string): boolean {
 }
 
 export const availabilityQuerySchema = z.object({
-  dealershipId: z.string().min(1),
-  serviceTypeId: z.string().min(1),
+  dealershipId: idSchema,
+  serviceTypeId: idSchema,
   date: z.string().refine(isRealDate, 'date must be a real calendar day written YYYY-MM-DD'),
-  vehicleId: z.string().min(1).optional(),
+  vehicleId: idSchema.optional(),
 });
 export type AvailabilityQuery = z.infer<typeof availabilityQuerySchema>;
 
@@ -183,15 +196,15 @@ export interface AvailabilityDto {
 /* ------------------------------------------------------------------ */
 
 export const createAppointmentSchema = z.object({
-  vehicleId: z.string().min(1),
-  serviceTypeId: z.string().min(1),
-  dealershipId: z.string().min(1),
+  vehicleId: idSchema,
+  serviceTypeId: idSchema,
+  dealershipId: idSchema,
   startTime: z.iso.datetime({ message: 'startTime must be an ISO 8601 UTC instant' }),
 });
 export type CreateAppointmentRequest = z.infer<typeof createAppointmentSchema>;
 
 export const listAppointmentsQuerySchema = z.object({
-  dealershipId: z.string().min(1).optional(),
+  dealershipId: idSchema.optional(),
   from: z.iso.datetime().optional(),
   to: z.iso.datetime().optional(),
   status: appointmentStatusSchema.optional(),

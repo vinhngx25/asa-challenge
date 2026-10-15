@@ -34,7 +34,8 @@ try {
 
   // Security headers and transport
   const h = res.headers();
-  check('P-04', 'security headers: HSTS, CSP, X-Frame-Options DENY, nosniff', /max-age=\d+/.test(h['strict-transport-security'] ?? '') && /default-src 'self'/.test(h['content-security-policy'] ?? '') && h['x-frame-options'] === 'DENY' && h['x-content-type-options'] === 'nosniff', JSON.stringify(h));
+  // These headers are added by CloudFront, so they are only expected on a deployed https site.
+  if (BASE.startsWith('https://')) check('P-04', 'security headers: HSTS, CSP, X-Frame-Options DENY, nosniff', /max-age=\d+/.test(h['strict-transport-security'] ?? '') && /default-src 'self'/.test(h['content-security-policy'] ?? '') && h['x-frame-options'] === 'DENY' && h['x-content-type-options'] === 'nosniff', JSON.stringify(h));
   if (BASE.startsWith('https://')) {
     const plain = BASE.replace('https://', 'http://');
     const r = await ctx.request.get(plain + '/', { maxRedirects: 0 });

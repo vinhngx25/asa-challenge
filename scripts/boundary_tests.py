@@ -43,10 +43,12 @@ def main():
     r.check("login: empty username -> 400", login("", "x") == 400)
     r.check("login: empty password -> 400", login("x", "") == 400)
     r.check("login: 1 char each -> 401 (valid shape, wrong credentials)", login("a", "b") == 401)
-    r.check("login: username 64 chars -> 401", login("a" * 64, "b") == 401)
-    r.check("login: username 65 chars -> 400", login("a" * 65, "b") == 400)
-    r.check("login: password 128 chars -> 401", login("a", "b" * 128) == 401)
-    r.check("login: password 129 chars -> 400", login("a", "b" * 129) == 400)
+    r.check("login: username 31 chars -> 401", login("a" * 31, "b") == 401)
+    r.check("login: username 32 chars (the limit) -> 401", login("a" * 32, "b") == 401)
+    r.check("login: username 33 chars -> 400", login("a" * 33, "b") == 400)
+    r.check("login: password 31 chars -> 401", login("a", "b" * 31) == 401)
+    r.check("login: password 32 chars (the limit) -> 401", login("a", "b" * 32) == 401)
+    r.check("login: password 33 chars -> 400", login("a", "b" * 33) == 400)
 
     # Body shapes
     r.check("body: malformed JSON -> 400", raw_post(api.base, "/auth/login", "{not json")[0] == 400)

@@ -5,6 +5,7 @@ import type { ZodType } from 'zod';
 import {
   availabilityQuerySchema,
   createAppointmentSchema,
+  idSchema,
   listAppointmentsQuerySchema,
   loginRequestSchema,
   type ApiErrorBody,
@@ -180,10 +181,12 @@ export function createApp(): Hono<Env> {
     return c.json(await listAppointments(c.get('principal'), query));
   });
 
-  app.get('/appointments/:id', async (c) => c.json(await getAppointment(c.req.param('id'), c.get('principal'))));
+  app.get('/appointments/:id', async (c) =>
+    c.json(await getAppointment(parse(idSchema, c.req.param('id')), c.get('principal'))),
+  );
 
   app.post('/appointments/:id/cancel', async (c) =>
-    c.json(await cancelAppointment(c.req.param('id'), c.get('principal'))),
+    c.json(await cancelAppointment(parse(idSchema, c.req.param('id')), c.get('principal'))),
   );
 
   return app;

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import type { AppointmentStatus } from '@asa/shared';
+import { LIMITS, type AppointmentStatus } from '@asa/shared';
 import { AppointmentCard } from '../components/AppointmentCard';
 import { Card, EmptyState, ErrorNote, Img, Spinner } from '../components/ui';
 import { phaseOf } from '../lib/format';
@@ -101,6 +101,7 @@ export function Staff() {
           <input
             type="search"
             value={query}
+            maxLength={LIMITS.search}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Reference, customer, plate, car, service or technician"
             className="w-full rounded-lg border-0 bg-white px-3 py-2 text-sm font-normal ring-1 ring-ink-200"

@@ -227,7 +227,7 @@ Foresight: conflict rate is the business signal that tells a dealership it needs
 | Storage | S3 private; DynamoDB encrypted at rest with point-in-time recovery. |
 | Abuse | API Gateway throttling; failed logins counted as a metric and alarm. |
 | IAM | The Lambda role may touch only its own table and secret. |
-| Input | Zod validation on every request; no raw input reaches a query expression. |
+| Input | Zod validation on every request; no raw input reaches a query expression. Limits: username and password 1 to 32 characters, record ids 1 to 64, search 100; every text box carries the same `maxlength`. The API stores no free text from users. See [TESTING.md](TESTING.md) section 4a. |
 
 This gate suits a challenge demo. The README states plainly that a production product would use a managed identity provider (for example Cognito); the token middleware is the only code that would change.
 

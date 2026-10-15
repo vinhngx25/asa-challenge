@@ -45,6 +45,9 @@ Where they came from: [IMPLEMENTATION_RESULTS.md](IMPLEMENTATION_RESULTS.md) sec
 | 20 | The CloudWatch dashboard layout was not reviewed visually and no alarm was triggered | The dashboard, metrics and alarms exist and were confirmed through the AWS API | Walk the dashboard and fire each alarm in a game day |
 | 21 | The frontend has no component-level unit tests | End-to-end browser tests cover its behaviour | Add component tests |
 | 22 | No screen-reader or real-device phone testing | Automated accessibility scans, keyboard-only sign-in and a 390 px layout check were done | Manual accessibility audit and device lab runs |
+| 23 | The browser counts characters in UTF-16 units and the server counts code points, so for emoji the box holds 16 and the API accepts 32 | The box is the stricter side, so nothing over the limit can be sent from the page | Count the same way on both sides |
+| 24 | Usernames and passwords are not trimmed, so a leading or trailing space is a different (wrong) account | Case and exact text matter by design | Trim the username before sign-in |
+| 25 | Requests with oversized headers or URLs are refused by the platform (413, 414, 431) in its own format, not the API's JSON error | Happens before the application is reached | Add a gateway response template |
 
 ## What this list is not
 

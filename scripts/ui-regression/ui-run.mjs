@@ -264,6 +264,31 @@ try {
   await staff.page.getByRole('button', { name: 'Clear filters' }).click();
   await staff.page.waitForTimeout(500);
   check('S-S06e', 'Clear filters also clears the search', (await search.inputValue()) === '' && (await staff.page.locator('article').count()) === total);
+
+  // Search box limits and hostile input
+  check('T-15', 'search box allows at most 100 characters (maxlength)', (await search.getAttribute('maxlength')) === '100');
+  await search.fill('');
+  await search.pressSequentially('s'.repeat(150));
+  check('T-16', 'typing 150 characters into Search keeps 100', (await search.inputValue()).length === 100);
+  await search.fill('.*[(\\');
+  await staff.page.getByText('No bookings match').waitFor();
+  check('T-17', 'regular-expression characters are searched as plain text (no crash, no match)', (await staff.page.getByRole('heading', { name: 'All bookings' }).isVisible()));
+  await search.fill('<img src=x onerror=__xss=1>');
+  await staff.page.waitForTimeout(300);
+  check('T-18', 'an HTML payload typed into Search is not executed', (await staff.page.evaluate(() => window.__xss)) === undefined && (await staff.page.getByRole('heading', { name: 'All bookings' }).isVisible()));
+  await search.fill('W'.repeat(100));
+  await staff.page.setViewportSize({ width: 390, height: 844 });
+  await staff.page.waitForTimeout(300);
+  check('T-19', '100 unbroken characters in Search do not make the page scroll sideways at 390 px', !(await staff.page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)));
+  await staff.page.setViewportSize({ width: 1440, height: 900 });
+  await search.fill('wick \u{1F697} \u00fcn\u00ef');
+  await staff.page.waitForTimeout(300);
+  check('T-20', 'emoji and accented characters in Search cause no error', await staff.page.getByRole('heading', { name: 'All bookings' }).isVisible());
+  await search.fill('   wick   mustang   ');
+  await staff.page.waitForTimeout(300);
+  check('T-21', 'extra spaces around search words are ignored', (await staff.page.locator('article').count()) >= 1);
+  await staff.page.getByRole('button', { name: 'Clear filters' }).click();
+  await staff.page.waitForTimeout(400);
   const jamesCard = staff.page.locator('article').filter({ hasText: 'James Bond' }).filter({ hasText: 'Upcoming' }).first();
   const jamesRef = (await jamesCard.innerText()).match(/ASA-[0-9A-F]{8}/)[0];
   await jamesCard.getByRole('button', { name: 'Cancel booking' }).click();
@@ -343,6 +368,73 @@ try {
     await axe(lp.page, 'login page');
     await lp.ctx.close();
     await c.ctx.close();
+  }
+
+  /* ---------- Text boxes: limits and hostile input ---------- */
+  {
+    const tb = await newPage();
+    await tb.page.goto(BASE + '/login');
+    const user = tb.page.getByLabel('Username');
+    const pass = tb.page.getByLabel('Password');
+    check('T-01', 'username box allows at most 32 characters (maxlength)', (await user.getAttribute('maxlength')) === '32');
+    check('T-02', 'password box allows at most 32 characters (maxlength)', (await pass.getAttribute('maxlength')) === '32');
+    await user.pressSequentially('u'.repeat(40));
+    await pass.pressSequentially('p'.repeat(40));
+    check('T-03', 'typing 40 characters into Username and Password keeps 32 in each', (await user.inputValue()).length === 32 && (await pass.inputValue()).length === 32);
+
+    const submit = async (u, p, { fill = false } = {}) => {
+      await user.fill('');
+      await pass.fill('');
+      if (fill) { await user.fill(u); await pass.fill(p); } else { await user.pressSequentially(u); await pass.pressSequentially(p); }
+      const [resp] = await Promise.all([tb.page.waitForResponse('**/api/auth/login'), tb.page.getByRole('button', { name: 'Sign in' }).click()]);
+      await tb.page.getByRole('alert').waitFor();
+      return { status: resp.status(), message: await tb.page.getByRole('alert').innerText() };
+    };
+    let r = await submit('u'.repeat(31), 'p'.repeat(31));
+    check('T-04', '31 characters in both boxes: the server answers "Incorrect username or password"', r.status === 401 && /Incorrect username or password/.test(r.message), JSON.stringify(r));
+    r = await submit('u'.repeat(32), 'p'.repeat(32));
+    check('T-05', '32 characters (the limit) in both boxes: accepted as well formed, answered 401', r.status === 401 && /Incorrect username or password/.test(r.message), JSON.stringify(r));
+    r = await submit('   ', 'x');
+    check('T-06', 'a username of only spaces is answered 401, not a crash', r.status === 401 && /Incorrect/.test(r.message), JSON.stringify(r));
+    let requests = 0;
+    tb.page.on('request', (rq) => rq.url().includes('/api/auth/login') && requests++);
+    await user.fill('');
+    await pass.fill('x');
+    await tb.page.getByRole('button', { name: 'Sign in' }).click();
+    await tb.page.waitForTimeout(400);
+    check('T-07', 'an empty username is stopped by the form: no request is sent', requests === 0 && (await user.evaluate((el) => el.validity.valueMissing)));
+    r = await submit('<img src=x onerror=__xss=1>', "' OR 1=1 --");
+    check('T-08', 'HTML and SQL-like text is answered 401, never executed or echoed', r.status === 401 && !/<img/.test(r.message) && (await tb.page.evaluate(() => window.__xss)) === undefined, JSON.stringify(r));
+    r = await submit('\u{1F697}'.repeat(20), 'p');
+    check('T-09', '20 emoji typed into Username: the box keeps 32 units (16 emoji) and the server answers 401', (await user.inputValue()).length === 32 && r.status === 401, JSON.stringify(r));
+    r = await submit('\u00fcn\u00ef\u00a9\u00f8d\u00e9 \u65e5\u672c\u8a9e \u0627\u0644\u0639\u0631\u0628\u064a\u0629', 'p');
+    check('T-10', 'accented, Japanese and Arabic text in Username is answered 401', r.status === 401, JSON.stringify(r));
+    r = await submit('a'.repeat(5000), 'b'.repeat(5000), { fill: true });
+    check('T-11', 'pasting 5,000 characters into both boxes keeps 32 in each, so nothing over-long is ever sent (answered 401)', (await user.inputValue()).length === 32 && (await pass.inputValue()).length === 32 && r.status === 401, JSON.stringify({ status: r.status, user: (await user.inputValue()).length }));
+    check('T-12', 'the login form still works after all of that', await tb.page.getByRole('button', { name: 'Sign in' }).isEnabled());
+    await tb.ctx.close();
+
+    // Date box on the booking page
+    const db = await newPage();
+    await signIn(db.page, 'JoinWick');
+    await db.page.getByRole('heading', { name: 'John Wick' }).waitFor();
+    await startBooking(db.page, { vehicle: 'Mustang', service: 'MOT Test', dealership: 'Kensington Motor Works' });
+    const date = db.page.locator('#date');
+    const noError = async () => (await db.page.getByRole('alert').count()) === 0;
+    await date.fill('9999-12-31');
+    await db.page.getByText(/Nothing is free on this day|closed on this day/).waitFor();
+    check('T-13', 'the year 9999 in the date box shows "nothing free" with no error', await noError());
+    await date.fill('0001-01-01');
+    await db.page.getByText(/Nothing is free on this day|closed on this day/).waitFor();
+    check('T-14', 'the year 0001 in the date box shows "nothing free" with no error', await noError());
+    await date.fill('2000-02-29');
+    await db.page.waitForTimeout(500);
+    check('T-15b', 'a leap day in the past is accepted by the box and shows no free times', (await times(db.page).count()) === (await times(db.page).filter({ has: db.page.locator('[disabled]') }).count()) || (await db.page.getByText(/Nothing is free/).count()) > 0);
+    const before = await date.inputValue();
+    await date.evaluate((el) => { const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set; set.call(el, '2026-02-30'); el.dispatchEvent(new Event('input', { bubbles: true })); });
+    await db.page.waitForTimeout(400);
+    check('T-16b', 'an impossible date forced into the box (2026-02-30) is ignored by the browser, no error, page intact', (await noError()) && (await db.page.getByRole('heading', { name: 'Book a service' }).isVisible()), `was ${before}, now ${await date.inputValue()}`);
+    await db.ctx.close();
   }
 
   /* ---------- Deep link, keyboard, images ---------- */

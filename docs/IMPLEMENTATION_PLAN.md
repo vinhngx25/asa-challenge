@@ -80,6 +80,12 @@ Status: all milestones complete. Outcomes, deviations from the design and test r
 - [x] Redeploy and re-run the live suites
 - [x] Record weak points and open questions as acknowledged, out of scope (docs/OUT_OF_SCOPE.md)
 
+### M11 Input boundaries on every text box
+- [x] Probe every text box and string parameter for server errors; found 500 on over-long ids
+- [x] One shared set of limits (username and password 32, ids 64, search 100) used by the API and the boxes
+- [x] Boundary, hostile-text and length tests at three levels: integration, HTTP sweep (`input_tests.py`), browser (87-check run)
+- [x] Document every input with its limit and tests (TESTING.md section 4a)
+
 ## Working agreements
 
 - Commit after each milestone to `asa-challenge`, one repository per commit.

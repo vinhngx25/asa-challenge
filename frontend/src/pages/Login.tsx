@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Navigate } from 'react-router';
 import { ApiError } from '../api';
 import { useAuth } from '../auth';
+import { LIMITS } from '@asa/shared';
 import { Button, ErrorNote, Img } from '../components/ui';
 
 export function Login() {
@@ -55,6 +56,7 @@ export function Login() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"
+              maxLength={LIMITS.username}
               autoCapitalize="none"
               spellCheck={false}
               required
@@ -69,6 +71,7 @@ export function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
+              maxLength={LIMITS.password}
               required
               className="w-full rounded-lg border-0 bg-white px-3 py-2.5 ring-1 ring-ink-200 focus:ring-2 focus:ring-brand-500"
             />

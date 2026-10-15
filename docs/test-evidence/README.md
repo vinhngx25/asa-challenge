@@ -8,14 +8,15 @@ Results from the author's runs (Alice). Full detail, tool notes and method: [../
 |---|---|---|
 | Type check (all workspaces) | local | clean |
 | Unit tests (`npm test`) | local | 20 passed (time zones including both clock changes, slot maths, password hashing, pairwise generator, appointment phase boundaries) |
-| Integration tests (`npm run test:integration`) | DynamoDB Local | 102 passed: booking and cancel 25, API and roles 13, **boundary values 26**, **pairwise 38** |
+| Integration tests (`npm run test:integration`) | DynamoDB Local | 103 passed: booking and cancel 25, API and roles 13, **boundary values 27**, **pairwise 38** |
 | `scripts/api_tests.py` | local and live | 38 of 38 |
 | `scripts/race_booking.py` | local and live | 11 of 11 |
-| `scripts/boundary_tests.py` | local and live | 55 of 55 |
+| `scripts/boundary_tests.py` | local and live | 57 of 57 |
+| `scripts/input_tests.py` (every text field and parameter) | local and live | 55 of 55 |
 | `scripts/pairwise_tests.py` | local and live | 39 of 39 |
 | `scripts/smoke_test.py` | live | 10 of 10 |
 | `scripts/ui-regression/ui-public.mjs` (browser, no sign-in) | **live** and local | 25 of 25 |
-| Playwright UI regression (`scripts/ui-regression`) | local app | 64 of 64 (includes staff search, date suggestion, throttled message and WCAG 2.1 AA scans of four screens) |
+| Playwright UI regression (`scripts/ui-regression`) | local app | 87 of 87 (includes the text box limits and hostile input, staff search, date suggestion, throttled message and WCAG 2.1 AA scans of four screens) |
 
 "Live" is `https://asa-challenge.fibosolutions.com` on AWS (CloudFront, API Gateway, Lambda, DynamoDB).
 

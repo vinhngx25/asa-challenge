@@ -4,7 +4,7 @@ What was built, how it differs from the design, what was tested and what was not
 
 - **Live:** https://asa-challenge.fibosolutions.com (AWS ap-southeast-1)
 - **Delivered:** 2026-10-15; hardened with boundary, pairwise and browser tests, then redeployed the same day
-- **Status:** all milestones M0 to M10 complete; the latest full run of every suite is green (section 5); a cross-check review is in section 12
+- **Status:** all milestones M0 to M11 complete; the latest full run of every suite is green (section 5); a cross-check review is in section 12
 
 ## 1. Summary
 
@@ -22,7 +22,7 @@ What was built, how it differs from the design, what was tested and what was not
 | Observability | Structured logs, custom metrics, X-Ray tracing, dashboard, 5 alarms |
 | Reviewer can follow the README to build, run, test and deploy | Rehearsed from a fresh clone: install, build, unit tests, seed, integration tests (section 6) |
 | Boundary and pairwise testing | Done: 26 boundary tests and 38 pairwise rows in the integration suite, plus 55 boundary and 39 pairwise HTTP checks that also run on the live site (sections 5.2 and 5.3) |
-| Real UI testing | Claude in Chrome for exploratory runs, plus a repeatable Playwright run of 64 checks including accessibility scans (section 5.4) |
+| Real UI testing | Claude in Chrome for exploratory runs, plus a repeatable Playwright run of 87 checks including text-box limits and accessibility scans (section 5.4) |
 | Manual test cases for a person, by priority | [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md): 14 must have, 21 should have, 12 nice to have |
 | Tools recorded | Google nano banana for images, Claude in Chrome and Playwright for the UI, Python and curl for the API (section 10, [TESTING.md](TESTING.md)) |
 
@@ -103,7 +103,7 @@ Deployment time: 865 seconds (CloudFront dominates). Region: ap-southeast-1. Cer
 | `phase.test.ts` | 4 | An appointment is upcoming until its start instant, in progress from the start to the end, past from the end instant, and cancelled whatever the clock says (boundaries at -1 ms, 0 and +1 ms) |
 | `pairwise.test.ts` | 3 | The all-pairs generator covers every pair with far fewer rows than the full product, is deterministic, and handles one or two parameters |
 
-### 5.2 Integration tests on DynamoDB Local: 102 passed (4 files)
+### 5.2 Integration tests on DynamoDB Local: 103 passed (4 files)
 
 `booking.integration.test.ts` (25 tests)
 
@@ -119,7 +119,7 @@ Deployment time: 865 seconds (CloudFront dominates). Region: ap-southeast-1. Cer
 
 `api.integration.test.ts` (13 tests): case-sensitive login, uniform error for wrong user and wrong password, body validation, `/me`, closed API without or with a bad token, only `/health` public, per-customer isolation, staff overview and filter, staff cannot book, 403 on another customer's booking, booking returns 201 with the full record, 409 with alternatives and rebooking after cancel, request validation, catalog counts.
 
-`boundary.integration.test.ts` (26 tests): the value just inside, exactly on and just outside each limit.
+`boundary.integration.test.ts` (27 tests): the value just inside, exactly on and just outside each limit.
 
 | Group | Tests | What is proved |
 |---|---|---|
@@ -130,7 +130,7 @@ Deployment time: 865 seconds (CloudFront dominates). Region: ap-southeast-1. Cer
 | Clock changes | 3 | Opening time in UTC moves by one hour between Saturday 24 and Monday 26 Oct 2026 and between 27 and 29 Mar 2027; the day lists the same number of slots on both sides |
 | Capacity | 1 | A one-bay day takes exactly 18 thirty-minute jobs, then refuses the 19th and a start after closing; availability shows none free |
 | Locks written | 5 | 1, 2, 4 and 8 slots write exactly slots x 3 locks, all removed on cancel; lock partitions hold the right slot keys in order |
-| HTTP inputs | 5 | Login field lengths (0, 1, 64, 65 and 0, 1, 128, 129), malformed JSON, array, null, wrong types, extra fields; 11 invalid and 5 valid calendar dates; 8 invalid start time formats; bad list filters |
+| HTTP inputs | 6 | Login field lengths (0, 1, 31, 32, 33 for both fields, and 32 or 33 emoji); record ids of 64 (looked up) and 65 (refused) in every position, and 1,500 and 3,000 characters never giving a server error; malformed JSON, array, null, wrong types, extra fields; 11 invalid and 5 valid calendar dates; 8 invalid start time formats; bad list filters |
 
 `pairwise.integration.test.ts` (38 tests: 1 coverage check and 37 rows): 3,150 combinations of dealership (3), service (7), day (Monday, Saturday, Sunday), start position (first, middle, last fit, after close, before open), contention (none, one bay taken, all qualified technicians taken, all bays taken, vehicle taken) and customer (2) are reduced to 37 rows. Each row arranges the contention in the table, books, and compares the result with an oracle written from the rules. Rows inside opening hours also compare the availability endpoint with the booking result. All 37 pass.
 
@@ -142,7 +142,8 @@ Deployment time: 865 seconds (CloudFront dominates). Region: ap-southeast-1. Cer
 |---|---|---|
 | `api_tests.py` | 38 of 38 | 38 of 38 |
 | `race_booking.py` | 11 of 11 | 11 of 11 |
-| `boundary_tests.py` | 55 of 55 | 55 of 55 |
+| `boundary_tests.py` | 57 of 57 | to be re-run after the final deploy |
+| `input_tests.py` | 55 of 55 | to be re-run after the final deploy |
 | `pairwise_tests.py` | 39 of 39 | 39 of 39 |
 | `smoke_test.py` | not applicable | 10 of 10 |
 
@@ -165,7 +166,7 @@ The race script fires every scenario at the same instant with a barrier. On the 
 
 A defect found and fixed during the first run: the "Sign out" text was too faint against the header. The staff list was also reordered so upcoming bookings come first.
 
-**Playwright regression, 64 of 64 passed** (`scripts/ui-regression/ui-run.mjs`, run twice to prove it cleans up after itself). It uses the case ids of the manual sheet: every Must-have customer and staff case, most Should-have cases and several Nice-to-have cases. Highlights:
+**Playwright regression, 87 of 87 passed** (`scripts/ui-regression/ui-run.mjs`, run twice to prove it cleans up after itself). It uses the case ids of the manual sheet: every Must-have customer and staff case, most Should-have cases and several Nice-to-have cases. Highlights:
 
 - Two browser windows act as two people. Both reach the last free slot; window A confirms; window B is refused with the message and the four nearest times and books one of them.
 - Taken and overlapping times are greyed out while back-to-back times stay open; a vehicle booked elsewhere is greyed everywhere.
@@ -176,6 +177,7 @@ A defect found and fixed during the first run: the "Sign out" text was too faint
 - The suggested booking date moves off a Sunday once a dealership is chosen, and a date the customer picked is never changed.
 - A throttled request (HTTP 429) shows "Too many requests" instead of a generic error.
 - WCAG 2.1 A and AA scan (axe) of the login page, customer dashboard, booking page and staff overview: no violations.
+- Text boxes: Username and Password stop at 32 characters whether typed or pasted (5,000 characters in, 32 kept); 31 and 32 characters are answered "Incorrect username or password"; a username of only spaces, HTML, SQL-like text, accented, Japanese, Arabic and emoji input are all answered normally and never executed or echoed; an empty username is stopped by the form. The staff Search stops at 100 characters, treats regular-expression characters as plain text, ignores extra spaces, does not execute HTML and does not widen the page at 390 px. The date box with years 0001 and 9999, a leap day in the past and an impossible date shows "nothing free" with no error.
 
 Claude in Chrome was used for exploratory runs of the same flows, including the race (the second person booked through the API while the first page waited on the time step). Screenshots are in [test-evidence/](test-evidence/).
 
@@ -286,6 +288,8 @@ Method: each requirement and design claim was traced to the code that implements
 | Staff journey | No way to find a booking from a caller's reference, plate or name | Search box (client-side, combines words); cancel prompt names the customer |
 | Accessibility | Colour contrast below WCAG AA on tabs, duration badges, small grey text and cancelled cards | Darker tokens; cancelled cards use a greyscale photo instead of 75% opacity; scan added to the UI run |
 | Documentation | README said the build "builds backend"; the API is bundled at deploy time | Wording corrected |
+| Input sweep | An over-long id sent as a query value or as an appointment id in the URL (about 1,100 characters and more) made DynamoDB reject the key and the API answered 500 | Ids are capped at 64 characters in every schema and in the URL path (found by probing every string parameter) |
+| Text box review | No length limit on any text box; username and password allowed 64 and 128 characters | Username and password 32, search 100, ids 64: one shared definition used by the API and by `maxlength` on the boxes |
 
 ### 12.3 Persona walkthrough
 
@@ -309,7 +313,7 @@ Method: each requirement and design claim was traced to the code that implements
 
 ### 12.5 Open points: acknowledged, out of scope for this version
 
-These are recorded so the limits are visible. They are not open for discussion in this version and none changes the delivered behaviour; the maintained list, with reasons and what a next version would do, is [OUT_OF_SCOPE.md](OUT_OF_SCOPE.md) (22 items).
+These are recorded so the limits are visible. They are not open for discussion in this version and none changes the delivered behaviour; the maintained list, with reasons and what a next version would do, is [OUT_OF_SCOPE.md](OUT_OF_SCOPE.md) (25 items).
 
 
 | # | Point | Why it matters | What a next version could do |
@@ -337,3 +341,18 @@ Run against https://asa-challenge.fibosolutions.com after the final deploy.
 | Infrastructure: metrics, alarms, traces, logs, certificate | agent | verified in section 12.4 |
 
 The API scripts and the browser run exercise the same code. The browser run adds the screens and the rendering, which is why it is the part left for a person to run on production.
+
+## 14. Input boundaries on every text box
+
+Added after a review question: boundary testing had covered the login field lengths and the date and time formats, but not every text box and string parameter.
+
+| Step | Result |
+|---|---|
+| Inventory | Every place a person can type or a client can send text is listed with its rule in [TESTING.md](TESTING.md) section 4a: username, password, search, the date boxes, the staff filters, three record ids in the body and the query, the appointment id in the URL, `startTime` and the `Authorization` header |
+| Probe | About 150 combinations of boundary lengths and hostile text against every string parameter. Found: HTTP 500 for ids of about 1,100 characters and more |
+| Fix | One shared set of limits: username and password 1 to 32 (the author's rule), ids 1 to 64, search up to 100. The API schemas and the `maxlength` of the boxes read the same constants |
+| Tests | Integration: login limits at 31, 32, 33 and emoji, ids at 64 and 65 in every position. HTTP sweep `input_tests.py`: 15 fields and header variants, 55 checks. Browser: 23 text-box checks (T-01 to T-21) |
+| Hostile text | HTML, SQL-like text, path traversal, control characters, new lines, accented, Arabic, Japanese and emoji text: no server error, never reflected, never executed |
+| Not an issue | The API stores no free text from users, so there is no stored-injection surface; React escapes everything it renders |
+
+Three smaller points are recorded in [OUT_OF_SCOPE.md](OUT_OF_SCOPE.md): the browser and the server count emoji differently (the box is the stricter), usernames are not trimmed, and the platform answers oversized headers in its own format.

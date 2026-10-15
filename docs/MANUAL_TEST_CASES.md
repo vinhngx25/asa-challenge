@@ -5,8 +5,8 @@ For a quick manual check of the live site by a person. Cases are ordered by prio
 | Priority | Meaning | Count | Rough time |
 |---|---|---|---|
 | **Must have** | The product is not usable or not safe if one fails | 14 | 20 to 25 minutes |
-| **Should have** | Important rules and everyday behaviour | 23 | 30 to 35 minutes |
-| **Nice to have** | Polish, accessibility and edge behaviour | 12 | 20 minutes |
+| **Should have** | Important rules and everyday behaviour | 25 | 35 minutes |
+| **Nice to have** | Polish, accessibility and edge behaviour | 13 | 20 minutes |
 
 Mark each result in the **Result** column: `P` pass, `F` fail, `-` skipped. Write failures down with the case ID and what you saw.
 
@@ -85,6 +85,7 @@ Services used below: **Oil & Filter Change** (60 min, Oil & Fluids), **Fluid Top
 | C-S14 | Qualified technician limit | Choose **Wheel Alignment** at Brum Auto Centre. Book it at DAY 10:00 with John, then try **Tyre Rotation & Balancing** at 10:00 with James. | The second is refused: Brum has only one tyre specialist, even though a bay is free. | |
 | C-S15 | Completed tab | Open the **Completed** tab. | Past bookings are listed with a "Completed" badge and no Cancel button. | |
 | C-S16 | Book another | After a confirmation, click **Book another**. | Wizard resets to an empty selection. | |
+| C-S18 | Username and password limit (negative) | On the login page type 40 characters into Username, then into Password. Then type exactly 32 characters in each and sign in. | Each box stops at 32 characters. With 32 characters in each the page answers "Incorrect username or password" (not an error screen). | |
 | C-S17 | Date suggestion skips closed days | On a Saturday, open the booking page and choose a vehicle, a service and a dealership without touching the date. | The date moves from Sunday to the next open day (Monday). If you pick a date yourself it is never changed for you. | |
 
 ### Staff
@@ -96,6 +97,7 @@ Services used below: **Oil & Filter Change** (60 min, Oil & Fluids), **Fluid Top
 | S-S03 | Date range filter | Set **From** and **To** around one booking. | Only bookings in that range. | |
 | S-S04 | Clear filters and empty result | Choose a range with no bookings (for example in the past, before any data), then **Clear filters**. | "No bookings match" message, then the full list after clearing. | |
 | S-S05 | Cancel only for upcoming | Look at Completed and Cancelled bookings. | No **Cancel booking** button on them. | |
+| S-S07 | Search with unusual text | In **Search** type `.*[(`, then `<b>x</b>`, then 100 letters without spaces, then an emoji. | The page never breaks: it shows "No bookings match", nothing is rendered as bold or executed, the layout does not scroll sideways, and the box stops at 100 characters. | |
 | S-S06 | Search | Type a booking reference, a number plate (for example `JB77 LTS`), a customer name, or two words such as `wick mustang` into **Search**. | Only matching bookings stay; a message says how many match; a search with no result shows "No bookings match"; **Clear filters** empties the search. | |
 
 ---
@@ -115,6 +117,7 @@ Services used below: **Oil & Filter Change** (60 min, Oil & Fluids), **Fluid Top
 | N-09 | Customer | Pictures | Look at login, vehicles, dealerships, technicians. | Cinematic images load; no broken image icons. | |
 | N-10 | Customer | Long service end time | Book Full Service (240 min). | Confirmation shows start to end four hours later in local time. | |
 | N-11 | Staff | Customer names and photos | Check the Customer column on All bookings. | Correct name and portrait for each booking. | |
+| N-13 | Customer | Date box extremes | On the booking page type the year 9999, then the year 0001, in the date box. | A message that nothing is free, no error screen. | |
 | N-12 | Both | Token expiry | Sign in, then delete the site's saved data in your browser (or wait 8 hours) and reload. | You are returned to the login page, no error screen. | |
 
 ---

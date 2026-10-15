@@ -8,7 +8,7 @@ How the project is tested, which tools were used, how to run every suite, and ho
 |---|---|---|
 | Images and thumbnails (37 portraits, places, cars, service art, logo, hero) | **Google "nano banana" (Gemini image models, `gemini-3.1-flash-image`)** through Alice's image skill | One shared cinematic style prompt keeps the set consistent. Each image is checked by eye on a contact sheet, then converted to WebP. File names are fixed, so changing the art needs no code change |
 | Real UI testing | **Claude in Chrome**, driven by Alice | Opens the real app in the author's Chrome, signs in as each role, books, cancels, reads the page and captures screenshots. Used on the local app. Browser sign-in on the deployed site is left to the author |
-| Repeatable UI regression | **Playwright** (headless Chromium), `scripts/ui-regression/` | 64 checks that mirror the manual cases, including two browser windows racing for one slot, phone width, keyboard-only sign-in, a broken-image check, a throttled-request message and an automated accessibility scan (axe, WCAG 2.1 A and AA). Optional, with its own `package.json` |
+| Repeatable UI regression | **Playwright** (headless Chromium), `scripts/ui-regression/` | 87 checks that mirror the manual cases, including two browser windows racing for one slot, phone width, keyboard-only sign-in, a broken-image check, a throttled-request message and an automated accessibility scan (axe, WCAG 2.1 A and AA). Optional, with its own `package.json` |
 | API black-box and rare cases | **Python scripts** (standard library only) in `scripts/` | Login, roles, validation, boundaries, pairwise, concurrency, post-deploy smoke test. Run against local or live |
 | Unit and integration | **Vitest** with DynamoDB Local in Docker | Includes the parallel-booking tests, boundary tests and pairwise tests |
 | Manual API calls | `curl` or PowerShell `Invoke-RestMethod` | Examples below |
@@ -22,9 +22,10 @@ How the project is tested, which tools were used, how to run every suite, and ho
 | API tests | `python scripts/api_tests.py --base-url <url>` | seeded data | yes |
 | Race (concurrent requests) | `python scripts/race_booking.py --base-url <url>` | seeded data | yes |
 | Boundary over HTTP | `python scripts/boundary_tests.py --base-url <url>` | seeded data | yes |
+| Input sweep (every text field and parameter) | `python scripts/input_tests.py --base-url <url>` | seeded data | yes (creates no bookings) |
 | Pairwise over HTTP | `python scripts/pairwise_tests.py --base-url <url>` | seeded data | yes |
 | Post-deploy smoke | `python scripts/smoke_test.py --base-url <url>` | deployed site | yes |
-| UI regression, full (64 checks) | see section 6 | local app running, or the deployed site run by you | local by the agent; production by the author (section 6) |
+| UI regression, full (87 checks) | see section 6 | local app running, or the deployed site run by you | local by the agent; production by the author (section 6) |
 | UI public (25 checks, no sign-in) | `node scripts/ui-regression/ui-public.mjs <url>` | nothing | yes |
 
 `<url>` is `http://localhost:3000` for the API on your machine, or the site address. Every script cancels the bookings it makes. All Python scripts exit with code 1 when a check fails, so they can run in CI.
@@ -104,10 +105,36 @@ For each rule the tests touch the value just inside, exactly on, and just outsid
 | Clock changes (24/26 Oct 2026, 27/29 Mar 2027) | opening time in UTC on each side; slot counts equal | same, `time.test.ts`, `boundary_tests.py` |
 | Capacity | one-bay day filled slot by slot (18 jobs), then the 19th and an after-close start | same |
 | Locks written | 1, 2, 4 and 8 slots, three resources each, and removed on cancel | same |
-| Login field lengths | 0, 1, 64, 65 (username); 0, 1, 128, 129 (password) | `boundary_tests.py`, `boundary.integration.test.ts` |
+| Login field lengths | 0, 1, 31, 32, 33 (username); 0, 1, 31, 32, 33 (password); 32 and 33 emoji | `boundary_tests.py`, `boundary.integration.test.ts`, UI T-01 to T-12 |
+| Record id lengths | 64 (looked up) and 65 (refused) in every position: booking body, availability query, list filter, URL path; 1,500 and 3,000 characters | `boundary.integration.test.ts`, `input_tests.py` |
 | Request body shapes | malformed JSON, array, null, wrong types, missing field, extra fields | same |
 | Calendar dates | 29 Feb in leap and non-leap years, month 13, month 00, 31 April, `0000`, wrong format, empty, far past, far future | same |
 | Start time formats | empty, word, date only, no zone, offset instead of Z, number, null | same |
+
+## 4a. Every text box and string input
+
+Every place a person can type, or a client can send text, with its limit and the tests that cover it. The limits live in one place (`LIMITS` in `shared/src/index.ts`) and are used by the API schemas and by the `maxlength` of the boxes.
+
+| Input | Where | Rule | Tests |
+|---|---|---|---|
+| Username | login box; `POST /api/auth/login` | 1 to 32 characters, case sensitive, no trimming | UI T-01 to T-12; `boundary_tests.py`; `input_tests.py`; `boundary.integration` |
+| Password | login box; `POST /api/auth/login` | 1 to 32 characters | same |
+| Search | staff All bookings | up to 100 characters, searched as plain text, words combined, extra spaces ignored | UI T-15 to T-21, S-S06 |
+| Date | booking page date box; `GET /api/availability?date=` | a real calendar day `YYYY-MM-DD`; the picker allows today to 60 days ahead; any other real date is answered with "nothing free" | UI T-13 to T-16b; `boundary_tests.py`; `boundary.integration` |
+| From, To | staff date boxes; `GET /api/appointments?from&to` | ISO 8601 instants or dates from the boxes | UI S-S03, S-S04; `boundary_tests.py` |
+| Status, Dealership | staff drop-downs; `status` and `dealershipId` query | fixed lists; the id is capped at 64 characters on the API | UI S-S01, S-S02; `input_tests.py` |
+| `vehicleId`, `serviceTypeId`, `dealershipId` | booking body; availability query | 1 to 64 characters, then looked up (404 if unknown) | `boundary.integration`; `input_tests.py`; `pairwise_tests.py` |
+| Appointment id | `GET /api/appointments/{id}`, `POST .../{id}/cancel` | 1 to 64 characters, then looked up | same |
+| `startTime` | booking body | ISO 8601 UTC instant on a 30 minute boundary | boundary and pairwise suites |
+| `Authorization` header | every protected call | `Bearer <token>`; missing, empty, wrong scheme, garbage and up to 7 KB values are refused | `input_tests.py`; UI-public P-16, P-17 |
+
+For each text input the sweeps try: empty, one character, one below the limit, exactly the limit, one over, 300 and 3,000 characters, HTML (`<script>`, `<img onerror>`), SQL-like text, path traversal, encoded and raw control characters, new lines, accented and Arabic and Japanese text, emoji, spaces only and quote characters. The rules checked are: no server error for any value, every client error from the application has the JSON error shape with a request id, the limit is accepted as well formed and one over is refused with 400, and nothing sent is reflected back unescaped.
+
+Notes:
+
+- The API stores no free text from users (only ids that must match existing records and the username of an existing account), so there is no stored-injection surface. React escapes everything it shows; the HTML test confirms a payload is never executed.
+- The browser counts characters in UTF-16 units and the server counts code points, so the box is the stricter of the two for emoji (16 fit in the box, 32 are accepted by the API).
+- Requests with oversized headers or URLs are refused by the platform (HTTP 413, 414 or 431) before the application sees them; those answers are not in the application's JSON shape.
 
 ## 5. Pairwise (all-pairs) testing
 
@@ -136,7 +163,7 @@ Alice opened the app in real Chrome, signed in as John Wick, James Bond and Wins
 ### On the deployed site
 
 - **Without a sign-in** (the agent runs this on production): `cd scripts/ui-regression && npm install && node ui-public.mjs https://asa-challenge.fibosolutions.com`. 25 checks: the login page loads and is quick, HSTS, CSP and the other security headers, `http://` redirects to `https://`, no console errors, no failed requests, all images load, no accessibility violations, keyboard order, signed-out redirects for `/`, `/book` and unknown addresses, an invalid saved token, every protected API route answers 401, a forged token is refused, malformed input is a 400, and the phone-width layout.
-- **With a sign-in** (run by the author): the full 64-check run needs the demo passwords typed into the login form, which the agent does not do on a deployed site. Run it yourself from the same folder: `node ui-run.mjs https://asa-challenge.fibosolutions.com ./shots` (set `CHROME_PATH` if you do not want to download a browser). It cancels what it books and takes about two minutes. The manual sheet [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md) covers the same ground by hand.
+- **With a sign-in** (run by the author): the full 87-check run needs the demo passwords typed into the login form, which the agent does not do on a deployed site. Run it yourself from the same folder: `node ui-run.mjs https://asa-challenge.fibosolutions.com ./shots` (set `CHROME_PATH` if you do not want to download a browser). It cancels what it books and takes about two minutes. The manual sheet [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md) covers the same ground by hand.
 - **API** on the deployed site: all five Python suites are run by the agent (section 2); they call the API directly and do not use the login form.
 
 ### With Playwright (repeatable)
@@ -151,7 +178,7 @@ node ui-run.mjs http://localhost:5173 ./shots
 
 Optional: `CHROME_PATH=<chrome.exe>` uses an existing browser instead of the downloaded one. The run prints PASS or FAIL per case id (the same ids as the manual sheet), writes screenshots and `results.json` to the folder, cancels the bookings it created and exits 1 on any failure. It can be run repeatedly.
 
-What the 64 checks include: every Must-have customer and staff case, most Should-have cases, keyboard-only sign-in (Tab, type, Enter), deep-link reload, an invalid token, a check that every image on the booking page loads, no sideways scrolling at 390 px on four pages, and a **two-window race**: window A and window B both reach the last free slot, A confirms first, B then sees the conflict message with the four nearest times and books one of them.
+What the 87 checks include: every Must-have customer and staff case, most Should-have cases, keyboard-only sign-in (Tab, type, Enter), deep-link reload, an invalid token, a check that every image on the booking page loads, no sideways scrolling at 390 px on four pages, and a **two-window race**: window A and window B both reach the last free slot, A confirms first, B then sees the conflict message with the four nearest times and books one of them.
 
 ## 7. Defects found by testing
 
@@ -165,6 +192,8 @@ What the 64 checks include: every Must-have customer and staff case, most Should
 | Persona walkthrough as a customer | The suggested booking date could be a Sunday, when every dealership is closed | The suggestion moves to the next open day until the customer picks a date |
 | Persona walkthrough as staff | No way to find a booking from a reference, plate or name | Search box on All bookings |
 | Persona walkthrough | A booking that had started was labelled "Upcoming" with no Cancel button | Labelled "In progress"; the phase logic is shared and boundary-tested |
+| Probe of every string parameter | An over-long id (about 1,100 characters or more) sent as a query value or as an appointment id in the URL made DynamoDB refuse the key and the API answered **500** instead of 400 | Ids are capped at 64 characters in every schema and in the URL path; `input_tests.py` and the boundary tests guard it |
+| Review of text boxes | The login and search boxes had no length limit, and the username and password limits were 64 and 128 | Username and password are limited to 32 characters on the API and in the boxes; search to 100; one shared definition |
 | Accessibility scan (axe) | Colour contrast below WCAG AA on tabs, duration badges, small grey text and cancelled cards | Darker text tokens; cancelled cards use a greyscale photo instead of 75% opacity |
 
 ## 8. Test data and clean-up
