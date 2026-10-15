@@ -1,34 +1,62 @@
 # Testing Guide
 
-How the project is tested, which tools were used, how to run every suite, and how to test the API by hand. Results are in [IMPLEMENTATION_RESULTS.md](IMPLEMENTATION_RESULTS.md); the person-run checklist is [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md).
+How the project is tested, how to run every suite, the latest results, and how to test the API by hand. The person-run checklist is [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md); screenshots are in [test-evidence/](test-evidence/).
 
-## 1. Tools used to build and test
+## 1. Tools
 
 | Job | Tool | Notes |
 |---|---|---|
-| Images and thumbnails (38: portraits, places, cars, service art, logo, desktop and mobile hero) | **Google "nano banana" (Gemini image models, `gemini-3.1-flash-image`)** through Alice's image skill | One shared bright, modern style prompt keeps the set consistent. Each image is checked by eye on a contact sheet, then converted to WebP. File names are fixed, so changing the art needs no code change |
-| Real UI testing | **Claude in Chrome**, driven by Alice | Opens the real app in the author's Chrome, signs in as each role, books, cancels, reads the page and captures screenshots. Used on the local app. Browser sign-in on the deployed site is left to the author |
-| API black-box and rare cases | **Python scripts** (standard library only) in `scripts/` | Login, roles, validation, boundaries, pairwise, concurrency, post-deploy smoke test. Run against local or live |
-| Unit and integration | **Vitest** with DynamoDB Local in Docker | Includes the parallel-booking tests, boundary tests and pairwise tests |
-| Manual API calls | `curl` or PowerShell `Invoke-RestMethod` | Examples below |
+| Unit and integration | **Vitest** with DynamoDB Local in Docker | Includes the parallel-booking, boundary and pairwise tests |
+| API black-box and concurrency | **Python scripts** (standard library only) in `scripts/` | Roles, validation, boundaries, pairwise, concurrency, every text input, post-deploy smoke test. Run against local or the live site |
+| UI | The manual sheet, run by hand or through **Claude in Chrome** (driven by Alice) | Real browser, real clicks; screenshots in `docs/test-evidence/` |
+| Images | Google "nano banana" (Gemini image models) through Alice's image skill | 38 WebP files; one shared style prompt keeps the set consistent |
+| Manual API calls | `curl` or PowerShell `Invoke-RestMethod` | Examples in section 4 |
 
 ## 2. What runs where
 
-| Suite | Command | Needs | Runs on live site? |
+| Suite | Command | Needs | Runs on the live site? |
 |---|---|---|---|
 | Unit | `npm test` | nothing | n/a |
-| Integration (booking, API, boundary, pairwise) | `npm run db:up` then `npm run test:integration` | Docker | n/a (uses its own table) |
+| Integration (booking, API, boundary, pairwise) | `npm run db:up` then `npm run test:integration` | Docker | n/a (uses its own table `asa-challenge-test`) |
 | API tests | `python scripts/api_tests.py --base-url <url>` | seeded data | yes |
 | Race (concurrent requests) | `python scripts/race_booking.py --base-url <url>` | seeded data | yes |
 | Boundary over HTTP | `python scripts/boundary_tests.py --base-url <url>` | seeded data | yes |
 | Input sweep (every text field and parameter) | `python scripts/input_tests.py --base-url <url>` | seeded data | yes (creates no bookings) |
 | Pairwise over HTTP | `python scripts/pairwise_tests.py --base-url <url>` | seeded data | yes |
 | Post-deploy smoke | `python scripts/smoke_test.py --base-url <url>` | deployed site | yes |
-| UI | the manual sheet [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md), run by hand or through Claude in Chrome (section 6) | local app, or the deployed site (sign-in typed by the author) | local by the agent; production by the author |
+| UI | [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md) | local app or the deployed site | yes, with a sign-in typed by a person |
 
-`<url>` is `http://localhost:3000` for the API on your machine, or the site address. Every script cancels the bookings it makes. All Python scripts exit with code 1 when a check fails, so they can run in CI.
+`<url>` is `http://localhost:3000` for the API on your machine, or the site address. Every script cancels the bookings it makes. All Python scripts exit with code 1 when a check fails, so they can run in CI. `npm run seed:local` and `npm run seed:aws` wipe the table and load the demo data, so a run starts from the same state; if a run is interrupted, re-seed.
 
-## 3. Testing the API by hand
+## 3. Latest results
+
+All suites pass.
+
+| Suite | Result |
+|---|---|
+| Type check (all workspaces) | clean |
+| Unit tests | 20 passed |
+| Integration tests | 104 passed (booking and cancel 25, API and roles 13, boundary values 28, pairwise 38) |
+| `api_tests.py` | 41 of 41 |
+| `race_booking.py` | 11 of 11 |
+| `boundary_tests.py` | 57 of 57 |
+| `input_tests.py` | 55 of 55 |
+| `pairwise_tests.py` | 39 of 39 |
+| `smoke_test.py` (live site) | 10 of 10 |
+
+The Python suites pass locally and on the live site (https://asa-challenge.fibosolutions.com). The manual sheet is run in Chrome on the local app; signing in on the deployed site is done by a person.
+
+What the race script proves, also on the live DynamoDB table:
+
+| Scenario | Requests fired at the same instant | Outcome |
+|---|---|---|
+| One bay, one slot | 7 vehicles | exactly 1 booking; 6 receive 409 |
+| Two bays, two qualified technicians | 7 vehicles | exactly 2 bookings, on different bays and technicians |
+| Same vehicle submitted | 5 times | exactly 1 booking |
+| Long and short job overlapping in one bay | 2 | exactly 1 booking |
+| Slot freed by a cancel | 4 rivals | exactly 1 takes it |
+
+## 4. Testing the API by hand
 
 The API is under `/api`. Every route except `/api/health` and `/api/auth/login` needs a token.
 
@@ -88,7 +116,7 @@ Every error has the same shape, `{"error":{"code","message","requestId"}}`, and 
 
 `scripts/asa_client.py` gives `Api(base_url)` with `login()` and `call(method, path, token, body)` (returns `(status, json)`), `find_free_start()` to locate a free slot, and `Results` to print PASS/FAIL and set the exit code. Copy `scripts/api_tests.py` as a starting point.
 
-## 4. Boundary value testing
+## 5. Boundary value testing
 
 For each rule the tests touch the value just inside, exactly on, and just outside the limit.
 
@@ -103,28 +131,28 @@ For each rule the tests touch the value just inside, exactly on, and just outsid
 | Clock changes (24/26 Oct 2026, 27/29 Mar 2027) | opening time in UTC on each side; slot counts equal | same, `time.test.ts`, `boundary_tests.py` |
 | Capacity | one-bay day filled slot by slot (18 jobs), then the 19th and an after-close start | same |
 | Locks written | 1, 2, 4 and 8 slots, three resources each, and removed on cancel | same |
-| Login field lengths | 0, 1, 31, 32, 33 (username); 0, 1, 31, 32, 33 (password); 32 and 33 emoji | `boundary_tests.py`, `boundary.integration.test.ts`, UI T-01 to T-12 |
+| Login field lengths | 0, 1, 31, 32, 33 (username); 0, 1, 31, 32, 33 (password); 32 and 33 emoji | `boundary_tests.py`, `boundary.integration.test.ts`, manual C-M02, C-S18 |
 | Record id lengths | 64 (looked up) and 65 (refused) in every position: booking body, availability query, list filter, URL path; 1,500 and 3,000 characters | `boundary.integration.test.ts`, `input_tests.py` |
 | Request body shapes | malformed JSON, array, null, wrong types, missing field, extra fields | same |
 | Calendar dates | 29 Feb in leap and non-leap years, month 13, month 00, 31 April, `0000`, wrong format, empty, far past, far future | same |
 | Start time formats | empty, word, date only, no zone, offset instead of Z, number, null | same |
 
-## 4a. Every text box and string input
+## 6. Every text box and string input
 
 Every place a person can type, or a client can send text, with its limit and the tests that cover it. The limits live in one place (`LIMITS` in `shared/src/index.ts`) and are used by the API schemas and by the `maxlength` of the boxes.
 
 | Input | Where | Rule | Tests |
 |---|---|---|---|
-| Username | login box; `POST /api/auth/login` | 1 to 32 characters, case sensitive, no trimming | UI T-01 to T-12; `boundary_tests.py`; `input_tests.py`; `boundary.integration` |
-| Password | login box (with live counter, "no spaces" warning as you type, show-password option and a Sign-in help panel); `POST /api/auth/login` | 1 to 32 characters, **no white space** (space, tab, new line, non-breaking space). The form stops it with "Password cannot contain spaces" and sends nothing; the API answers 400 `INVALID_INPUT` with the same message | same, plus UI C-M03b, T-22 and `boundary.integration` |
-| Search | staff All bookings | up to 100 characters, searched as plain text, words combined, extra spaces ignored | UI T-15 to T-21, S-S06 |
-| Date | booking page date box; `GET /api/availability?date=` | a real calendar day `YYYY-MM-DD`; the picker allows today to 60 days ahead; any other real date is answered with "nothing free" | UI T-13 to T-16b; `boundary_tests.py`; `boundary.integration` |
-| From, To | staff date boxes; `GET /api/appointments?from&to` | ISO 8601 instants or dates from the boxes | UI S-S03, S-S04; `boundary_tests.py` |
-| Status, Dealership | staff drop-downs; `status` and `dealershipId` query | fixed lists; the id is capped at 64 characters on the API | UI S-S01, S-S02; `input_tests.py` |
+| Username | login box; `POST /api/auth/login` | 1 to 32 characters, case sensitive, no trimming | manual C-M02, C-S18; `boundary_tests.py`; `input_tests.py`; `boundary.integration` |
+| Password | login box (with live counter, "no spaces" warning as you type, show-password option and a Sign-in help panel); `POST /api/auth/login` | 1 to 32 characters, **no white space** (space, tab, new line, non-breaking space). The form stops it with "Password cannot contain spaces" and sends nothing; the API answers 400 `INVALID_INPUT` with the same message | same, plus manual C-M03b, C-S19 and `boundary.integration` |
+| Search | staff All bookings | up to 100 characters, searched as plain text, words combined, extra spaces ignored | manual S-S06, S-S07 |
+| Date | booking page date box; `GET /api/availability?date=` | a real calendar day `YYYY-MM-DD`; the picker allows today to 60 days ahead; any other real date is answered with "nothing free" | manual C-S04, C-S05, C-S17; `boundary_tests.py`; `boundary.integration` |
+| From, To | staff date boxes; `GET /api/appointments?from&to` | ISO 8601 instants or dates from the boxes | manual S-S03, S-S04; `boundary_tests.py` |
+| Status, Dealership | staff drop-downs; `status` and `dealershipId` query | fixed lists; the id is capped at 64 characters on the API | manual S-S01, S-S02; `input_tests.py` |
 | `vehicleId`, `serviceTypeId`, `dealershipId` | booking body; availability query | 1 to 64 characters, then looked up (404 if unknown) | `boundary.integration`; `input_tests.py`; `pairwise_tests.py` |
 | Appointment id | `GET /api/appointments/{id}`, `POST .../{id}/cancel` | 1 to 64 characters, then looked up | same |
 | `startTime` | booking body | ISO 8601 UTC instant on a 30 minute boundary | boundary and pairwise suites |
-| `Authorization` header | every protected call | `Bearer <token>`; missing, empty, wrong scheme, garbage and up to 7 KB values are refused | `input_tests.py`; UI-public P-16, P-17 |
+| `Authorization` header | every protected call | `Bearer <token>`; missing, empty, wrong scheme, garbage and up to 7 KB values are refused | `input_tests.py` |
 
 For each text input the sweeps try: empty, one character, one below the limit, exactly the limit, one over, 300 and 3,000 characters, HTML (`<script>`, `<img onerror>`), SQL-like text, path traversal, encoded and raw control characters, new lines, accented and Arabic and Japanese text, emoji, spaces only and quote characters. The rules checked are: no server error for any value, every client error from the application has the JSON error shape with a request id, the limit is accepted as well formed and one over is refused with 400, and nothing sent is reflected back unescaped.
 
@@ -132,9 +160,9 @@ Notes:
 
 - The API stores no free text from users (only ids that must match existing records and the username of an existing account), so there is no stored-injection surface. React escapes everything it shows; the HTML test confirms a payload is never executed.
 - The browser counts characters in UTF-16 units and the server counts code points, so the box is the stricter of the two for emoji (16 fit in the box, 32 are accepted by the API).
-- Requests with oversized headers or URLs, and URL paths containing `../` or control characters, are refused by the platform (CloudFront or API Gateway: HTTP 400, 403, 413, 414 or 431) before the application sees them. Those answers are not in the application's JSON shape and expose nothing. This was found by running the sweep on production: locally the same paths reach the API, which answers 404.
+- Requests with oversized headers or URLs, and URL paths containing `../` or control characters, are refused by the platform (CloudFront or API Gateway: HTTP 400, 403, 413, 414 or 431) before the application sees them. Those answers are not in the application's JSON shape and expose nothing. Locally the same paths reach the API, which answers 404.
 
-## 5. Pairwise (all-pairs) testing
+## 7. Pairwise (all-pairs) testing
 
 Two pairwise designs, each with a hand-written expected result:
 
@@ -147,60 +175,13 @@ Two pairwise designs, each with a hand-written expected result:
 - The **booking decision** run arranges the contention directly in the table, executes the booking, and also checks the availability endpoint gives the same answer for the same slot.
 - The **booking request** run follows the documented precedence: no token 401, wrong role 403, malformed body 400, bad start time 422, unknown record 404.
 - Pairwise rarely yields the all-valid row and isolates no single fault, so the request design adds a baseline and every one-factor-at-a-time variation.
-- **Mutation check:** I deliberately broke the code twice and confirmed the suites fail. Locking only the first slot of a booking failed 6 tests (overlap, capacity, lock count). Checking only the first slot when searching failed 1 test, because the transaction locks still stop the double booking and only the availability read was wrong. That is the intended defence in depth.
+- **Mutation check:** locking only the first slot of a booking makes 6 integration tests fail (overlap, capacity, lock count); checking only the first slot when searching makes 1 fail, because the transaction locks still stop the double booking and only the availability read is wrong. That is the intended defence in depth.
 
-## 6. UI testing
+## 8. UI testing
 
-### With Claude in Chrome (what Alice did)
+Run the cases in [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md) in your own browser, or have Claude in Chrome (the browser extension) run them. They cover sign-in rules, booking, a conflict with nearest times, cancelling, the staff view, search and filters, session handling, and the phone layout.
 
-Alice opened the app in real Chrome, signed in as John Wick, James Bond and Winston, and performed the manual cases: wrong-case sign-in, booking, conflict, nearest times, cancel, staff filters, `/book` for staff. She read the rendered page and took screenshots. Notes from practice:
-
-- Chrome slows background-tab timers and stops rendering them, so keep one tab in front. If screenshots time out, wait or bring the window forward.
-- Run it against the local app. Entering demo passwords into the deployed site through the browser is left to the human.
-
-### On the deployed site
-
-- **Without a sign-in** (the agent runs this on production): in Claude in Chrome, open the sign-in page and check that it loads quickly, explains the username and password rules, redirects `http://` to `https://`, has no console errors, loads every image, and that `/`, `/book` and unknown addresses send a signed-out visitor to the sign-in page. The security headers, 401 on every protected route, forged-token and malformed-input checks are covered by the Python suites below.
-- **With a sign-in** (run by the author): the demo passwords are typed into the login form, which the agent does not do on a deployed site. Walk through [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md) in your own browser; the Must-have section takes about 15 minutes.
-- **API** on the deployed site: all five Python suites are run by the agent (section 2); they call the API directly and do not use the login form.
-
-## 7. Defects found by testing
-
-| Found by | Defect | Fix |
-|---|---|---|
-| Boundary test | `GET /availability?date=2026-02-30` (and other impossible dates) returned 200 with the hours of a different day | Dates are validated as real calendar days (400 otherwise) |
-| Browser at 390 px | The booking page was 708 px wide on a phone and scrolled sideways: service cards and the category chips widened their grid column | `min-w-0` on the column and on the service cards; the page now fits |
-| Browser review | "Sign out" text was too faint in the header | Own button style with higher contrast |
-| Browser review | "Times shown in Manchester time" for a UK-wide time zone | Reads "UK local time" |
-| Review of design against code | `RATE_LIMITED` (429) was in the design but nothing produced it; API Gateway's own 429 body is not the API error shape and the page showed a generic error. Observed live: 79 of 400 requests in a 4 second burst were throttled | The web app maps 429 to "Too many requests" (checked by a UI test) |
-| Persona walkthrough as a customer | The suggested booking date could be a Sunday, when every dealership is closed | The suggestion moves to the next open day until the customer picks a date |
-| Persona walkthrough as staff | No way to find a booking from a reference, plate or name | Search box on All bookings |
-| Persona walkthrough | A booking that had started was labelled "Upcoming" with no Cancel button | Labelled "In progress"; the phase logic is shared and boundary-tested |
-| Probe of every string parameter | An over-long id (about 1,100 characters or more) sent as a query value or as an appointment id in the URL made DynamoDB refuse the key and the API answered **500** instead of 400 | Ids are capped at 64 characters in every schema and in the URL path; `input_tests.py` and the boundary tests guard it |
-| Review of text boxes | The login and search boxes had no length limit, and the username and password limits were 64 and 128 | Username and password are limited to 32 characters on the API and in the boxes; search to 100; one shared definition |
-| Accessibility scan (axe) | Colour contrast below WCAG AA on tabs, duration badges, small grey text and cancelled cards | Darker text tokens; cancelled cards use a greyscale photo instead of 75% opacity |
-
-## 8. Test data and clean-up
-
-- `npm run seed:local` / `npm run seed:aws` wipe the table and load the demo data, so a run always starts from the same state.
-- Integration tests use their own table (`asa-challenge-test`), so the demo data is untouched.
-- The Python runs cancel what they create. If a run is interrupted, re-seed.
-
-## 6a. More kinds of UI testing (done earlier)
-
-Layout at seven screen sizes, resilience (time zones and locales, network failures, session and navigation, random clicking), visual regression and performance budgets were run once with throw-away browser scripts. The scripts were then removed to keep the repository small; the findings and results are recorded in [IMPLEMENTATION_RESULTS.md](IMPLEMENTATION_RESULTS.md) section 17, and every defect they found is covered by the manual cases or by a unit or integration test.
-
-### Testing through Claude in Chrome
-
-The author prefers UI testing through Claude in Chrome (the browser extension). It is used for the phone Confirm bar and a re-run of the core cases (results in [IMPLEMENTATION_RESULTS.md](IMPLEMENTATION_RESULTS.md) section 18). Practical notes: the extension cannot resize the window, so phone width is shown in a 390 px wide frame (the page's own media queries apply inside it); Chrome often reports the tab as hidden, which makes real keystrokes and some screenshots unreliable, so clicks and form fills go through the page's scripts and screenshots are taken when the tab allows it; sign-in is typed or filled only on the local copy.
-
-### What these found
-
-| Found by | Defect | Fix |
-|---|---|---|
-| Layout audit | On phones the header was three rows and 153 px tall: logo and title, then the menu, then the avatar and Sign out each on their own line, so the title, avatar and menu did not sit on one line | Redesigned: row one has the logo and title on the left and avatar and Sign out on the right on one centre line; row two has the menu as equal-width buttons; one row on wider screens; title fits at 320 px |
-| Layout review | Staff filters on phones had different widths with a lone "To" box, and the search placeholder was cut off | One tidy grid of full-width controls; shorter placeholder |
-| Resilience (network) | A fast double click on Confirm booking sent two requests (the database still booked once) | A guard that works on the first click; the same for Cancel and Sign in |
-| Resilience (offline) | With the network down, Confirm booking sat on "Confirming..." for ever with no message: the data library silently pauses requests while offline, and there was no request timeout | Requests are always attempted so "You appear to be offline" shows at once; any request that gets no answer for 20 seconds is given up with a clear message |
-| Resilience (session) | After an expired session or a deep link the person always landed on the home page after signing in | They now return to the page they asked for (only same-site paths are honoured); a deliberate sign-out returns to the home page |
-| The tests themselves | The first version of the resilience script swallowed its own errors and stopped after 25 of its 46 checks without saying so | Errors are reported; the full 46 run and pass |
+- **Without signing in** (safe on the deployed site): the sign-in page loads, explains the username and password rules, redirects `http://` to `https://`, has no console errors and loads every image; `/`, `/book` and unknown addresses send a signed-out visitor to the sign-in page. The security headers, 401 on every protected route, forged-token and malformed-input checks are covered by the Python suites.
+- **With a sign-in**: type the demo passwords yourself; the Must-have section takes about 15 minutes.
+- **Phone layout**: the Claude in Chrome extension cannot resize the window, so phone width is shown by loading the app in a 390 px wide frame; the page's own media queries apply inside it. On a real phone, or a narrow desktop window, the booking page shows the summary and Confirm button as a bar pinned to the bottom.
+- Chrome slows hidden tabs, so keep one tab in front; if a screenshot times out, bring the window forward.

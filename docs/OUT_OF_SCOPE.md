@@ -1,8 +1,8 @@
 # Out of Scope for This Version
 
-These points were found during design, build, testing and a cross-check review. They are **acknowledged and deliberately not addressed in this version**: the brief asks for a working, correct appointment scheduler, and this version delivers that. Nothing here is a known defect in the delivered behaviour, and none of it is open for discussion in this version. The list shows what a next version would look at first.
+These points were found during design, build, testing and review. They are **acknowledged and deliberately not addressed in this version**: the brief asks for a working, correct appointment scheduler, and this version delivers that. Nothing here is a known defect in the delivered behaviour, and none of it is open for discussion in this version. The list shows what a next version would look at first.
 
-Where they came from: [IMPLEMENTATION_RESULTS.md](IMPLEMENTATION_RESULTS.md) section 12 (review), the design assumptions in [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) section 11, and the questions raised at the end of the review.
+Related: the design assumptions in [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) section 11.
 
 ## 1. Security and abuse
 
@@ -42,16 +42,15 @@ Where they came from: [IMPLEMENTATION_RESULTS.md](IMPLEMENTATION_RESULTS.md) sec
 | 17 | Accounts, cars and portraits refer to film characters (the images are fictional and generated, but evocative) | A deliberate theme for this demo | Use neutral names and cars for a formal audience |
 | 18 | The date picker follows the browser's locale format | Native control, works everywhere | A custom date picker |
 | 19 | X-Ray traces start at Lambda because API Gateway HTTP APIs do not support tracing | A platform limit; logs carry the request id for correlation | Use a REST API or add a gateway log correlation |
-| 20 | The CloudWatch dashboard layout was not reviewed visually and no alarm was triggered | The dashboard, metrics and alarms exist and were confirmed through the AWS API | Walk the dashboard and fire each alarm in a game day |
-| 21 | The frontend has no component-level unit tests | End-to-end browser tests cover its behaviour | Add component tests |
-| 22 | No screen-reader or real-device phone testing | Automated accessibility scans, keyboard-only sign-in and a 390 px layout check were done | Manual accessibility audit and device lab runs |
+| 20 | No alarm has been triggered on purpose, and the dashboard layout has not been reviewed visually | The dashboard, metrics and alarms exist and are confirmed through the AWS API | Walk the dashboard and fire each alarm in a game day |
+| 21 | The frontend has no component-level unit tests | The manual cases cover its behaviour | Add component tests |
+| 22 | No screen-reader or real-device phone testing | Keyboard-only sign-in and the 390 px layout are checked in Chrome | Manual accessibility audit and device lab runs |
 | 23 | The browser counts characters in UTF-16 units and the server counts code points, so for emoji the box holds 16 and the API accepts 32 | The box is the stricter side, so nothing over the limit can be sent from the page | Count the same way on both sides |
 | 24 | Usernames and passwords are not trimmed, so a leading or trailing space is a different (wrong) account | Case and exact text matter by design | Trim the username before sign-in |
-| 26 | The browser tests run in Chromium only; Firefox and Safari's engine (WebKit) are not tested | Needs a large extra browser download and was set aside by the author for this version | Add Firefox and WebKit to the browser runs |
-| 27 | No manual accessibility or usability sessions: screen reader (NVDA, VoiceOver), 200% zoom, high-contrast mode, first-time-user walkthrough | Automated scans, keyboard-only sign-in and layout checks were done; a human session was set aside by the author for this version | Run a moderated accessibility and usability session |
-| 28 | No test with heavy data: very long names, hundreds of bookings per customer or per dealership | Demo volumes only; set aside by the author for this version | Add large-data fixtures and measure the lists |
-| 29 | Visual-regression baselines are not committed, because they depend on the machine's fonts and browser | Each person creates their own with one command (`npm run test:visual:update`) | Keep baselines in CI on one fixed image |
-| 25 | Requests with oversized headers or URLs, or URL paths containing `../` or control characters, are refused by the platform (CloudFront or API Gateway: 400, 403, 413, 414, 431) in its own format, not the API's JSON error | Happens before the application is reached | Add a gateway response template |
+| 25 | UI testing is done in Chrome only; Firefox and Safari are not tested | Set aside for this version | Run the manual cases in Firefox and Safari |
+| 26 | No manual accessibility or usability sessions: screen reader (NVDA, VoiceOver), 200% zoom, high-contrast mode, first-time-user walkthrough | Keyboard-only sign-in and layout checks are done; a human session is set aside for this version | Run a moderated accessibility and usability session |
+| 27 | No test with heavy data: very long names, hundreds of bookings per customer or per dealership | Demo volumes only | Add large-data fixtures and measure the lists |
+| 28 | Requests with oversized headers or URLs, or URL paths containing `../` or control characters, are refused by the platform (CloudFront or API Gateway: 400, 403, 413, 414, 431) in its own format, not the API's JSON error | Happens before the application is reached | Add a gateway response template |
 
 ## What this list is not
 

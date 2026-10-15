@@ -161,7 +161,7 @@ This gate suits a demo; a product would use a managed identity provider (for exa
 
 ## 10. Testing
 
-Commands and results: [TESTING.md](TESTING.md) and [IMPLEMENTATION_RESULTS.md](IMPLEMENTATION_RESULTS.md).
+Commands and latest results: [TESTING.md](TESTING.md).
 
 | Level | Tool | Covers |
 |---|---|---|

@@ -4,9 +4,7 @@ An appointment scheduler for car dealerships that replaces manual booking. A cus
 
 - Live: https://asa-challenge.fibosolutions.com
 - Design: [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DESIGN.md) (architecture diagram, components, data flow, data model, technology choices, observability)
-- Plan and progress: [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md)
-- Implementation results (what was built, build notes, test results, known limits): [docs/IMPLEMENTATION_RESULTS.md](docs/IMPLEMENTATION_RESULTS.md)
-- Testing guide (tools, every suite, API testing by hand, boundary and pairwise design): [docs/TESTING.md](docs/TESTING.md)
+- Testing guide (tools, every suite and its latest results, API testing by hand, boundary and pairwise design): [docs/TESTING.md](docs/TESTING.md)
 - Manual test cases for a quick human check, by priority: [docs/MANUAL_TEST_CASES.md](docs/MANUAL_TEST_CASES.md)
 
 > Status: built, tested and deployed. Test results and screenshots are in [docs/test-evidence/](docs/test-evidence/).
