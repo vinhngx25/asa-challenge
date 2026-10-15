@@ -47,7 +47,7 @@ Where they came from: [IMPLEMENTATION_RESULTS.md](IMPLEMENTATION_RESULTS.md) sec
 | 22 | No screen-reader or real-device phone testing | Automated accessibility scans, keyboard-only sign-in and a 390 px layout check were done | Manual accessibility audit and device lab runs |
 | 23 | The browser counts characters in UTF-16 units and the server counts code points, so for emoji the box holds 16 and the API accepts 32 | The box is the stricter side, so nothing over the limit can be sent from the page | Count the same way on both sides |
 | 24 | Usernames and passwords are not trimmed, so a leading or trailing space is a different (wrong) account | Case and exact text matter by design | Trim the username before sign-in |
-| 25 | Requests with oversized headers or URLs are refused by the platform (413, 414, 431) in its own format, not the API's JSON error | Happens before the application is reached | Add a gateway response template |
+| 25 | Requests with oversized headers or URLs, or URL paths containing `../` or control characters, are refused by the platform (CloudFront or API Gateway: 400, 403, 413, 414, 431) in its own format, not the API's JSON error | Happens before the application is reached | Add a gateway response template |
 
 ## What this list is not
 

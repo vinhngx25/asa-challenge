@@ -134,7 +134,7 @@ Notes:
 
 - The API stores no free text from users (only ids that must match existing records and the username of an existing account), so there is no stored-injection surface. React escapes everything it shows; the HTML test confirms a payload is never executed.
 - The browser counts characters in UTF-16 units and the server counts code points, so the box is the stricter of the two for emoji (16 fit in the box, 32 are accepted by the API).
-- Requests with oversized headers or URLs are refused by the platform (HTTP 413, 414 or 431) before the application sees them; those answers are not in the application's JSON shape.
+- Requests with oversized headers or URLs, and URL paths containing `../` or control characters, are refused by the platform (CloudFront or API Gateway: HTTP 400, 403, 413, 414 or 431) before the application sees them. Those answers are not in the application's JSON shape and expose nothing. This was found by running the sweep on production: locally the same paths reach the API, which answers 404.
 
 ## 5. Pairwise (all-pairs) testing
 

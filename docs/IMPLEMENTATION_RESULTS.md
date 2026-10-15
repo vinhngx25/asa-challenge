@@ -142,8 +142,8 @@ Deployment time: 865 seconds (CloudFront dominates). Region: ap-southeast-1. Cer
 |---|---|---|
 | `api_tests.py` | 38 of 38 | 38 of 38 |
 | `race_booking.py` | 11 of 11 | 11 of 11 |
-| `boundary_tests.py` | 57 of 57 | to be re-run after the final deploy |
-| `input_tests.py` | 55 of 55 | to be re-run after the final deploy |
+| `boundary_tests.py` | 57 of 57 | 57 of 57 |
+| `input_tests.py` | 55 of 55 | 55 of 55 |
 | `pairwise_tests.py` | 39 of 39 | 39 of 39 |
 | `smoke_test.py` | not applicable | 10 of 10 |
 
@@ -335,9 +335,9 @@ Run against https://asa-challenge.fibosolutions.com after the final deploy.
 
 | Layer | Who ran it | Result |
 |---|---|---|
-| API: smoke, API, race, boundary and pairwise scripts | agent | 10, 38, 11, 55 and 39 checks pass |
+| API: smoke, API, race, boundary, pairwise and input-sweep scripts | agent | 10, 38, 11, 57, 39 and 55 checks pass |
 | Browser, no sign-in (`ui-public.mjs`): page load speed, security headers, HTTP to HTTPS, console and network cleanliness, images, accessibility scan, keyboard order, signed-out redirects, API 401 shapes, forged token, malformed input, phone width | agent | 25 of 25 pass (login page loaded in about 0.6 s) |
-| Browser, signed in (`ui-run.mjs`, 64 checks) or the manual sheet | author | not run by the agent: it does not type the demo passwords into the login form of a deployed site. The same 64 checks pass on the local app; the author runs them on production with one command (see [TESTING.md](TESTING.md) section 6) |
+| Browser, signed in (`ui-run.mjs`, 87 checks) or the manual sheet | author | not run by the agent: it does not type the demo passwords into the login form of a deployed site. The same 87 checks pass on the local app; the author runs them on production with one command (see [TESTING.md](TESTING.md) section 6) |
 | Infrastructure: metrics, alarms, traces, logs, certificate | agent | verified in section 12.4 |
 
 The API scripts and the browser run exercise the same code. The browser run adds the screens and the rendering, which is why it is the part left for a person to run on production.
@@ -356,3 +356,5 @@ Added after a review question: boundary testing had covered the login field leng
 | Not an issue | The API stores no free text from users, so there is no stored-injection surface; React escapes everything it renders |
 
 Three smaller points are recorded in [OUT_OF_SCOPE.md](OUT_OF_SCOPE.md): the browser and the server count emoji differently (the box is the stricter), usernames are not trimmed, and the platform answers oversized headers in its own format.
+
+One difference between local and production was found by the input sweep on production: a URL path with `../` or control characters is answered by CloudFront itself (400 or 403 in its own format, nothing exposed) while the local API answers 404. The sweep accepts either, still forbids server errors and reflected text, and the point is recorded as out-of-scope item 25.

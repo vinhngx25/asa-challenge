@@ -14,7 +14,8 @@ Fields covered
 For each field: empty, one character, limit - 1, the limit, limit + 1, far over the limit, and hostile values (HTML, SQL-like,
 path traversal, control characters, unicode, emoji, whitespace only, very long). Rules checked:
   1. no server error (5xx) for any value;
-  2. every 4xx answer from the application has the JSON error shape with a request id;
+  2. every 4xx answer from the application has the JSON error shape with a request id (URL paths with `../` or control
+     characters may be refused by CloudFront itself on a deployed site, 400 or 403 in its own format; that is accepted);
   3. at the limit the value is accepted as well formed (the answer is 401 or 404, not 400); one over the limit is 400;
   4. nothing sent comes back unescaped in an answer (no reflected "<script", the API stores no free text).
 Safe on the live site: no booking is created.
@@ -63,6 +64,8 @@ def main():
     def probe(field, label, status, body):
         if status >= 500:
             problems.append((field, label, status, "server error"))
+        elif field.startswith("path.") and label in ("traversal", "encoded-null", "control") and status in (400, 403, 404):
+            pass  # on a deployed site CloudFront refuses odd URL paths itself, in its own format, before the API is reached
         elif status >= 400 and status not in (413, 414, 431) and not shaped(status, body):
             problems.append((field, label, status, f"not the error shape: {str(body)[:60]}"))
         if body is not None and "<script" in str(body).lower():
