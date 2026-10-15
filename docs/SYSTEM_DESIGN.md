@@ -161,10 +161,11 @@ This gate suits a demo; a product would use a managed identity provider (for exa
 
 ## 10. Testing
 
-Commands and latest results: [TESTING.md](TESTING.md).
+Commands and latest results: [TESTING.md](TESTING.md). GitHub Actions runs the build, unit, frontend and integration tests on every push.
 
 | Level | Tool | Covers |
 |---|---|---|
+| Frontend | Vitest + React Testing Library, API mocked | Booking page resets (Book another, hidden service, stale conflict message, changed choices), double click, staff filters, sign-in and sign-out clearing cached data |
 | Unit | Vitest | Slot maths, overlap, opening hours, password hashing, clock-change days, pairwise generator |
 | Integration | Vitest + DynamoDB Local | Booking and cancel on a real transaction engine, including parallel bookings of one slot (exactly one succeeds); boundary values and pairwise combinations |
 | API black-box | Python scripts (standard library) | Roles, validation, boundaries, pairwise, concurrency, every text input, post-deploy smoke test; run against local or the live URL |

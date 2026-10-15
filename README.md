@@ -73,7 +73,8 @@ npm run build               # type-checks every workspace and builds the fronten
 Full guide, including how to call the API by hand: [docs/TESTING.md](docs/TESTING.md).
 
 ```bash
-npm test                    # 20 unit tests (Vitest)
+npm test                    # 20 backend unit tests (Vitest)
+npm run test:frontend       # 11 frontend tests: booking page, staff filters, sign-in (React Testing Library)
 npm run test:integration    # 104 tests on DynamoDB Local: booking, API, boundary values, pairwise, parallel bookings
 
 # black-box scripts, no installs needed (Python standard library). Seeded data required; each cancels what it books.

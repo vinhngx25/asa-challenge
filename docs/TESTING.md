@@ -6,7 +6,9 @@ How the project is tested, how to run every suite, the latest results, and how t
 
 | Job | Tool | Notes |
 |---|---|---|
-| Unit and integration | **Vitest** with DynamoDB Local in Docker | Includes the parallel-booking, boundary and pairwise tests |
+| Backend unit and integration | **Vitest** with DynamoDB Local in Docker | Includes the parallel-booking, boundary and pairwise tests |
+| Frontend state | **Vitest** with React Testing Library (jsdom), API mocked | Booking page resets, staff filters, sign-in and sign-out |
+| Continuous integration | **GitHub Actions** (`.github/workflows/ci.yml`) | On every push and pull request: build, unit, frontend and integration tests |
 | API black-box and concurrency | **Python scripts** (standard library only) in `scripts/` | Roles, validation, boundaries, pairwise, concurrency, every text input, post-deploy smoke test. Run against local or the live site |
 | UI | The manual sheet, run by hand or through **Claude in Chrome** (driven by Alice) | Real browser, real clicks; screenshots in `docs/test-evidence/` |
 | Images | Google "nano banana" (Gemini image models) through Alice's image skill | 38 WebP files; one shared style prompt keeps the set consistent |
@@ -16,7 +18,8 @@ How the project is tested, how to run every suite, the latest results, and how t
 
 | Suite | Command | Needs | Runs on the live site? |
 |---|---|---|---|
-| Unit | `npm test` | nothing | n/a |
+| Unit (backend) | `npm test` | nothing | n/a |
+| Frontend state | `npm run test:frontend` | nothing | n/a |
 | Integration (booking, API, boundary, pairwise) | `npm run db:up` then `npm run test:integration` | Docker | n/a (uses its own table `asa-challenge-test`) |
 | API tests | `python scripts/api_tests.py --base-url <url>` | seeded data | yes |
 | Race (concurrent requests) | `python scripts/race_booking.py --base-url <url>` | seeded data | yes |
@@ -35,7 +38,8 @@ All suites pass.
 | Suite | Result |
 |---|---|
 | Type check (all workspaces) | clean |
-| Unit tests | 20 passed |
+| Backend unit tests | 20 passed |
+| Frontend tests | 11 passed (booking page 7, staff overview 2, sign-in and sign-out 2) |
 | Integration tests | 104 passed (booking and cancel 25, API and roles 13, boundary values 28, pairwise 38) |
 | `api_tests.py` | 41 of 41 |
 | `race_booking.py` | 11 of 11 |
@@ -44,7 +48,7 @@ All suites pass.
 | `pairwise_tests.py` | 39 of 39 |
 | `smoke_test.py` (live site) | 10 of 10 |
 
-The Python suites pass locally and on the live site (https://asa-challenge.fibosolutions.com). The manual sheet is run in Chrome on the local app; signing in on the deployed site is done by a person.
+The same four steps (build, unit, frontend, integration) run in GitHub Actions. The Python suites pass locally and on the live site (https://asa-challenge.fibosolutions.com). The manual sheet is run in Chrome on the local app; signing in on the deployed site is done by a person.
 
 What the race script proves, also on the live DynamoDB table:
 
