@@ -75,7 +75,7 @@ python scripts/pairwise_tests.py --base-url http://localhost:3000
 python scripts/input_tests.py    --base-url http://localhost:3000
 ```
 
-The Python scripts run unchanged against a deployed site (`--base-url https://<your-url>`). The UI is checked with the [manual test cases](docs/MANUAL_TEST_CASES.md). Details and API examples are in the [testing guide](docs/TESTING.md).
+The Python scripts run unchanged against a deployed site (`--base-url https://<your-url>`). The tests that validate the three core requirements of the brief are mapped in the [testing guide](docs/TESTING.md#core-requirements-and-the-tests-that-prove-them). The UI is checked with the [manual test cases](docs/MANUAL_TEST_CASES.md). Details and API examples are in the [testing guide](docs/TESTING.md).
 
 ## Deploy to AWS
 
@@ -132,11 +132,42 @@ npm run destroy
 
 The deploy creates JSON logs in CloudWatch, a dashboard (`asa-challenge`) and four alarms. All services are pay-per-use, so the demo costs cents per month when idle.
 
-## About Alice, the assistant that built this
+## AI Collaboration Narrative
 
-This project was built with **Alice**, a personal AI engineering assistant created by **Vinh**. Alice runs on Claude Code and treats a single `CLAUDE.md` file as her operating manual.
+I built this with **Alice**, my personal AI engineering assistant. Alice runs on Claude Code and uses a `CLAUDE.md` file as her operating manual. The history is in `git log`: 40 commits over three days, unsquashed, 39 of them co-authored by the AI, so the reversals below are visible there.
 
-**How Alice is organized.** Alice is one git repository. This is its structure (the `asa-challenge` repository you are reading lives inside `workspace/projects/` and is not part of it):
+**How I guided the AI**
+
+- **Design before code.** I gave the brief and my constraints as facts (accounts, data sizes, TypeScript, AWS with SSL, light UI). Alice wrote a design and a plan, and I reviewed them before any code (`f35a8a9`).
+- **Options, then my decision.** On choices that matter (database server or serverless, Hono and CDK against alternatives, my own earlier backend as a reference) I asked for a comparison and a recommendation, then decided.
+- **Small milestones.** Each one ended in running code, tests and a deploy to the live site.
+- **I steer as a user.** I use the app and tell the AI what I see, in plain words. It investigates and fixes.
+
+**How I verified and refined the output**
+
+- **Nothing counts until it has run.** Four levels: unit tests, integration tests on a real DynamoDB Local, Python black-box suites against the live site, and a manual sheet run in Chrome. I asked for boundary-value and pairwise tests, and for deliberate code breaks to prove the tests can fail.
+- **I check the AI's claims.** Docs against code, a fresh clone against production, screenshots against the current build.
+
+| What happened | Commit |
+|---|---|
+| Boundary tests found impossible dates accepted; the input sweep found a 500 error on very long ids | `4569a79`, `59285d1` |
+| I chose a cinematic image look, then found it too dark; I asked for bright and modern, and for a light interface to match | `003933b`, `2e75553`, `6bf5731` |
+| I spotted the phone header misaligned and made mobile the first priority; the AI audited seven screen sizes and added a pinned Confirm bar | `86cfd92`, `b2b3d2a` |
+| I found "Book another" kept the old service and dealership; the AI then audited every place that keeps state between steps | `42a541d`, `3d9d180` |
+| I asked for a simpler repository: Playwright, CI, custom metrics and tracing were removed, and the design and docs trimmed to what is built | `f3f06ee`, `ec66244`, `eb03d01`, `daef193`, `20698bc` |
+| A fresh clone built different files from production: my machine's `NODE_ENV=development` had shipped a development build; builds are now forced to production | `aa52f17` |
+| Mapping the tests to the brief showed no test for the technician being busy part-way through a job; one was added | `94b9d59` |
+
+**How I ensured the final quality**
+
+- **Tests of the core logic:** 20 unit, 106 integration, 15 frontend, and the Python suites (203 checks, plus a 10-check smoke test) on the live site, mapped to the brief's three requirements in the [testing guide](docs/TESTING.md#core-requirements-and-the-tests-that-prove-them). Breaking the lock code on purpose makes them fail.
+- **Fresh-clone rehearsals:** the README followed from an empty folder, and `cdk diff` against the live stack.
+- **Scope:** anything beyond the three core requirements is listed in [out of scope](docs/OUT_OF_SCOPE.md) and will be discussed further.
+- **Not verified:** a deploy into another AWS account, and my signed-in walkthrough of the live site.
+
+### How Alice is organized
+
+Alice is one git repository. This is its structure (this repository lives inside `workspace/projects/` and is not part of it):
 
 ```
 alice/
@@ -164,14 +195,6 @@ alice/
 ```
 
 **How Alice handles many projects.** Every code project under `workspace/projects/` is its own git repository with its own remote. Alice finds which repository owns a changed file before every commit and commits each repository separately, so work on several projects never mixes.
-
-**What Alice did on this project**
-
-- **Planned first.** She wrote the design and waited for review before coding.
-- **Cloud operations.** She uses the AWS CLI with a dedicated profile to create and update infrastructure, deploy the frontend and backend, seed data and read logs.
-- **UI testing through a real browser.** She drives Chrome through the Claude in Chrome extension: signing in as each role, booking, cancelling, reading the rendered page and capturing screenshots as evidence, including the phone layout and a second customer taking the same slot.
-- **API and rare-case testing.** She writes Python scripts that call the API directly, including two customers booking the same slot at the same moment, the same vehicle double-submitted, and cancel-then-rebook. She designs boundary-value and pairwise (all-pairs) tests and checks that they fail when the code is deliberately broken.
-- **Visuals.** She generates every image and thumbnail (37: portraits, dealerships, cars, service categories, logo, desktop and mobile hero, empty state) with Google's "nano banana" Gemini image models through her image skill, using one shared bright, modern style prompt.
 
 ## License
 
