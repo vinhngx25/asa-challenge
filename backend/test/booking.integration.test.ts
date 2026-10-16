@@ -153,6 +153,21 @@ describe('resource constraints', () => {
   });
 });
 
+describe('the technician is needed for the whole duration', () => {
+  it('refuses a job that overlaps the only tyre specialist part-way, even while a bay is free', async () => {
+    // Birmingham has two bays and one tyre specialist. The alignment holds the specialist from 11:00 to 12:00.
+    await book(wick, 'wick-mustang', 'alignment', 'birmingham', at(11));
+    for (const start of [at(10, 30), at(11), at(11, 30)]) {
+      expect(await codeOf(book(bond, 'bond-db5', 'rotation', 'birmingham', start))).toBe('SLOT_UNAVAILABLE');
+    }
+    // A bay was free all along: a job that needs no tyre specialist books at the same time.
+    expect(await codeOf(book(bond, 'bond-2000gt', 'mot', 'birmingham', at(11)))).toBe('OK');
+    // Back to back with the alignment, before and after, the specialist is free.
+    expect(await codeOf(book(bond, 'bond-esprit', 'rotation', 'birmingham', at(10)))).toBe('OK');
+    expect(await codeOf(book(bond, 'bond-db5', 'rotation', 'birmingham', at(12)))).toBe('OK');
+  });
+});
+
 describe('concurrency: simultaneous requests never double book', () => {
   it('one bay, seven vehicles, one slot: exactly one booking wins', async () => {
     const attempts: [Principal, string][] = [

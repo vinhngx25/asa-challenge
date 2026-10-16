@@ -2,6 +2,18 @@
 
 How the project is tested, how to run every suite, the latest results, and how to test the API manually. The person-run checklist is [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md); screenshots are in [test-evidence/](test-evidence/).
 
+## Core requirements and the tests that prove them
+
+The brief has three core requirements. These are the tests that validate each one (details in sections 5 to 7).
+
+| Core requirement | Tests |
+|---|---|
+| **1. Resource-constrained booking** for a vehicle, service type, dealership and desired time | Booking happy path; booking through the API (201 with the full record, 409 with alternative times); the booking request pairwise design (3 callers, vehicles, services, dealerships and start times: 648 combinations in 39 rows, with the documented order of checks 401, 403, 400, 422, 404, 409); boundary values for the start time (30-minute grid, opening hours for each duration, 1 hour lead time, 60 day horizon, clock changes); a customer can book only their own vehicles; one vehicle cannot be in two places |
+| **2. Real-time availability** of a ServiceBay **and** a qualified Technician for the **whole duration** | No qualified technician free although a bay is; no bay free although technicians are; **the only qualified technician is busy part-way through the new job while a bay is free**; bay overlaps from both sides with half-open intervals (back to back is allowed); a one-bay day fills exactly (18 jobs) and refuses the 19th; the availability list agrees with what booking accepts; the booking decision pairwise design (3,150 combinations in 37 rows, including one bay taken, all qualified technicians taken, all bays taken); one lock per slot and resource; concurrency: 7 rivals for one slot give exactly 1 booking, two bays and two technicians give exactly 2 on different bays and technicians, the same vehicle sent 5 times books once (integration, and `race_booking.py` on the live table) |
+| **3. Confirmed Appointment record** linking customer, vehicle, technician and bay | The happy path checks customer, vehicle, a technician who holds the needed skill, the bay, start and end, and that the stored record equals the one returned; the API returns the full record; the pairwise run checks the technician is qualified in every row; times are stored in UTC and read back in the dealership time zone; the appointment appears in the customer's and staff's lists; cancel frees the bay, technician and vehicle so the slot can be rebooked |
+
+Breaking the code on purpose shows these tests fail: locking only the first slot of a booking, or checking only the first slot when searching, makes the tests above fail.
+
 ## 1. Tools
 
 | Job | Tool | Notes |
@@ -39,7 +51,7 @@ All suites pass.
 | Type check (all workspaces) | clean |
 | Backend unit tests | 20 passed |
 | Frontend tests | 15 passed (booking page 7, staff overview 2, sign-in and sign-out 2, time zone display 4) |
-| Integration tests | 105 passed (booking and cancel 26, API and roles 13, boundary values 28, pairwise 38) |
+| Integration tests | 106 passed (booking and cancel 27, API and roles 13, boundary values 28, pairwise 38) |
 | `api_tests.py` | 41 of 41 |
 | `race_booking.py` | 11 of 11 |
 | `boundary_tests.py` | 57 of 57 |

@@ -65,7 +65,7 @@ Open http://localhost:5173 (Vite prints the address if that port is busy) and si
 ```bash
 npm test                    # 20 backend unit tests
 npm run test:frontend       # 15 frontend tests (booking page, staff filters, sign-in, time display)
-npm run test:integration    # 105 tests on DynamoDB Local (needs npm run db:up)
+npm run test:integration    # 106 tests on DynamoDB Local (needs npm run db:up)
 
 # Black-box scripts (Python standard library, seeded data required, each cancels what it books)
 python scripts/api_tests.py      --base-url http://localhost:3000

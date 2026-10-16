@@ -1,6 +1,8 @@
 # Out of Scope for This Version
 
-These points were found during design, build, testing and review. They are **acknowledged and deliberately not addressed in this version**: the brief asks for a working, correct appointment scheduler, and this version delivers that. Nothing here is a known defect in the delivered behaviour, and none of it is open for discussion in this version. The list shows what a next version would look at first.
+The core requirements of the brief are three: book a service for a vehicle, service type, dealership and time (resource-constrained booking); check that a service bay and a qualified technician are both free for the whole duration (real-time availability check); and store a confirmed appointment linking customer, vehicle, technician and bay. **Anything beyond those three is treated as out of scope for this version, to avoid over-engineering, and will be discussed further.**
+
+The points below were found during design, build, testing and review. They are **acknowledged and deliberately not addressed in this version**. Nothing here is a known defect in the delivered behaviour. The list shows what a next version would look at first.
 
 Related: the design assumptions in [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) section 11.
 
