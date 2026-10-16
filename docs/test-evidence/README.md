@@ -11,7 +11,7 @@ Screenshots of the current build (production build, local API on DynamoDB Local)
 | `05-conflict-with-alternatives.jpg` | Another person took the time: message and the four nearest free times |
 | `06-booking-confirmed.jpg` | Confirmation with reference, bay and technician |
 | `07-staff-all-bookings.jpg` | Staff overview with totals, dealership tiles and filters |
-| `08-phone-login.jpg` | Sign-in on a phone, with the portrait banner |
+| `08-phone-login.jpg` | Sign-in on a phone, with the photo banner |
 | `09-phone-dashboard.jpg` | Phone dashboard and header |
 | `10-phone-booking-confirm-bar.jpg` | Phone booking page: summary and Confirm pinned to the bottom |
 | `11-phone-conflict-in-bar.jpg` | Phone: the conflict message and nearest times inside the pinned bar |

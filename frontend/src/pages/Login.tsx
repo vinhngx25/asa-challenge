@@ -56,9 +56,6 @@ export function Login() {
         {/* Phones and tablets get their own portrait picture as a banner; wide screens use the large picture on the left. */}
         <div className="relative h-52 w-full overflow-hidden sm:h-64 lg:hidden">
           <Img k="app-hero-mobile" alt="A friendly mechanic in a bright modern workshop" className="size-full object-[50%_30%]" />
-          <p className="absolute inset-x-3 bottom-3 rounded-xl bg-white/90 px-4 py-2.5 text-base font-bold leading-snug text-ink-900 shadow backdrop-blur sm:inset-x-6 sm:bottom-4 sm:text-lg">
-            A bay and a qualified technician, confirmed before you book.
-          </p>
         </div>
         <div className="w-full max-w-sm space-y-6 px-6 py-8 lg:py-10">
           <form onSubmit={submit} className="space-y-5" aria-label="Sign in">
