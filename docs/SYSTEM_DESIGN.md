@@ -139,7 +139,7 @@ This gate suits a demo; a product would use a managed identity provider (for exa
 | Infrastructure | AWS CDK (TypeScript) | One command deploys and the stack is readable as code |
 | Observability | JSON logs to CloudWatch, built-in AWS metrics, a dashboard and four alarms | Enough to see errors, latency and throttling without extra libraries |
 | Tests | Vitest (with DynamoDB Local), Python scripts, Claude in Chrome | See section 10 |
-| Images | Generated with Gemini through Alice's image skill (38 WebP files, about 1.1 MB) | Faces, places and cars instead of text blocks; one shared style prompt keeps them consistent; each record stores an image key, so art can be replaced without code changes |
+| Images | Generated with Gemini through Alice's image skill (37 WebP files, about 1.1 MB) | Faces, places and cars instead of text blocks; one shared style prompt keeps them consistent; each record stores an image key, so art can be replaced without code changes |
 
 ## 8. Frontend behaviour
 

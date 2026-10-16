@@ -173,7 +173,7 @@ alice/
 - **Cloud operations.** She uses the AWS CLI with a dedicated profile to create and update infrastructure, deploy the frontend and backend, seed data and read logs.
 - **UI testing through a real browser.** She drives Chrome through the Claude in Chrome extension: signing in as each role, booking, cancelling, reading the rendered page and capturing screenshots as evidence, including the phone layout and a second customer taking the same slot.
 - **API and rare-case testing.** She writes Python scripts that call the API directly, including two customers booking the same slot at the same moment, the same vehicle double-submitted, and cancel-then-rebook. She designs boundary-value and pairwise (all-pairs) tests and checks that they fail when the code is deliberately broken.
-- **Visuals.** She generates every image and thumbnail (38: portraits, dealerships, cars, service categories, logo, desktop and mobile hero, empty state) with Google's "nano banana" Gemini image models through her image skill, using one shared bright, modern style prompt.
+- **Visuals.** She generates every image and thumbnail (37: portraits, dealerships, cars, service categories, logo, desktop and mobile hero, empty state) with Google's "nano banana" Gemini image models through her image skill, using one shared bright, modern style prompt.
 
 ## License
 

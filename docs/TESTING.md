@@ -10,7 +10,7 @@ How the project is tested, how to run every suite, the latest results, and how t
 | Frontend state | **Vitest** with React Testing Library (jsdom), API mocked | Booking page resets, staff filters, sign-in and sign-out, times shown in the dealership time zone |
 | API black-box and concurrency | **Python scripts** (standard library only) in `scripts/` | Roles, validation, boundaries, pairwise, concurrency, every text input, post-deploy smoke test. Run against local or the live site |
 | UI | The manual sheet, run manually or through **Claude in Chrome** (driven by Alice) | Real browser, real clicks; screenshots in `docs/test-evidence/` |
-| Images | Google "nano banana" (Gemini image models) through Alice's image skill | 38 WebP files; one shared style prompt keeps the set consistent |
+| Images | Google "nano banana" (Gemini image models) through Alice's image skill | 37 WebP files; one shared style prompt keeps the set consistent |
 | Manual API calls | `curl` or PowerShell `Invoke-RestMethod` | Examples in section 4 |
 
 ## 2. What runs where
