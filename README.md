@@ -163,8 +163,6 @@ alice/
     (other folders)    Client, research and personal working material, organized by topic
 ```
 
-**How a request flows.** Alice extracts keywords from the request and queries the routing graph, which scores skills, memories and rules and writes a hint file. She follows the best-matching skill (or `capabilities.md` when nothing scores high enough), shows a plan for multi-step work, acts, then checks whether the intent was covered. If a skill has a gap or a memory is stale, she repairs it before the session ends and re-syncs the graphs, so she improves with use. Facts live in `memories/` and `knowledge/` as current state, with git history as the timeline; a project's own credentials stay inside that project, outside git.
-
 **How Alice handles many projects.** Every code project under `workspace/projects/` is its own git repository with its own remote. Alice finds which repository owns a changed file before every commit and commits each repository separately, so work on several projects never mixes.
 
 **What Alice did on this project**
