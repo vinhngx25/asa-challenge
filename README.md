@@ -23,7 +23,7 @@ Demo accounts (case sensitive; username and password are at most 32 characters; 
 | `JamesBond` | `JamesBond` | customer (James Bond) |
 | `Winston` | `Winston` | staff (Winston Scott) |
 
-The sign-in is an access gate for a demo with fixed accounts; a production product would use a managed identity provider. Demo data: 3 dealerships in England, 5 bays, 13 technicians, 24 services, 7 cars and a spread of past, upcoming and cancelled bookings (details in the design document).
+The sign-in is an access gate for a demo with fixed accounts; a production product would use a managed identity provider. Demo data: 3 dealerships in England, 5 bays, 13 technicians, 24 services, 7 cars and a spread of past, upcoming and cancelled bookings (details in the design document). The seed data is code (`backend/src/seed/data.ts`) and all 37 images, thumbnails and avatars are committed in `frontend/public/images/`, so nothing needs to be generated or downloaded beyond the packages below.
 
 ## Repository layout
 
