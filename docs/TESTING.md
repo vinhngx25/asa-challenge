@@ -1,6 +1,6 @@
 # Testing Guide
 
-How the project is tested, how to run every suite, the latest results, and how to test the API by hand. The person-run checklist is [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md); screenshots are in [test-evidence/](test-evidence/).
+How the project is tested, how to run every suite, the latest results, and how to test the API manually. The person-run checklist is [MANUAL_TEST_CASES.md](MANUAL_TEST_CASES.md); screenshots are in [test-evidence/](test-evidence/).
 
 ## 1. Tools
 
@@ -9,7 +9,7 @@ How the project is tested, how to run every suite, the latest results, and how t
 | Backend unit and integration | **Vitest** with DynamoDB Local in Docker | Includes the parallel-booking, boundary and pairwise tests |
 | Frontend state | **Vitest** with React Testing Library (jsdom), API mocked | Booking page resets, staff filters, sign-in and sign-out, times shown in the dealership time zone |
 | API black-box and concurrency | **Python scripts** (standard library only) in `scripts/` | Roles, validation, boundaries, pairwise, concurrency, every text input, post-deploy smoke test. Run against local or the live site |
-| UI | The manual sheet, run by hand or through **Claude in Chrome** (driven by Alice) | Real browser, real clicks; screenshots in `docs/test-evidence/` |
+| UI | The manual sheet, run manually or through **Claude in Chrome** (driven by Alice) | Real browser, real clicks; screenshots in `docs/test-evidence/` |
 | Images | Google "nano banana" (Gemini image models) through Alice's image skill | 38 WebP files; one shared style prompt keeps the set consistent |
 | Manual API calls | `curl` or PowerShell `Invoke-RestMethod` | Examples in section 4 |
 
@@ -59,7 +59,7 @@ What the race script proves, also on the live DynamoDB table:
 | Long and short job overlapping in one bay | 2 | exactly 1 booking |
 | Slot freed by a cancel | 4 rivals | exactly 1 takes it |
 
-## 4. Testing the API by hand
+## 4. Testing the API manually
 
 The API is under `/api`. Every route except `/api/health` and `/api/auth/login` needs a token.
 

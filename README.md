@@ -4,7 +4,7 @@ An appointment scheduler for car dealerships. A customer requests a service for 
 
 - Live: https://asa-challenge.fibosolutions.com
 - [System design](docs/SYSTEM_DESIGN.md): architecture, components, data flow, data model, technology choices, observability
-- [Testing guide](docs/TESTING.md): every suite, latest results, API testing by hand
+- [Testing guide](docs/TESTING.md): every suite, latest results, API testing manually
 - [Manual test cases](docs/MANUAL_TEST_CASES.md): a person-run checklist by priority; screenshots in [docs/test-evidence/](docs/test-evidence/)
 - [Out of scope](docs/OUT_OF_SCOPE.md): weak points that are acknowledged and deliberately not addressed in this version
 
